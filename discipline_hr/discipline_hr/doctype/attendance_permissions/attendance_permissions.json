@@ -10,10 +10,9 @@
   "column_break_dtde",
   "attendance",
   "section_break_ajdf",
+  "reason",
   "auto_created",
-  "status",
-  "column_break_shjw",
-  "reason"
+  "status"
  ],
  "fields": [
   {
@@ -64,16 +63,12 @@
   {
    "fieldname": "section_break_ajdf",
    "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "column_break_shjw",
-   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-15 20:08:02.857481",
+ "modified": "2026-02-16 11:21:13.071068",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",
