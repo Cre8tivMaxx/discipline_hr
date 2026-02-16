@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "HR-GR-.#####",
+ "creation": "2026-02-16 13:16:18.919688",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "period_start",
+  "period_end",
+  "column_break_illc",
+  "consumed_minutes",
+  "allowed_minutes",
+  "remaining_minutes"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_illc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.shift_request_approver",
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "label": "Period Start",
+   "read_only": 1
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End",
+   "read_only": 1
+  },
+  {
+   "fieldname": "allowed_minutes",
+   "fieldtype": "Int",
+   "label": "Allowed Minutes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "consumed_minutes",
+   "fieldtype": "Int",
+   "label": "Consumed Minutes"
+  },
+  {
+   "fieldname": "remaining_minutes",
+   "fieldtype": "Int",
+   "label": "Remaining Minutes",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-16 13:25:35.575831",
+ "modified_by": "Administrator",
+ "module": "Discipline Hr",
+ "name": "Employee Grace Ledger",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
