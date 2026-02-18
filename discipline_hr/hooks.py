@@ -137,7 +137,7 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
+doc_events = {"Attendance": {"on_submit": "discipline_hr.events.attendance.get_grace_details"}}
 #     "*": {
 #         "on_update": "method",
 #         "on_cancel": "method",
