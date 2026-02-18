@@ -32,9 +32,12 @@ def get_grace_details(doc, method=None):
 	early_minutes = max(0, time_diff_in_seconds(end_datetime, doc.out_time)) / 60
 
 	doc.custom_late_entry_minutes = cint(late_minutes)
-	doc.custom_early_exit_minutes = cint(early_minutes)
+	doc.custom_early_exist_minutes = cint(early_minutes)
 
 	# Fetch Grace Directly From Shift
+	if not doc.shift:
+		return
+
 	shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
 
 	late_grace = shift_doc.late_entry_grace_period or 0
@@ -42,6 +45,6 @@ def get_grace_details(doc, method=None):
 
 	doc.custom_late_after_grace_minutes = cint(max(0, doc.custom_late_entry_minutes - late_grace))
 
-	doc.custom_early_after_grace_minutes = cint(max(0, doc.custom_early_exit_minutes - early_grace))
+	doc.custom_early_after_grace_minutes = cint(max(0, doc.custom_early_exist_minutes - early_grace))
 
 	doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
