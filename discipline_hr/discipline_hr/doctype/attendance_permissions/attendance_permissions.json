@@ -9,6 +9,7 @@
   "minutes",
   "column_break_dtde",
   "attendance",
+  "date",
   "section_break_ajdf",
   "reason",
   "auto_created",
@@ -63,12 +64,17 @@
   {
    "fieldname": "section_break_ajdf",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-17 14:32:46.204323",
+ "modified": "2026-02-18 14:13:58.140865",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",

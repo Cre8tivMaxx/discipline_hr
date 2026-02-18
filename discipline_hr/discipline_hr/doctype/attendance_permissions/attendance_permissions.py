@@ -16,6 +16,7 @@ class AttendancePermissions(Document):
 
 		attendance: DF.Link
 		auto_created: DF.Check
+		date: DF.Date | None
 		employee: DF.Link
 		minutes: DF.Int
 		reason: DF.SmallText | None

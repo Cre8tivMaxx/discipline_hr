@@ -1,14 +1,18 @@
 from typing import cast
 
 import frappe
-from frappe.utils import cint, get_datetime, time_diff_in_seconds
+from frappe.utils import cint, get_datetime, time_diff_in_seconds, today
 from hrms.hr.doctype.attendance.attendance import Attendance
 from hrms.hr.doctype.shift_assignment.shift_assignment import (
 	get_actual_start_end_datetime_of_shift,
 )
 
+from discipline_hr.discipline_hr.doctype.attendance_permissions.attendance_permissions import (
+	AttendancePermissions,
+)
 
-def get_grace_details(doc, method=None):
+
+def calculate_attendance_penalty_minutes(doc, method=None):
 	doc = cast(Attendance, doc)
 
 	# Only calculate for Present records
@@ -48,3 +52,18 @@ def get_grace_details(doc, method=None):
 	doc.custom_early_after_grace_minutes = cint(max(0, doc.custom_early_exist_minutes - early_grace))
 
 	doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
+
+	if doc.custom_penalty_minutes:
+		create_attendance_permissions(doc.employee, doc.name, doc.custom_penalty_minutes, doc.attendance_date)
+
+
+def create_attendance_permissions(employee, attendance, minutes, date=""):
+	doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
+	if not employee:
+		return
+	doc.employee = employee
+	doc.attendance = attendance
+	doc.minutes = minutes
+	doc.date = date or today()
+	doc.auto_created = 1
+	doc.insert(ignore_if_duplicate=True, ignore_permissions=True)

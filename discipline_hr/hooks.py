@@ -137,7 +137,12 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-doc_events = {"Attendance": {"before_submit": "discipline_hr.events.attendance.get_grace_details"}}
+doc_events = {
+	"Attendance": {
+		"before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
+		"after_submit": "",
+	}
+}
 #     "*": {
 #         "on_update": "method",
 #         "on_cancel": "method",
