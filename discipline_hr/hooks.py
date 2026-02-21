@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["hrms"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -140,7 +140,7 @@ app_license = "mit"
 doc_events = {
 	"Attendance": {
 		"before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
-		"after_submit": "",
+		# "on_submit": "discipline_hr.events.attendance.create_attendance_permissions",
 	}
 }
 #     "*": {

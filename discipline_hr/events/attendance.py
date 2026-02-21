@@ -53,6 +53,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
 	doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
 
+	# TODO enqueue this job or move it after_submit/on_submit
 	if doc.custom_penalty_minutes:
 		create_attendance_permissions(doc.employee, doc.name, doc.custom_penalty_minutes, doc.attendance_date)
 
