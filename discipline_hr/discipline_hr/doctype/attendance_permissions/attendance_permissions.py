@@ -1,8 +1,13 @@
 # Copyright (c) 2026, Abdelrahman Elsayed and contributors
 # For license information, please see license.txt
+from typing import cast
 
-# import frappe
+import frappe
 from frappe.model.document import Document
+
+from discipline_hr.services.attendance_permission import (
+	process_submitted_attendance_permission,
+)
 
 
 class AttendancePermissions(Document):
@@ -22,4 +27,6 @@ class AttendancePermissions(Document):
 		reason: DF.SmallText | None
 		status: DF.Literal["Accepted", "Pending", "Rejected"]
 	# end: auto-generated types
-	pass
+
+	def on_submit(self):
+		process_submitted_attendance_permission(self)
