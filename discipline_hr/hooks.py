@@ -140,7 +140,7 @@ required_apps = ["hrms"]
 doc_events = {
 	"Attendance": {
 		"before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
-		# "on_submit": "discipline_hr.events.attendance.create_attendance_permissions",
+		"on_submit": "discipline_hr.events.attendance.create_attendance_violation",
 	}
 }
 #     "*": {

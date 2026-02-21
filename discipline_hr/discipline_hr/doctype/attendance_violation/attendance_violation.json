@@ -9,13 +9,12 @@
   "column_break_diql",
   "attendance",
   "section_break_details",
-  "date",
+  "violation_date",
   "deviation_minutes",
   "grace_consumed",
   "penalty_minutes",
   "column_break_policy",
   "violation_number",
-  "policy_applied",
   "section_break_penalty",
   "final_penalty_type",
   "final_penalty_value",
@@ -25,6 +24,7 @@
   {
    "fieldname": "employee",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Employee",
    "options": "Employee",
    "reqd": 1
@@ -36,6 +36,7 @@
   {
    "fieldname": "attendance",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Attendance",
    "options": "Attendance",
    "reqd": 1
@@ -46,29 +47,23 @@
    "label": "Violation Details"
   },
   {
-   "fieldname": "date",
-   "fieldtype": "Date",
-   "label": "Violation Date",
-   "reqd": 1
-  },
-  {
    "fieldname": "deviation_minutes",
    "fieldtype": "Int",
    "label": "Deviation Minutes",
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "grace_consumed",
    "fieldtype": "Int",
    "label": "Grace Consumed (Minutes)",
-   "default": "0",
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "penalty_minutes",
    "fieldtype": "Int",
    "label": "Penalty Minutes",
-   "default": "0",
    "read_only": 1
   },
   {
@@ -79,13 +74,6 @@
    "fieldname": "violation_number",
    "fieldtype": "Int",
    "label": "Violation Number",
-   "read_only": 1
-  },
-  {
-   "fieldname": "policy_applied",
-   "fieldtype": "Link",
-   "label": "Policy Applied",
-   "options": "Penalty Policy",
    "read_only": 1
   },
   {
@@ -107,17 +95,24 @@
    "read_only": 1
   },
   {
+   "default": "Pending Approval",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nGraced\nPenalized\nRejected\nPending Approval",
-   "default": "Pending Approval"
+   "options": "\nGraced\nPenalized\nRejected\nPending Approval"
+  },
+  {
+   "fieldname": "violation_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Violation Date",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-21 11:04:03.602266",
+ "modified": "2026-02-21 14:07:17.258672",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Violation",
