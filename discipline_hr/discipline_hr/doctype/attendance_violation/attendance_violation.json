@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-21 11:03:09.659556",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "column_break_diql",
+  "attendance",
+  "section_break_details",
+  "date",
+  "deviation_minutes",
+  "grace_consumed",
+  "penalty_minutes",
+  "column_break_policy",
+  "violation_number",
+  "policy_applied",
+  "section_break_penalty",
+  "final_penalty_type",
+  "final_penalty_value",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_diql",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attendance",
+   "fieldtype": "Link",
+   "label": "Attendance",
+   "options": "Attendance",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_details",
+   "fieldtype": "Section Break",
+   "label": "Violation Details"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Violation Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "deviation_minutes",
+   "fieldtype": "Int",
+   "label": "Deviation Minutes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "grace_consumed",
+   "fieldtype": "Int",
+   "label": "Grace Consumed (Minutes)",
+   "default": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "penalty_minutes",
+   "fieldtype": "Int",
+   "label": "Penalty Minutes",
+   "default": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_policy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "violation_number",
+   "fieldtype": "Int",
+   "label": "Violation Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "policy_applied",
+   "fieldtype": "Link",
+   "label": "Policy Applied",
+   "options": "Penalty Policy",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_penalty",
+   "fieldtype": "Section Break",
+   "label": "Final Penalty"
+  },
+  {
+   "fieldname": "final_penalty_type",
+   "fieldtype": "Select",
+   "label": "Final Penalty Type",
+   "options": "\nMinutes\nPercentage of Day\nFull Day\nWarning Only",
+   "read_only": 1
+  },
+  {
+   "fieldname": "final_penalty_value",
+   "fieldtype": "Float",
+   "label": "Final Penalty Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nGraced\nPenalized\nRejected\nPending Approval",
+   "default": "Pending Approval"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-21 11:04:03.602266",
+ "modified_by": "Administrator",
+ "module": "Discipline Hr",
+ "name": "Attendance Violation",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
