@@ -141,6 +141,9 @@ doc_events = {
 	"Attendance": {
 		"before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
 	},
+	"Attendance Permissions": {
+		"on_submit": "discipline_hr.events.attendance_permission.create_violation_and_grace_ledger_from_permission",
+	},
 }
 #     "*": {
 #         "on_update": "method",

@@ -48,6 +48,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 	shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
 
 	late_grace, early_grace = _get_grace_minutes(shift_doc)
+	late_grace, early_grace = _get_grace_minutes(shift_doc)
 
 	doc.custom_late_after_grace_minutes = cint(max(0, doc.custom_late_entry_minutes - late_grace))
 
@@ -55,6 +56,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
 	doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
 
+	# TODO enqueue this job or move it after_submit/on_submit
 	# TODO enqueue this job or move it after_submit/on_submit
 	if doc.custom_penalty_minutes:
 		create_attendance_permissions(doc.employee, doc.name, doc.custom_penalty_minutes, doc.attendance_date)
@@ -89,6 +91,38 @@ def create_attendance_permissions(employee, attendance, minutes, date=""):
 # 	violation.penalty_minutes = doc.custom_penalty_minutes
 
 # 	violation.insert(ignore_if_duplicate=True, ignore_permissions=True)
+
+
+def _get_grace_minutes(shift_doc):
+	late_grace = shift_doc.late_entry_grace_period or 0
+	early_grace = shift_doc.early_exit_grace_period or 0
+	return late_grace, early_grace
+
+
+def _calculate_consumed_grace_minutes(doc: Attendance, shift_doc) -> int:
+	late_grace, early_grace = _get_grace_minutes(shift_doc)
+	late_consumed = min(cint(doc.custom_late_entry_minutes), late_grace)
+	early_consumed = min(cint(doc.custom_early_exist_minutes), early_grace)
+	return cint(late_consumed + early_consumed)
+
+
+def create_attendance_violation(doc: Attendance, method=None):
+	if not doc.custom_penalty_minutes:
+		return
+	if not doc.shift:
+		return
+
+	violation = cast(AttendanceViolation, frappe.new_doc("Attendance Violation"))
+	violation.employee = doc.employee
+	violation.attendance = doc.name
+	violation.violation_date = doc.attendance_date
+
+	violation.deviation_minutes = doc.custom_late_entry_minutes + doc.custom_early_exist_minutes
+	shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
+	violation.grace_consumed = _calculate_consumed_grace_minutes(doc, shift_doc)
+	violation.penalty_minutes = doc.custom_penalty_minutes
+
+	violation.insert(ignore_if_duplicate=True, ignore_permissions=True)
 
 
 def _get_grace_minutes(shift_doc):
