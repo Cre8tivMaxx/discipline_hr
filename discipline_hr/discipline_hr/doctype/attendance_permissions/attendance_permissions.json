@@ -7,6 +7,7 @@
  "field_order": [
   "employee",
   "minutes",
+  "shift_type",
   "column_break_dtde",
   "attendance",
   "date",
@@ -69,12 +70,18 @@
    "fieldname": "date",
    "fieldtype": "Date",
    "label": "Date"
+  },
+  {
+   "fieldname": "shift_type",
+   "fieldtype": "Link",
+   "label": "Shift Type",
+   "options": "Shift Type"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-18 14:13:58.140865",
+ "modified": "2026-02-23 13:51:27.223388",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",

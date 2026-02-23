@@ -21,8 +21,9 @@ class AttendancePermissions(Document):
 		employee: DF.Link
 		minutes: DF.Int
 		reason: DF.SmallText | None
+		shift_type: DF.Link | None
 		status: DF.Literal["Accepted", "Pending", "Rejected"]
 	# end: auto-generated types
 
-	def on_save(self):
+	def before_save(self):
 		process_submitted_attendance_permission(self)

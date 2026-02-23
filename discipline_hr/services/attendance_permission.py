@@ -1,10 +1,17 @@
+from typing import cast
+
 import frappe
 from frappe.utils import cint
 
+from discipline_hr import logger
+from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
+	EmployeeGraceLedger,
+)
 from discipline_hr.services.grace import calculate_consumed_grace_minutes
 
 
 def process_submitted_attendance_permission(doc):
+	logger.debug(doc)
 	if not doc.employee or not doc.attendance or not doc.minutes:
 		return
 
@@ -36,9 +43,34 @@ def _create_attendance_violation(permission_doc, attendance):
 
 
 def _create_grace_ledger(permission_doc):
-	ledger = frappe.new_doc("Employee Grace Ledger")
+	shift = frappe.get_cached_doc("Shift Type", permission_doc.shift_type)
+	ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
+	logger.info(f"ledger created {ledger}")
 	ledger.employee = permission_doc.employee
-	ledger.period_start = permission_doc.date
-	ledger.period_end = permission_doc.date
+	ledger.attendance = permission_doc.attendance
+	ledger.period_start = shift.custom_period_start_date
+	ledger.period_end = shift.custom_period_end_date
+	ledger.allowed_minutes = shift.custom_total_allowed_grace_minutes
 	ledger.consumed_minutes = permission_doc.minutes
-	ledger.insert(ignore_permissions=True)
+	previous_minutes = (
+		sum(
+			frappe.get_all(
+				"Employee Grace Ledger",
+				filters=[
+					["employee", "=", permission_doc.employee],
+					["period_start", "=", shift.custom_period_start_date],
+					["period_end", "=", shift.custom_period_end_date],
+				],
+				pluck="consumed_minutes",
+			)
+		)
+		or 0
+	)
+
+	ledger.remaining_minutes = max(0, ledger.allowed_minutes - ledger.consumed_minutes - previous_minutes)
+
+	try:
+		ledger.insert(ignore_permissions=True)
+		logger.info("Ledger Inserted successfuly.")
+	except Exception as e:
+		logger.error(f"Couldn't create the grace ledger --> {e}")

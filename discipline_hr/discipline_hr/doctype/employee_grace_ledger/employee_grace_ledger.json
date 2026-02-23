@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "employee",
+  "attendance",
   "period_start",
   "period_end",
   "column_break_illc",
@@ -19,14 +20,14 @@
    "fieldname": "employee",
    "fieldtype": "Link",
    "label": "Employee",
-   "options": "Employee"
+   "options": "Employee",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_illc",
    "fieldtype": "Column Break"
   },
   {
-   "fetch_from": "employee.shift_request_approver",
    "fieldname": "period_start",
    "fieldtype": "Date",
    "label": "Period Start",
@@ -47,19 +48,27 @@
   {
    "fieldname": "consumed_minutes",
    "fieldtype": "Int",
-   "label": "Consumed Minutes"
+   "label": "Consumed Minutes",
+   "read_only": 1
   },
   {
    "fieldname": "remaining_minutes",
    "fieldtype": "Int",
    "label": "Remaining Minutes",
    "read_only": 1
+  },
+  {
+   "fieldname": "attendance",
+   "fieldtype": "Link",
+   "label": "Attendance",
+   "options": "Attendance",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-16 13:25:35.575831",
+ "modified": "2026-02-23 16:32:44.282608",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Employee Grace Ledger",

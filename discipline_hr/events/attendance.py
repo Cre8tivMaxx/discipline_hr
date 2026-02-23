@@ -7,6 +7,7 @@ from hrms.hr.doctype.shift_assignment.shift_assignment import (
 	get_actual_start_end_datetime_of_shift,
 )
 
+from discipline_hr import logger
 from discipline_hr.discipline_hr.doctype.attendance_permissions.attendance_permissions import (
 	AttendancePermissions,
 )
@@ -75,6 +76,7 @@ def create_attendance_permissions(employee, attendance, minutes, shift_doc, date
 	doc.status = _get_attendance_permission_status(shift_doc) or "Approved"
 	doc.date = date or today()
 	doc.auto_created = 1
+	doc.shift_type = shift_doc.name
 	doc.insert(ignore_if_duplicate=True, ignore_permissions=True)
 
 
