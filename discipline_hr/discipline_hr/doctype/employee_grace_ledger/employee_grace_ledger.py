@@ -6,20 +6,20 @@ from frappe.model.document import Document
 
 
 class EmployeeGraceLedger(Document):
-	# begin: auto-generated types
-	# This code is auto-generated. Do not modify anything in this block.
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
 
-	from typing import TYPE_CHECKING
+    from typing import TYPE_CHECKING
 
-	if TYPE_CHECKING:
-		from frappe.types import DF
+    if TYPE_CHECKING:
+        from frappe.types import DF
 
-		allowed_minutes: DF.Int
-		attendance: DF.Link | None
-		consumed_minutes: DF.Int
-		employee: DF.Link | None
-		period_end: DF.Date | None
-		period_start: DF.Date | None
-		remaining_minutes: DF.Int
-	# end: auto-generated types
-	pass
+        allowed_minutes: DF.Int
+        attendance: DF.Link | None
+        consumed_minutes: DF.Int
+        employee: DF.Link | None
+        period_end: DF.Date | None
+        period_start: DF.Date | None
+        remaining_minutes: DF.Int
+    # end: auto-generated types
+    pass

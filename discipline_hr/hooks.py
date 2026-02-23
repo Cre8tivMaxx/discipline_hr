@@ -138,9 +138,9 @@ required_apps = ["hrms"]
 # Hook on document methods and events
 
 doc_events = {
-	"Attendance": {
-		"before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
-	},
+    "Attendance": {
+        "before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
+    },
 }
 #     "*": {
 #         "on_update": "method",

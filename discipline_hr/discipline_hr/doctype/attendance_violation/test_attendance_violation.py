@@ -6,4 +6,4 @@ from frappe.tests.utils import FrappeTestCase
 
 
 class TestAttendanceViolation(FrappeTestCase):
-	pass
+    pass

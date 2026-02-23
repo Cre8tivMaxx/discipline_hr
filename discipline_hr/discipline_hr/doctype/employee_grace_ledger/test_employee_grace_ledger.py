@@ -6,4 +6,4 @@ from frappe.tests.utils import FrappeTestCase
 
 
 class TestEmployeeGraceLedger(FrappeTestCase):
-	pass
+    pass

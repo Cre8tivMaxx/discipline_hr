@@ -4,83 +4,83 @@ import frappe
 from frappe.utils import cint, get_datetime, time_diff_in_seconds, today
 from hrms.hr.doctype.attendance.attendance import Attendance
 from hrms.hr.doctype.shift_assignment.shift_assignment import (
-	get_actual_start_end_datetime_of_shift,
+    get_actual_start_end_datetime_of_shift,
 )
 
 from discipline_hr import logger
 from discipline_hr.discipline_hr.doctype.attendance_permissions.attendance_permissions import (
-	AttendancePermissions,
+    AttendancePermissions,
 )
 from discipline_hr.discipline_hr.doctype.attendance_violation.attendance_violation import (
-	AttendanceViolation,
+    AttendanceViolation,
 )
 from discipline_hr.services.grace import get_grace_minutes
 
 
 def calculate_attendance_penalty_minutes(doc, method=None):
-	# Only calculate for Present records
-	if doc.status != "Present":
-		return
+    # Only calculate for Present records
+    if doc.status != "Present":
+        return
 
-	if not doc.in_time or not doc.out_time:
-		return
+    if not doc.in_time or not doc.out_time:
+        return
 
-	shift_details = get_actual_start_end_datetime_of_shift(doc.employee, get_datetime(doc.in_time))
+    shift_details = get_actual_start_end_datetime_of_shift(doc.employee, get_datetime(doc.in_time))
 
-	if not shift_details:
-		return
+    if not shift_details:
+        return
 
-	start_datetime = shift_details["start_datetime"]
-	end_datetime = shift_details["end_datetime"]
+    start_datetime = shift_details["start_datetime"]
+    end_datetime = shift_details["end_datetime"]
 
-	# Calculate Raw Late / Early
-	late_minutes = max(0, time_diff_in_seconds(doc.in_time, start_datetime)) / 60
+    # Calculate Raw Late / Early
+    late_minutes = max(0, time_diff_in_seconds(doc.in_time, start_datetime)) / 60
 
-	early_minutes = max(0, time_diff_in_seconds(end_datetime, doc.out_time)) / 60
+    early_minutes = max(0, time_diff_in_seconds(end_datetime, doc.out_time)) / 60
 
-	doc.custom_late_entry_minutes = cint(late_minutes)
-	doc.custom_early_exist_minutes = cint(early_minutes)
+    doc.custom_late_entry_minutes = cint(late_minutes)
+    doc.custom_early_exist_minutes = cint(early_minutes)
 
-	# Fetch Grace Directly From Shift
-	if not doc.shift:
-		return
+    # Fetch Grace Directly From Shift
+    if not doc.shift:
+        return
 
-	shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
+    shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
 
-	late_grace, early_grace = get_grace_minutes(shift_doc)
+    late_grace, early_grace = get_grace_minutes(shift_doc)
 
-	doc.custom_late_after_grace_minutes = cint(max(0, doc.custom_late_entry_minutes - late_grace))
+    doc.custom_late_after_grace_minutes = cint(max(0, doc.custom_late_entry_minutes - late_grace))
 
-	doc.custom_early_after_grace_minutes = cint(max(0, doc.custom_early_exist_minutes - early_grace))
+    doc.custom_early_after_grace_minutes = cint(max(0, doc.custom_early_exist_minutes - early_grace))
 
-	doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
+    doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
 
-	# TODO enqueue this job or move it after_submit/on_submit
-	if doc.custom_penalty_minutes:
-		create_attendance_permissions(
-			doc.employee,
-			doc.name,
-			doc.custom_penalty_minutes,
-			shift_doc,
-			doc.attendance_date,
-		)
+    # TODO enqueue this job or move it after_submit/on_submit
+    if doc.custom_penalty_minutes:
+        create_attendance_permissions(
+            doc.employee,
+            doc.name,
+            doc.custom_penalty_minutes,
+            shift_doc,
+            doc.attendance_date,
+        )
 
 
 def create_attendance_permissions(employee, attendance, minutes, shift_doc, date=""):
-	doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
-	if not employee:
-		return
-	doc.employee = employee
-	doc.attendance = attendance
-	doc.minutes = max(cint(shift_doc.custom_minimum_grace_minutes), minutes)
-	doc.status = _get_attendance_permission_status(shift_doc) or "Approved"
-	doc.date = date or today()
-	doc.auto_created = 1
-	doc.shift_type = shift_doc.name
-	doc.insert(ignore_if_duplicate=True, ignore_permissions=True)
+    doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
+    if not employee:
+        return
+    doc.employee = employee
+    doc.attendance = attendance
+    doc.minutes = max(cint(shift_doc.custom_minimum_grace_minutes), minutes)
+    doc.status = _get_attendance_permission_status(shift_doc) or "Approved"
+    doc.date = date or today()
+    doc.auto_created = 1
+    doc.shift_type = shift_doc.name
+    doc.insert(ignore_if_duplicate=True, ignore_permissions=True)
 
 
 def _get_attendance_permission_status(shift_doc):
-	if cint(shift_doc.custom_enable_permissions) == 1:
-		return "Pending"
-	return "Accepted"
+    if cint(shift_doc.custom_enable_permissions) == 1:
+        return "Pending"
+    return "Accepted"
