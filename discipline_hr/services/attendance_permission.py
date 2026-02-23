@@ -3,7 +3,7 @@ from typing import cast
 import frappe
 from frappe.utils import cint
 
-from discipline_hr import logger
+from discipline_hr import error_logger, logger
 from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
 	EmployeeGraceLedger,
 )
@@ -73,4 +73,4 @@ def _create_grace_ledger(permission_doc):
 		ledger.insert(ignore_permissions=True)
 		logger.info("Ledger Inserted successfuly.")
 	except Exception as e:
-		logger.error(f"Couldn't create the grace ledger --> {e}")
+		error_logger.error(f"Couldn't create the grace ledger --> {e}")
