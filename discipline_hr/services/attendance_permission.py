@@ -72,4 +72,4 @@ def _create_grace_ledger(permission_doc):
         ledger.insert(ignore_permissions=True)
         logger.info("Ledger Inserted successfuly.")
     except Exception as e:
-        error_logger.error(f"Couldn't create the grace ledger --> {e}")
+        logger.error(f"Couldn't create the grace ledger --> {e}")

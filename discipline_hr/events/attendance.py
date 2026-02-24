@@ -28,6 +28,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
     shift_details = get_actual_start_end_datetime_of_shift(doc.employee, get_datetime(doc.in_time))
 
     if not shift_details:
+        logger.error(f"Shift details missing for {doc.employee} on {doc.attendance_date}")
         return
 
     start_datetime = shift_details["start_datetime"]
@@ -43,9 +44,16 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
     # Fetch Grace Directly From Shift
     if not doc.shift:
+        logger.error("Attendance missing for Shift Type")
         return
 
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
+
+    if not shift_doc.enable_auto_attendance:
+        logger.info(
+            f"Penalty skipped for {doc.name} because Auto Attendance is disabled for shift {doc.shift}"
+        )
+        return
 
     late_grace, early_grace = get_grace_minutes(shift_doc)
 

@@ -12,3 +12,7 @@ def calculate_consumed_grace_minutes(late_entry_minutes, early_exit_minutes, shi
     late_consumed = min(cint(late_entry_minutes), late_grace)
     early_consumed = min(cint(early_exit_minutes), early_grace)
     return cint(late_consumed + early_consumed)
+
+
+def get_employee_grace_details(employee):
+    pass
