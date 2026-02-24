@@ -21,5 +21,6 @@ class EmployeeGraceLedger(Document):
         period_end: DF.Date | None
         period_start: DF.Date | None
         remaining_minutes: DF.Int
+        remaining_minutes_before_consume: DF.Int
     # end: auto-generated types
     pass

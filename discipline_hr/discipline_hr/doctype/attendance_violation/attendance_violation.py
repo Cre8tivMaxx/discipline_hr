@@ -17,10 +17,12 @@ class AttendanceViolation(Document):
         attendance: DF.Link
         deviation_minutes: DF.Int
         employee: DF.Link
+        end_period: DF.Date | None
         final_penalty_type: DF.Literal["", "Minutes", "Percentage of Day", "Full Day", "Warning Only"]
         final_penalty_value: DF.Float
         grace_consumed: DF.Int
         penalty_minutes: DF.Int
+        start_period: DF.Date | None
         status: DF.Literal["", "Graced", "Penalized", "Rejected", "Pending Approval"]
         violation_date: DF.Date
         violation_number: DF.Int

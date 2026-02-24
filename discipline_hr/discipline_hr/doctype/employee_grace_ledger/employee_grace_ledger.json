@@ -11,6 +11,7 @@
   "period_start",
   "period_end",
   "column_break_illc",
+  "remaining_minutes_before_consume",
   "consumed_minutes",
   "allowed_minutes",
   "remaining_minutes"
@@ -63,12 +64,18 @@
    "label": "Attendance",
    "options": "Attendance",
    "read_only": 1
+  },
+  {
+   "fieldname": "remaining_minutes_before_consume",
+   "fieldtype": "Int",
+   "label": "Remaining Minutes Before Consume",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-23 16:32:44.282608",
+ "modified": "2026-02-24 14:29:34.789548",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Employee Grace Ledger",

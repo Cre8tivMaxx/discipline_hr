@@ -10,11 +10,13 @@
   "attendance",
   "section_break_details",
   "violation_date",
-  "deviation_minutes",
-  "grace_consumed",
-  "penalty_minutes",
+  "start_period",
+  "end_period",
   "column_break_policy",
   "violation_number",
+  "grace_consumed",
+  "penalty_minutes",
+  "deviation_minutes",
   "section_break_penalty",
   "final_penalty_type",
   "final_penalty_value",
@@ -107,12 +109,22 @@
    "in_list_view": 1,
    "label": "Violation Date",
    "reqd": 1
+  },
+  {
+   "fieldname": "start_period",
+   "fieldtype": "Date",
+   "label": "Start Period"
+  },
+  {
+   "fieldname": "end_period",
+   "fieldtype": "Date",
+   "label": "End period"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-21 14:07:17.258672",
+ "modified": "2026-02-24 17:21:56.577489",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Violation",
