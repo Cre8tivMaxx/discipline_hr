@@ -3,15 +3,14 @@ from typing import cast
 import frappe
 from frappe.utils import cint
 
-from discipline_hr import error_logger, logger
 from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
     EmployeeGraceLedger,
 )
 from discipline_hr.services.grace import calculate_consumed_grace_minutes
+from discipline_hr.services.utils import logger
 
 
 def process_submitted_attendance_permission(doc):
-    logger.debug(doc)
     if not doc.employee or not doc.attendance or not doc.minutes:
         return
 

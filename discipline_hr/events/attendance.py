@@ -1,20 +1,22 @@
 from typing import cast
 
 import frappe
-from frappe.utils import cint, get_datetime, time_diff_in_seconds, today
-from hrms.hr.doctype.attendance.attendance import Attendance
+from frappe.utils import (
+    cint,
+    get_datetime,
+    getdate,
+    time_diff_in_seconds,
+    today,
+)
 from hrms.hr.doctype.shift_assignment.shift_assignment import (
     get_actual_start_end_datetime_of_shift,
 )
 
-from discipline_hr import logger
 from discipline_hr.discipline_hr.doctype.attendance_permissions.attendance_permissions import (
     AttendancePermissions,
 )
-from discipline_hr.discipline_hr.doctype.attendance_violation.attendance_violation import (
-    AttendanceViolation,
-)
 from discipline_hr.services.grace import get_grace_minutes
+from discipline_hr.services.utils import logger
 
 
 def calculate_attendance_penalty_minutes(doc, method=None):
@@ -48,6 +50,24 @@ def calculate_attendance_penalty_minutes(doc, method=None):
         return
 
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
+
+    # Guard to start, end period
+    if not shift_doc.custom_period_start_date or not shift_doc.custom_period_end_date:
+        logger.info(
+            f"Penalty Skipped for {doc.name}, because shift {doc.shift} doesn't have Period Start/End Date"
+        )
+        return
+
+    if getdate(doc.attendance_date) < getdate(shift_doc.custom_period_start_date) or getdate(
+        doc.attendance_date
+    ) > getdate(shift_doc.custom_period_end_date):
+        logger.info(
+            f"Penalty skipped for Attendance {doc.name}: "
+            f"date {doc.attendance_date} is outside shift period "
+            f"({shift_doc.custom_period_start_date} → "
+            f"{shift_doc.custom_period_end_date})"
+        )
+        return
 
     if not shift_doc.enable_auto_attendance:
         logger.info(
