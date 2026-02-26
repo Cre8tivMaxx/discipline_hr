@@ -14,12 +14,17 @@
   "remaining_minutes_before_consume",
   "consumed_minutes",
   "allowed_minutes",
-  "remaining_minutes"
+  "remaining_minutes",
+  "penalty_section",
+  "penalty_minutes"
  ],
  "fields": [
   {
    "fieldname": "employee",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee",
    "read_only": 1
@@ -49,18 +54,21 @@
   {
    "fieldname": "consumed_minutes",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Consumed Minutes",
    "read_only": 1
   },
   {
    "fieldname": "remaining_minutes",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Remaining Minutes",
    "read_only": 1
   },
   {
    "fieldname": "attendance",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Attendance",
    "options": "Attendance",
    "read_only": 1
@@ -68,14 +76,27 @@
   {
    "fieldname": "remaining_minutes_before_consume",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Remaining Minutes Before Consume",
+   "read_only": 1
+  },
+  {
+   "fieldname": "penalty_section",
+   "fieldtype": "Section Break",
+   "label": "Penalty"
+  },
+  {
+   "fieldname": "penalty_minutes",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Penalty Minutes",
    "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-24 14:29:34.789548",
+ "modified": "2026-02-26 12:55:53.276626",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Employee Grace Ledger",

@@ -23,7 +23,7 @@ class AttendanceViolation(Document):
         grace_consumed: DF.Int
         penalty_minutes: DF.Int
         start_period: DF.Date | None
-        status: DF.Literal["", "Graced", "Penalized", "Rejected", "Pending Approval"]
+        status: DF.Literal["Penalized", "Rejected", "Pending Approval"]
         violation_date: DF.Date
         violation_number: DF.Int
     # end: auto-generated types

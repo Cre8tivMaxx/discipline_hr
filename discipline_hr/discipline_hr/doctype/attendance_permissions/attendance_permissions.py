@@ -1,6 +1,6 @@
 # Copyright (c) 2026, Abdelrahman Elsayed and contributors
 # For license information, please see license.txt
-
+import frappe
 from frappe.model.document import Document
 
 from discipline_hr.services.attendance_permission import process_submitted_attendance_permission
@@ -27,3 +27,12 @@ class AttendancePermissions(Document):
 
     def before_save(self):
         process_submitted_attendance_permission(self)
+
+    def validate(self):
+        self.validate_shift_minimum_grace()
+
+    def validate_shift_minimum_grace(self):
+        shift = frappe.get_value("Attendance", "HR-ATT-2026-00039", "shift")
+        min_grace = frappe.get_value("Shift Type", shift, "custom_minimum_grace_minutes")
+        if self.minutes:
+            self.minutes = max(min_grace, self.minutes)

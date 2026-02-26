@@ -18,6 +18,7 @@ class EmployeeGraceLedger(Document):
         attendance: DF.Link | None
         consumed_minutes: DF.Int
         employee: DF.Link | None
+        penalty_minutes: DF.Int
         period_end: DF.Date | None
         period_start: DF.Date | None
         remaining_minutes: DF.Int

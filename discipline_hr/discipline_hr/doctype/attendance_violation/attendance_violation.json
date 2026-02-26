@@ -18,8 +18,8 @@
   "penalty_minutes",
   "deviation_minutes",
   "section_break_penalty",
-  "final_penalty_type",
   "final_penalty_value",
+  "final_penalty_type",
   "status"
  ],
  "fields": [
@@ -101,7 +101,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nGraced\nPenalized\nRejected\nPending Approval"
+   "options": "Penalized\nRejected\nPending Approval"
   },
   {
    "fieldname": "violation_date",
@@ -124,7 +124,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-24 17:21:56.577489",
+ "modified": "2026-02-26 13:41:22.248855",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Violation",
