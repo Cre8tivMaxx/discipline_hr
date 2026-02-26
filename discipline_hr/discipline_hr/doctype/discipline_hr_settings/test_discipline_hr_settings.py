@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestAttendanceViolation(FrappeTestCase):
+class TestDisciplineHRSettings(FrappeTestCase):
     pass

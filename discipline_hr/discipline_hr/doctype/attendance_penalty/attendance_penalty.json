@@ -1,13 +1,17 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "ATT-PEN-.####",
  "creation": "2026-02-21 11:03:09.659556",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "employee",
+  "attendance_permission",
+  "salary_component",
   "column_break_diql",
   "attendance",
+  "employee_grace_ledger",
   "section_break_details",
   "violation_date",
   "start_period",
@@ -16,11 +20,13 @@
   "violation_number",
   "grace_consumed",
   "penalty_minutes",
+  "penalty_amount",
   "deviation_minutes",
   "section_break_penalty",
   "final_penalty_value",
   "final_penalty_type",
-  "status"
+  "status",
+  "auto_create_salary"
  ],
  "fields": [
   {
@@ -38,7 +44,6 @@
   {
    "fieldname": "attendance",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Attendance",
    "options": "Attendance",
    "reqd": 1
@@ -65,6 +70,7 @@
    "default": "0",
    "fieldname": "penalty_minutes",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Penalty Minutes",
    "read_only": 1
   },
@@ -75,6 +81,7 @@
   {
    "fieldname": "violation_number",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Violation Number",
    "read_only": 1
   },
@@ -93,15 +100,15 @@
   {
    "fieldname": "final_penalty_value",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Final Penalty Value",
    "read_only": 1
   },
   {
-   "default": "Pending Approval",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Penalized\nRejected\nPending Approval"
+   "options": "\nPending\nApproved\nRejected"
   },
   {
    "fieldname": "violation_date",
@@ -119,15 +126,45 @@
    "fieldname": "end_period",
    "fieldtype": "Date",
    "label": "End period"
+  },
+  {
+   "fieldname": "attendance_permission",
+   "fieldtype": "Link",
+   "label": "Attendance Permission",
+   "options": "Attendance Permissions"
+  },
+  {
+   "fieldname": "employee_grace_ledger",
+   "fieldtype": "Link",
+   "label": "Employee Grace Ledger",
+   "options": "Employee Grace Ledger"
+  },
+  {
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "label": "Salary Component",
+   "options": "Salary Component"
+  },
+  {
+   "fieldname": "penalty_amount",
+   "fieldtype": "Currency",
+   "label": "Penalty Amount"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_create_salary",
+   "fieldtype": "Check",
+   "label": "Auto Create Salary"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 13:41:22.248855",
+ "modified": "2026-02-26 15:28:17.468048",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
- "name": "Attendance Violation",
+ "name": "Attendance Penalty",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

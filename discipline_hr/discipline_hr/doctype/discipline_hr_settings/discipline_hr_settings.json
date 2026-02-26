@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-26 16:03:34.422298",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "ignore_grace_ledger_duplicates"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "prevents duplicates in grace ledger for same `Attendance`, `Employee` and the day",
+   "fieldname": "ignore_grace_ledger_duplicates",
+   "fieldtype": "Check",
+   "label": "Ignore Grace Ledger duplicates"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-02-26 16:05:45.004511",
+ "modified_by": "Administrator",
+ "module": "Discipline Hr",
+ "name": "Discipline HR Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

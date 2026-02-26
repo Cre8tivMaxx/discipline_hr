@@ -32,7 +32,7 @@ class AttendancePermissions(Document):
         self.validate_shift_minimum_grace()
 
     def validate_shift_minimum_grace(self):
-        shift = frappe.get_value("Attendance", "HR-ATT-2026-00039", "shift")
+        shift = frappe.get_value("Attendance", self.attendance, "shift")
         min_grace = frappe.get_value("Shift Type", shift, "custom_minimum_grace_minutes")
         if self.minutes:
             self.minutes = max(min_grace, self.minutes)
