@@ -56,6 +56,10 @@ def _create_attendance_penalty(permission_doc, ledger):
     )
 
     # shift_doc = frappe.get_cached_doc("Shift Type", attendance.shift)
+    config = frappe.get_doc("Discipline HR Settings")
+    penalty.attendance_permission = permission_doc.name
+    penalty.salary_component = config.salary_component or ""  # TODO remove this field
+    penalty.employee_grace_ledger = ledger.name
     penalty.grace_consumed = ledger.consumed_minutes
     penalty.penalty_minutes = ledger.penalty_minutes
     penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)

@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "salary_component",
   "ignore_grace_ledger_duplicates"
  ],
  "fields": [
@@ -14,13 +15,20 @@
    "fieldname": "ignore_grace_ledger_duplicates",
    "fieldtype": "Check",
    "label": "Ignore Grace Ledger duplicates"
+  },
+  {
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "label": "Salary Component",
+   "link_filters": "[[\"Salary Component\",\"type\",\"=\",\"Deduction\"]]",
+   "options": "Salary Component"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-02-26 16:05:45.004511",
+ "modified": "2026-02-26 16:26:20.466442",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

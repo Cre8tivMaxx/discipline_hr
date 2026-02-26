@@ -1,0 +1,68 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"hYBo592y2A\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\" data--h-bstatus=\\\"0OBSERVED\\\">Discipline Hr</span>\",\"col\":12}},{\"id\":\"CCCl-hJxBG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":9}},{\"id\":\"dR-SPccZJ7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":9}},{\"id\":\"646oYwmPeC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Grace Ledger\",\"col\":9}},{\"id\":\"fI6AKR5qaw\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Permissions\",\"col\":9}},{\"id\":\"7KkLzhnI91\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty\",\"col\":9}}]",
+ "creation": "2026-02-24 13:40:42.345311",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "shrink",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Discipline Hr",
+ "links": [],
+ "modified": "2026-02-26 16:34:45.899349",
+ "modified_by": "Administrator",
+ "module": "Discipline Hr",
+ "name": "Discipline Hr",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "HR",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 20.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Attendance Penalty",
+   "link_to": "Attendance Penalty",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Attendance",
+   "link_to": "Attendance",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Employee Grace Ledger",
+   "link_to": "Employee Grace Ledger",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Shift Type",
+   "link_to": "Shift Type",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Attendance Permissions",
+   "link_to": "Attendance Permissions",
+   "type": "DocType"
+  }
+ ],
+ "title": "Discipline Hr"
+}

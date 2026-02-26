@@ -15,5 +15,6 @@ class DisciplineHRSettings(Document):
         from frappe.types import DF
 
         ignore_grace_ledger_duplicates: DF.Check
+        salary_component: DF.Link | None
     # end: auto-generated types
     pass
