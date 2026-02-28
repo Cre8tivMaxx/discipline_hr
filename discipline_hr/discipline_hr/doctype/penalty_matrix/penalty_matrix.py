@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class DisciplineHRSettings(Document):
+class PenaltyMatrix(Document):
     # begin: auto-generated types
     # This code is auto-generated. Do not modify anything in this block.
 
@@ -14,8 +14,10 @@ class DisciplineHRSettings(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
-        attendance_penalty_policy: DF.Link | None
-        ignore_grace_ledger_duplicates: DF.Check
-        salary_component: DF.Link | None
+        description: DF.Data | None
+        parent: DF.Data
+        parentfield: DF.Data
+        parenttype: DF.Data
+        percentage: DF.Float
     # end: auto-generated types
     pass

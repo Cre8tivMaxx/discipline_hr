@@ -94,9 +94,10 @@
   }
  ],
  "grid_page_length": 50,
+ "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 12:55:53.276626",
+ "modified": "2026-02-26 17:13:27.209801",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Employee Grace Ledger",

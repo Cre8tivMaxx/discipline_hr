@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "salary_component",
+  "attendance_penalty_policy",
   "ignore_grace_ledger_duplicates"
  ],
  "fields": [
@@ -22,13 +23,19 @@
    "label": "Salary Component",
    "link_filters": "[[\"Salary Component\",\"type\",\"=\",\"Deduction\"]]",
    "options": "Salary Component"
+  },
+  {
+   "fieldname": "attendance_penalty_policy",
+   "fieldtype": "Link",
+   "label": "Attendance Penalty Policy ",
+   "options": "Attendance Penalty Policy"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-02-26 16:26:20.466442",
+ "modified": "2026-02-28 13:19:16.340007",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",
