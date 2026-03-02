@@ -95,6 +95,10 @@ class AttendancePenalty(Document):
 
     def get_penalty_amount(self):
         """Calculate Deduction amount based on Configuration"""
+        if not self.attendance_penalty_policy:
+            logger.warning("Attendance Policy is not set. %s", self)
+            return 0.0
+
         penalty_type = frappe.get_value(
             "Attendance Penalty Policy", self.attendance_penalty_policy, "penalty_type"
         )
@@ -106,14 +110,19 @@ class AttendancePenalty(Document):
         )
         self.final_penalty_type = penalty_type
 
-        if penalty_type == "Factor":
-            pass
+        # Get Penalty
+        handlers = {
+            "Fixed Per Hour": self._fixed_per_hour_deduction,
+            "Penalty Matrix": self._penalty_matrix_deduction,
+            "Factor": self._factor_deduction,
+        }
+        handler = handlers.get(penalty_type)
 
-        if penalty_type == "Fixed Per Hour":
-            return self._fixed_per_hour_deduction()
+        if not handler:
+            logger.error("Unknown Penalty Type: %s", penalty_type)
+            return 0.0
 
-        if penalty_type == "Penalty Matrix":
-            return self._penalty_matrix_deduction()
+        return handler()
 
     def _penalty_matrix_deduction(self):
         at_pp = self._get_attendance_penalty_policy_doc()
@@ -169,3 +178,6 @@ class AttendancePenalty(Document):
             AttendancePenaltyPolicy,
             frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy),
         )
+
+    def _factor_deduction(self):
+        return 0
