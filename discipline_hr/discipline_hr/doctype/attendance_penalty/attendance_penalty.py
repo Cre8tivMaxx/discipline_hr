@@ -39,7 +39,6 @@ class AttendancePenalty(Document):
         violation_date: DF.Date
         violation_number: DF.Int
     # end: auto-generated types
-    pass
 
     # def after_insert(self):
     #     pass

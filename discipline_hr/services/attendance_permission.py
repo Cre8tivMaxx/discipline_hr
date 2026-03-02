@@ -6,7 +6,6 @@ from frappe.utils import cint
 from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
     EmployeeGraceLedger,
 )
-from discipline_hr.services.grace import calculate_consumed_grace_minutes
 from discipline_hr.services.utils import logger
 
 
@@ -27,7 +26,7 @@ def _create_attendance_penalty(permission_doc, ledger):
         )
         return
 
-    attendance = frappe.get_doc("Attendance", permission_doc.attendance)
+    attendance = frappe.get_cached_doc("Attendance", permission_doc.attendance)
 
     logger.debug(
         "Creating attendance penalty for attendance %s",
@@ -82,18 +81,18 @@ def _create_grace_ledger(permission_doc):
     ledger.period_end = shift.custom_period_end_date
     ledger.allowed_minutes = shift.custom_total_allowed_grace_minutes
     ledger.consumed_minutes = permission_doc.minutes
-    ledger.remaining_minutes_before_consume = ledger.allowed_minutes - (
-        sum(
-            frappe.get_all(
-                "Employee Grace Ledger",
-                filters=[
-                    ["employee", "=", permission_doc.employee],
-                    ["period_start", "=", shift.custom_period_start_date],
-                    ["period_end", "=", shift.custom_period_end_date],
-                ],
-                pluck="consumed_minutes",
-            )
-        )
+    ledger.remaining_minutes_before_consume = (
+        ledger.allowed_minutes
+        - frappe.get_all(
+            "Employee Grace Ledger",
+            filters=[
+                ["employee", "=", permission_doc.employee],
+                ["period_start", "=", shift.custom_period_start_date],
+                ["period_end", "=", shift.custom_period_end_date],
+            ],
+            fields=["sum(consumed_minutes) as consumed_minutes"],
+            pluck="consumed_minutes",
+        )[0]
         or 0
     )
 

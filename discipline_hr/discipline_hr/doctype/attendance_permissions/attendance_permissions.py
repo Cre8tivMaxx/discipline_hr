@@ -22,7 +22,7 @@ class AttendancePermissions(Document):
         minutes: DF.Int
         reason: DF.SmallText | None
         shift_type: DF.Link | None
-        status: DF.Literal["", "Auto Approved", "Pending", "Rejected"]
+        status: DF.Literal["", "Auto Processed", "Accepted", "Pending", "Rejected"]
     # end: auto-generated types
 
     def after_insert(self):

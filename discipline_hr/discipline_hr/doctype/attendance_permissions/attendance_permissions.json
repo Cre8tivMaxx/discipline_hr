@@ -53,7 +53,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nAuto Approved\nPending\nRejected"
+   "options": "\nAuto Processed\nAccepted\nPending\nRejected"
   },
   {
    "default": "0",
@@ -80,7 +80,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-02 22:27:12.526706",
+ "modified": "2026-03-02 22:48:45.454361",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",
