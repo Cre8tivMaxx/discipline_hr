@@ -175,8 +175,56 @@ class AttendancePenalty(Document):
     def _get_attendance_penalty_policy_doc(self):
         return cast(
             AttendancePenaltyPolicy,
-            frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy),
+            frappe.get_doc("Attendance Penalty Policy", self.attendance_penalty_policy),
         )
 
-    def _factor_deduction(self):
-        return 0
+    def _factor_deduction(self) -> float:
+        at_pp = self._get_attendance_penalty_policy_doc()
+        factor = flt(at_pp.deducted_minutes_factor)
+
+        if not factor:
+            logger.warning(
+                "Factor deduction skipped: deducted_minutes_factor is 0 | Employee: %s | Policy: %s",
+                self.employee,
+                self.attendance_penalty_policy,
+            )
+            return 0.0
+
+        minute_rate = self._get_minute_rate()
+        if not minute_rate:
+            return 0.0
+
+        deduction = self.penalty_minutes * factor * minute_rate
+        logger.debug(
+            "Factor deduction | Employee: %s | Penalty Minutes: %s | Factor: %s | Minute Rate: %s | Deduction: %s",
+            self.employee,
+            self.penalty_minutes,
+            factor,
+            minute_rate,
+            deduction,
+        )
+        return flt(deduction)
+
+    def _get_minute_rate(self) -> float:
+        """Daily rate divided by shift hours divided by 60"""
+        from frappe.utils import time_diff_in_hours
+
+        attendance = frappe.get_cached_doc("Attendance", self.attendance)
+
+        if not attendance.shift:
+            logger.error(
+                "Cannot compute minute rate: no shift on attendance | Employee: %s | Attendance: %s",
+                self.employee,
+                self.attendance,
+            )
+            return 0.0
+
+        shift = frappe.get_cached_doc("Shift Type", attendance.shift)
+        shift_hours = time_diff_in_hours(shift.end_time, shift.start_time)
+
+        if not shift_hours:
+            logger.error("Cannot compute minute rate: shift_hours is 0 | Shift: %s", attendance.shift)
+            return 0.0
+
+        daily_rate = self._get_employee_daily_rate()
+        return flt(daily_rate / shift_hours / 60)
