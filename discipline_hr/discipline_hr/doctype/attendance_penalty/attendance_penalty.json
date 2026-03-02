@@ -12,6 +12,7 @@
   "column_break_diql",
   "attendance",
   "employee_grace_ledger",
+  "attendance_penalty_policy",
   "section_break_details",
   "violation_date",
   "start_period",
@@ -20,11 +21,10 @@
   "violation_number",
   "grace_consumed",
   "penalty_minutes",
-  "penalty_amount",
   "deviation_minutes",
   "section_break_penalty",
-  "final_penalty_value",
   "final_penalty_type",
+  "penalty_amount",
   "status",
   "auto_create_salary"
  ],
@@ -96,14 +96,7 @@
    "fieldname": "final_penalty_type",
    "fieldtype": "Select",
    "label": "Final Penalty Type",
-   "options": "\nMinutes\nPercentage of Day\nFull Day\nWarning Only",
-   "read_only": 1
-  },
-  {
-   "fieldname": "final_penalty_value",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Final Penalty Value",
+   "options": "Factor\nFixed Per Hour\nPenalty Matrix",
    "read_only": 1
   },
   {
@@ -160,12 +153,19 @@
    "fieldname": "auto_create_salary",
    "fieldtype": "Check",
    "label": "Auto Create Salary"
+  },
+  {
+   "fieldname": "attendance_penalty_policy",
+   "fieldtype": "Link",
+   "label": "Attendance Penalty Policy",
+   "options": "Attendance Penalty Policy",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 17:00:41.615669",
+ "modified": "2026-03-02 14:15:43.448541",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty",

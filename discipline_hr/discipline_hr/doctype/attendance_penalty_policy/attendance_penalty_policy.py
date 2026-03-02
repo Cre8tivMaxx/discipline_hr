@@ -20,9 +20,12 @@ class AttendancePenaltyPolicy(Document):
         deducted_minutes_factor: DF.Float
         penalty_matrix: DF.Table[PenaltyMatrix]
         penalty_type: DF.Literal["", "Factor", "Fixed Per Hour", "Penalty Matrix"]
-        rate_per_minute: DF.Data | None
+        rate_per_hour: DF.Currency
     # end: auto-generated types
     pass
 
     def autoname(self):
-        self.name = make_autoname(f"{self.penalty_type}-.##")
+        if self.penalty_type in ["Fixed Per Hour", "Factor"]:
+            self.name = f"{self.penalty_type}-{self.rate_per_hour or self.deducted_minutes_factor}"
+        else:
+            self.name = make_autoname(f"{self.penalty_type}-.##")

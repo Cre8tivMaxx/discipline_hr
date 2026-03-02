@@ -55,10 +55,12 @@ def _create_attendance_penalty(permission_doc, ledger):
         },
     )
 
-    # shift_doc = frappe.get_cached_doc("Shift Type", attendance.shift)
+    shift_doc = frappe.get_cached_doc("Shift Type", attendance.shift)
+    default_policy = frappe.get_single_value("Discipline HR Settings", "attendance_penalty_policy")
+    penalty.attendance_penalty_policy = shift_doc.custom_attendance_penalty_policy or default_policy
     config = frappe.get_doc("Discipline HR Settings")
     penalty.attendance_permission = permission_doc.name
-    penalty.salary_component = config.salary_component or ""  # TODO remove this field
+    penalty.salary_component = config.salary_component or ""
     penalty.employee_grace_ledger = ledger.name
     penalty.grace_consumed = ledger.consumed_minutes
     penalty.penalty_minutes = ledger.penalty_minutes
@@ -128,7 +130,7 @@ def _should_continue_workflow(permission_doc):
 def _ignore_grace_ledger_duplicates(permission_doc):
     ignore_duplicates = frappe.db.get_single_value("Discipline HR Settings", "ignore_grace_ledger_duplicates")
     if cint(ignore_duplicates) != 1:
-        logger.debug("ignore duplicates activated")
+        logger.debug("ignore duplicates deactivated")
         return True
 
     existing_ledger = frappe.db.exists(

@@ -7,7 +7,7 @@
  "field_order": [
   "penalty_type",
   "deducted_minutes_factor",
-  "rate_per_minute",
+  "rate_per_hour",
   "penalty_matrix"
  ],
  "fields": [
@@ -28,25 +28,25 @@
    "mandatory_depends_on": "eval:doc.penalty_type === \"Factor\""
   },
   {
-   "depends_on": "eval:doc.penalty_type === \"Fixed Per Hour\"",
-   "fieldname": "rate_per_minute",
-   "fieldtype": "Data",
-   "label": "Rate Per Hour",
-   "mandatory_depends_on": "eval:doc.penalty_type === \"Fixed Per Hour\""
-  },
-  {
    "depends_on": "eval:doc.penalty_type === \"Penalty Matrix\"",
    "fieldname": "penalty_matrix",
    "fieldtype": "Table",
    "label": "Penalty Matrix",
    "mandatory_depends_on": "eval:doc.penalty_type === \"Penalty Matrix\"",
    "options": "Penalty Matrix"
+  },
+  {
+   "depends_on": "eval:doc.penalty_type === \"Fixed Per Hour\"",
+   "fieldname": "rate_per_hour",
+   "fieldtype": "Currency",
+   "label": "Rate Per Hour",
+   "mandatory_depends_on": "eval:doc.penalty_type === \"Fixed Per Hour\""
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-28 13:12:16.506225",
+ "modified": "2026-03-02 13:06:23.120278",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty Policy",

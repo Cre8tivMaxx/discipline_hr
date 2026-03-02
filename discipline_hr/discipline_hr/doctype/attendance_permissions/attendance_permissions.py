@@ -25,10 +25,11 @@ class AttendancePermissions(Document):
         status: DF.Literal["Accepted", "Pending", "Rejected"]
     # end: auto-generated types
 
-    def before_save(self):
+    def after_insert(self):
         process_submitted_attendance_permission(self)
 
     def validate(self):
+        process_submitted_attendance_permission(self)
         self.validate_shift_minimum_grace()
 
     def validate_shift_minimum_grace(self):
