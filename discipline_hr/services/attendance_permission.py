@@ -117,7 +117,7 @@ def _should_continue_workflow(permission_doc):
     if not permission_doc.employee or not permission_doc.attendance or not permission_doc.minutes:
         return False
 
-    if permission_doc.status != "Rejected":
+    if permission_doc.status not in ["Auto Processed", "Accepted"]:
         logger.info(
             "Workflow Stopped for permission %s with status %s",
             permission_doc.name,

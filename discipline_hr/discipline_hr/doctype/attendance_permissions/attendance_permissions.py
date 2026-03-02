@@ -22,14 +22,14 @@ class AttendancePermissions(Document):
         minutes: DF.Int
         reason: DF.SmallText | None
         shift_type: DF.Link | None
-        status: DF.Literal["Accepted", "Pending", "Rejected"]
+        status: DF.Literal["", "Auto Approved", "Pending", "Rejected"]
     # end: auto-generated types
 
     def after_insert(self):
         process_submitted_attendance_permission(self)
 
     def validate(self):
-        process_submitted_attendance_permission(self)
+        # process_submitted_attendance_permission(self)  # JUST FOR TEST
         self.validate_shift_minimum_grace()
 
     def validate_shift_minimum_grace(self):

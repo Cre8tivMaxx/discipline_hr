@@ -154,7 +154,7 @@ class AttendancePenalty(Document):
 
         # Calculate rate per minute
         rate_per_minute = at_pp.rate_per_hour / 60
-        logger.debug(
+        logger.info(
             "Penalty Per minute | Employee: %s | APP: %s | Rate Per Hour: %s | Rate Per Minutes: %s",
             self.employee,
             at_pp,
@@ -163,7 +163,6 @@ class AttendancePenalty(Document):
         )
 
         return self.penalty_minutes * rate_per_minute
-        pass
 
     def _get_attendance_penalty_policy_doc(self):
         return cast(

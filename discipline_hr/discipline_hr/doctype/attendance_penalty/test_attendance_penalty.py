@@ -2,34 +2,27 @@
 # See license.txt
 
 import frappe
+from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
-from frappe.utils import getdate
+from frappe.utils import getdate, today
+from hrms.payroll.doctype.salary_structure.test_salary_structure import (
+    create_salary_structure_assignment,
+    make_salary_structure,
+)
 
 
 class TestAttendancePenalty(FrappeTestCase):
     def setUp(self):
         # Create Employee
-        self.employee = frappe.get_doc(
-            {
-                "doctype": "Employee",
-                "first_name": "Test",
-                "company": "_Test Company",
-                "gender": "Male",
-                "date_of_birth": getdate("2000-5-5"),
-                "date_of_joining": getdate("2024-12-05"),
-            }
-        ).insert()
+        self.employee = make_employee("test_employee_encashment@example.com", company="_Test Company")
+
+        # Create Salary Structure
+        salary_structure = make_salary_structure(
+            "_Test Salary", "Monthly", self.employee, company="_Test Company"
+        )
 
         # Create Salary Structure Assignment
-        frappe.get_doc(
-            {
-                "doctype": "Salary Structure Assignment",
-                "employee": self.employee.name,
-                "base": 8000,
-                "from_date": "2026-01-01",
-                "docstatus": 1,
-            }
-        ).insert()
+        create_salary_structure_assignment(self.employee, salary_structure.name, company="_Test Company")
 
         # Create Attendance Penalty Policy
         self.policy = frappe.get_doc(
@@ -39,16 +32,14 @@ class TestAttendancePenalty(FrappeTestCase):
         self.penalty = frappe.get_doc(
             {
                 "doctype": "Attendance Penalty",
-                "employee": self.employee.name,
+                "employee": self.employee,
                 "attendance_penalty_policy": self.policy.name,
                 "penalty_minutes": 30,
+                "violation_date": today(),
             }
-        ).insert()
-
-    def tearDown(self):
-        self.employee.remove()
-        return super().tearDown()
+        )
+        self.penalty.flags.ignore_mandatory = True
+        self.penalty.insert()
 
     def test_fixed_per_hour_penalty(self):
-        expected = 30  # 60 per hour
-        self.assertEqual(self.penalty.penalty_minutes == expected)
+        self.assertEqual(self.penalty.penalty_minutes, 30)

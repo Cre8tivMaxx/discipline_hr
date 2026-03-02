@@ -111,4 +111,4 @@ def create_attendance_permissions(employee, attendance, minutes, shift_doc, date
 def _get_attendance_permission_status(shift_doc):
     if cint(shift_doc.custom_enable_permissions) == 1:
         return "Pending"
-    return "Rejected"
+    return "Auto Processed"
