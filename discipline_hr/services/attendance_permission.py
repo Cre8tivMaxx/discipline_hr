@@ -55,9 +55,10 @@ def _create_attendance_penalty(permission_doc, ledger):
     )
 
     shift_doc = frappe.get_cached_doc("Shift Type", attendance.shift)
-    default_policy = frappe.get_single_value("Discipline HR Settings", "attendance_penalty_policy")
-    penalty.attendance_penalty_policy = shift_doc.custom_attendance_penalty_policy or default_policy
-    config = frappe.get_doc("Discipline HR Settings")
+    config = frappe.get_cached_doc("Discipline HR Settings")
+    penalty.attendance_penalty_policy = (
+        shift_doc.custom_attendance_penalty_policy or config.attendance_penalty_policy
+    )
     penalty.attendance_permission = permission_doc.name
     penalty.salary_component = config.salary_component or ""
     penalty.employee_grace_ledger = ledger.name
@@ -81,20 +82,19 @@ def _create_grace_ledger(permission_doc):
     ledger.period_end = shift.custom_period_end_date
     ledger.allowed_minutes = shift.custom_total_allowed_grace_minutes
     ledger.consumed_minutes = permission_doc.minutes
-    ledger.remaining_minutes_before_consume = (
-        ledger.allowed_minutes
-        - frappe.get_all(
+    consumed_so_far = (
+        frappe.db.get_value(
             "Employee Grace Ledger",
-            filters=[
-                ["employee", "=", permission_doc.employee],
-                ["period_start", "=", shift.custom_period_start_date],
-                ["period_end", "=", shift.custom_period_end_date],
-            ],
-            fields=["sum(consumed_minutes) as consumed_minutes"],
-            pluck="consumed_minutes",
-        )[0]
+            filters={
+                "employee": permission_doc.employee,
+                "period_start": shift.custom_period_start_date,
+                "period_end": shift.custom_period_end_date,
+            },
+            fieldname="sum(consumed_minutes)",
+        )
         or 0
     )
+    ledger.remaining_minutes_before_consume = ledger.allowed_minutes - consumed_so_far
 
     ledger.remaining_minutes = max(0, ledger.remaining_minutes_before_consume - ledger.consumed_minutes)
     penalty_minutes = ledger.remaining_minutes_before_consume - ledger.consumed_minutes

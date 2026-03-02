@@ -42,4 +42,4 @@ class TestAttendancePenalty(FrappeTestCase):
         self.penalty.insert()
 
     def test_fixed_per_hour_penalty(self):
-        self.assertEqual(self.penalty.penalty_minutes, 30)
+        self.assertEqual(self.penalty.penalty_minutes, 30.0)

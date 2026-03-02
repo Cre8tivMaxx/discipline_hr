@@ -93,7 +93,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
                 employee=doc.employee,
                 attendance=doc.name,
                 minutes=doc.custom_penalty_minutes,
-                shift_doc=shift_doc,
+                shift_name=shift_doc.name,
                 date=doc.attendance_date,
             )
             logger.info(
@@ -105,7 +105,8 @@ def calculate_attendance_penalty_minutes(doc, method=None):
             )
 
 
-def create_attendance_permissions(employee, attendance, minutes, shift_doc, date=""):
+def create_attendance_permissions(employee, attendance, minutes, shift_name, date=""):
+    shift_doc = frappe.get_cached_doc("Shift Type", shift_name)
     doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
     if not employee:
         return
