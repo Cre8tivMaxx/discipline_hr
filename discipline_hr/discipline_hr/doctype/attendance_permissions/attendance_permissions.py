@@ -26,13 +26,16 @@ class AttendancePermissions(Document):
     # end: auto-generated types
 
     def after_insert(self):
+        """Trigger permission workflow after the record is saved."""
         process_submitted_attendance_permission(self)
 
     def validate(self):
+        """Run field validations before saving."""
         # process_submitted_attendance_permission(self)  # JUST FOR TEST
         self.validate_shift_minimum_grace()
 
     def validate_shift_minimum_grace(self):
+        """Floor ``minutes`` to the shift's minimum grace setting."""
         shift = frappe.get_value("Attendance", self.attendance, "shift")
         min_grace = frappe.get_value("Shift Type", shift, "custom_minimum_grace_minutes")
         if self.minutes:

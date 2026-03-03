@@ -10,12 +10,28 @@ from discipline_hr.services.utils import logger
 
 
 def process_submitted_attendance_permission(doc):
+    """Entry point called after an Attendance Permission is inserted.
+
+    Validates the permission status and delegates to grace ledger creation.
+
+    Args:
+        doc: An ``AttendancePermissions`` document.
+    """
     if not _should_continue_workflow(doc):
         return
     _create_grace_ledger(doc)
 
 
 def _create_attendance_penalty(permission_doc, ledger):
+    """Create an Attendance Penalty record from a grace ledger entry.
+
+    Does nothing if ``ledger.penalty_minutes`` is zero. The penalty policy is
+    taken from the shift, or falls back to the global Discipline HR Settings.
+
+    Args:
+        permission_doc: The ``AttendancePermissions`` being processed.
+        ledger: The ``EmployeeGraceLedger`` that was just inserted.
+    """
     # If no penalties to be applied
     if ledger.penalty_minutes <= 0:
         logger.info(
@@ -68,6 +84,14 @@ def _create_attendance_penalty(permission_doc, ledger):
 
 
 def _create_grace_ledger(permission_doc):
+    """Insert an Employee Grace Ledger entry and trigger penalty creation if needed.
+
+    Sums up grace already consumed in the period, subtracts the current minutes,
+    and sets ``penalty_minutes`` to the overflow (if any).
+
+    Args:
+        permission_doc: The ``AttendancePermissions`` being processed.
+    """
     if not _ignore_grace_ledger_duplicates(permission_doc):
         return
 
@@ -113,6 +137,17 @@ def _create_grace_ledger(permission_doc):
 
 
 def _should_continue_workflow(permission_doc):
+    """Check whether the permission is ready to be processed.
+
+    Returns ``False`` if required fields are missing or the status is not
+    ``"Auto Processed"`` or ``"Accepted"``.
+
+    Args:
+        permission_doc: The ``AttendancePermissions`` document to check.
+
+    Returns:
+        ``True`` if processing should continue, ``False`` otherwise.
+    """
     if not permission_doc.employee or not permission_doc.attendance or not permission_doc.minutes:
         return False
 
@@ -127,6 +162,17 @@ def _should_continue_workflow(permission_doc):
 
 
 def _ignore_grace_ledger_duplicates(permission_doc):
+    """Return whether a grace ledger entry should be created for this permission.
+
+    When the ``ignore_grace_ledger_duplicates`` setting is on, returns ``False``
+    if a ledger already exists for the same employee and attendance.
+
+    Args:
+        permission_doc: The ``AttendancePermissions`` document to check.
+
+    Returns:
+        ``True`` if safe to create a new ledger, ``False`` to skip.
+    """
     ignore_duplicates = frappe.db.get_single_value("Discipline HR Settings", "ignore_grace_ledger_duplicates")
     if cint(ignore_duplicates) != 1:
         logger.debug("ignore duplicates deactivated")

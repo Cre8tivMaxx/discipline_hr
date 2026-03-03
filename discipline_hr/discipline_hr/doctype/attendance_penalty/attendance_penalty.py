@@ -44,6 +44,7 @@ class AttendancePenalty(Document):
     #     pass
 
     def validate(self):
+        """Calculate and store the penalty amount before saving."""
         self.penalty_amount = self.get_penalty_amount()
 
     # def fixed_price_penalty(self):
@@ -124,6 +125,14 @@ class AttendancePenalty(Document):
         return handler()
 
     def _penalty_matrix_deduction(self):
+        """Calculate penalty using a violation-number lookup table.
+
+        Finds the matrix row matching ``violation_number``; uses the last row
+        if no exact match exists. Returns ``daily_rate * percentage``.
+
+        Returns:
+            Penalty amount as a float.
+        """
         at_pp = self._get_attendance_penalty_policy_doc()
         try:
             matrix = at_pp.penalty_matrix or []
@@ -158,6 +167,11 @@ class AttendancePenalty(Document):
         return 0
 
     def _fixed_per_hour_deduction(self):
+        """Calculate penalty as ``penalty_minutes * (rate_per_hour / 60)``.
+
+        Returns:
+            Penalty amount as a float.
+        """
         at_pp = self._get_attendance_penalty_policy_doc()
 
         # Calculate rate per minute
@@ -173,6 +187,7 @@ class AttendancePenalty(Document):
         return self.penalty_minutes * rate_per_minute
 
     def _get_attendance_penalty_policy_doc(self):
+        """Fetch and return the linked ``AttendancePenaltyPolicy`` document."""
         return cast(
             AttendancePenaltyPolicy,
             frappe.get_doc("Attendance Penalty Policy", self.attendance_penalty_policy),

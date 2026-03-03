@@ -20,6 +20,16 @@ from discipline_hr.services.utils import logger
 
 
 def calculate_attendance_penalty_minutes(doc, method=None):
+    """Calculate penalty minutes for a submitted Attendance record.
+
+    Runs on ``Attendance.before_submit``. Writes late/early custom fields and
+    enqueues :func:`create_attendance_permissions` if penalisable minutes remain
+    after grace. Skips non-Present records and attendances outside the shift period.
+
+    Args:
+        doc: The ``Attendance`` document being submitted.
+        method: Unused; required by Frappe hook signature.
+    """
     # Only calculate for Present records
     if doc.status != "Present":
         return
@@ -106,6 +116,18 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
 
 def create_attendance_permissions(employee, attendance, minutes, shift_name, date=""):
+    """Create an Attendance Permissions record. Intended to run as a background job.
+
+    Status is set to ``"Pending"`` when the shift requires HR approval, otherwise
+    ``"Auto Processed"``. Silently returns if ``employee`` is empty.
+
+    Args:
+        employee: Employee docname.
+        attendance: Attendance docname linked to this permission.
+        minutes: Penalty minutes (floored to shift minimum grace).
+        shift_name: Shift Type docname used to resolve config.
+        date: Violation date; defaults to today if omitted.
+    """
     shift_doc = frappe.get_cached_doc("Shift Type", shift_name)
     doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
     if not employee:
@@ -121,6 +143,14 @@ def create_attendance_permissions(employee, attendance, minutes, shift_name, dat
 
 
 def _get_attendance_permission_status(shift_doc):
+    """Return the initial status for an auto-created Attendance Permission.
+
+    Args:
+        shift_doc: A ``Shift Type`` document.
+
+    Returns:
+        ``"Pending"`` if HR approval is required, ``"Auto Processed"`` otherwise.
+    """
     if cint(shift_doc.custom_enable_permissions) == 1:
         return "Pending"
     return "Auto Processed"

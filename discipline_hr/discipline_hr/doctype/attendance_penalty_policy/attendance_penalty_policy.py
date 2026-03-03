@@ -25,6 +25,12 @@ class AttendancePenaltyPolicy(Document):
     pass
 
     def autoname(self):
+        """Build the document name from the penalty type and its rate or factor.
+
+        Examples:
+            ``Fixed Per Hour-60`` for a fixed policy with rate_per_hour=60.
+            ``Penalty Matrix-01`` for a matrix policy (auto-incremented).
+        """
         if self.penalty_type in ["Fixed Per Hour", "Factor"]:
             self.name = f"{self.penalty_type}-{self.rate_per_hour or self.deducted_minutes_factor}"
         else:
