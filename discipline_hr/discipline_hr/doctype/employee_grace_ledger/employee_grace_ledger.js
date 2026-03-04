@@ -1,8 +1,9 @@
 // Copyright (c) 2026, Abdelrahman Elsayed and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("Employee Grace Ledger", {
-// 	refresh(frm) {
-
-// 	},
-// });
+frappe.listview_settings["Employee Grace Ledger"] = {
+    hide_new_doc: 1,
+    onload(listview) {
+        listview.page.remove_action_item(__("Delete"));
+    },
+};
