@@ -26,7 +26,8 @@
   "final_penalty_type",
   "penalty_amount",
   "status",
-  "auto_create_salary"
+  "auto_create_salary",
+  "error"
  ],
  "fields": [
   {
@@ -103,7 +104,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nPending\nApproved\nRejected"
+   "options": "\nAuto Processed\nPending\nApproved\nRejected"
   },
   {
    "fieldname": "violation_date",
@@ -160,12 +161,18 @@
    "label": "Attendance Penalty Policy",
    "options": "Attendance Penalty Policy",
    "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "error",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-02 14:15:43.448541",
+ "modified": "2026-03-04 14:10:32.336016",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty",

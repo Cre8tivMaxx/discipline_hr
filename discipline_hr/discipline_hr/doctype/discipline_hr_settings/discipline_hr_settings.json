@@ -7,7 +7,8 @@
  "field_order": [
   "salary_component",
   "attendance_penalty_policy",
-  "ignore_grace_ledger_duplicates"
+  "ignore_grace_ledger_duplicates",
+  "auto_submit_additional_salary"
  ],
  "fields": [
   {
@@ -29,13 +30,20 @@
    "fieldtype": "Link",
    "label": "Attendance Penalty Policy ",
    "options": "Attendance Penalty Policy"
+  },
+  {
+   "default": "0",
+   "description": "The Additional Salary\nwill be created as Draft if this field not checked.",
+   "fieldname": "auto_submit_additional_salary",
+   "fieldtype": "Check",
+   "label": "Auto Submit Additional Salary"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-02-28 13:19:16.340007",
+ "modified": "2026-03-04 14:14:45.610845",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

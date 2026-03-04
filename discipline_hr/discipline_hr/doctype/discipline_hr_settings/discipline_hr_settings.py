@@ -15,6 +15,7 @@ class DisciplineHRSettings(Document):
         from frappe.types import DF
 
         attendance_penalty_policy: DF.Link | None
+        auto_submit_additional_salary: DF.Check
         ignore_grace_ledger_duplicates: DF.Check
         salary_component: DF.Link | None
     # end: auto-generated types

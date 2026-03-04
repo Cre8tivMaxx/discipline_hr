@@ -4,10 +4,13 @@ from typing import cast
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import flt, today
 
 from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_penalty_policy import (
     AttendancePenaltyPolicy,
+)
+from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_settings import (
+    DisciplineHRSettings,
 )
 from discipline_hr.services.utils import logger
 
@@ -29,19 +32,20 @@ class AttendancePenalty(Document):
         employee: DF.Link
         employee_grace_ledger: DF.Link | None
         end_period: DF.Date | None
+        error: DF.SmallText | None
         final_penalty_type: DF.Literal["Factor", "Fixed Per Hour", "Penalty Matrix"]
         grace_consumed: DF.Int
         penalty_amount: DF.Currency
         penalty_minutes: DF.Int
         salary_component: DF.Link | None
         start_period: DF.Date | None
-        status: DF.Literal["", "Pending", "Approved", "Rejected"]
+        status: DF.Literal["", "Auto Processed", "Pending", "Approved", "Rejected"]
         violation_date: DF.Date
         violation_number: DF.Int
     # end: auto-generated types
 
-    # def after_insert(self):
-    #     pass
+    def after_insert(self):
+        self.create_additional_salary()
 
     def validate(self):
         """Calculate and store the penalty amount before saving."""
@@ -51,14 +55,33 @@ class AttendancePenalty(Document):
     #     pass
 
     def create_additional_salary(self):
-        # additional_salary = frappe.get_doc(
-        #     {
-        #         "doctype": "Additional Salary",
-        #         "employee": self.employee,
-        #         "salary_component": self.salary_component,
-        #         "amount": "",
-        #     }
-        # )
+        # TODO If salary structure raise just log the error inside the attendance penalty
+        try:
+            config = self._get_discipline_hr_settings()
+            additional_salary = frappe.get_doc(
+                {
+                    "doctype": "Additional Salary",
+                    "employee": self.employee,
+                    "payroll_date": self.violation_date or today(),
+                    "salary_component": self.salary_component,
+                    "type": "Deduction",
+                    "amount": self.penalty_amount,
+                }
+            )
+            logger.debug("Created Additional Salary: %s | Attendance Penalty %s", additional_salary, self)
+
+            additional_salary.insert()
+            if config.auto_submit_additional_salary == 1:
+                additional_salary.submit()
+
+        except Exception as e:
+            logger.exception(
+                "Couldn't create additional salary | Attendance Penalty: %s | Employee: %s ",
+                self,
+                self.employee,
+            )
+            self.error = str(e)
+
         pass
 
     def _get_employee_daily_rate(self):
@@ -243,3 +266,11 @@ class AttendancePenalty(Document):
 
         daily_rate = self._get_employee_daily_rate()
         return flt(daily_rate / shift_hours / 60)
+
+    def _get_discipline_hr_settings(self) -> Document:
+        try:
+            settings_doctype = "Discipline HR Settings"
+            config = frappe.get_cached_doc(settings_doctype)
+            return cast(DisciplineHRSettings, config)
+        except Exception:
+            logger.exception("Cannot fetch %s DocType", settings_doctype)
