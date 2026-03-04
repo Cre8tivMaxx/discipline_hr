@@ -124,6 +124,15 @@ Business logic lives in the service layer; controllers are thin:
 - `AttendancePermissions.after_insert` → calls `process_submitted_attendance_permission`
 - `AttendancePenalty.validate` → calls `get_penalty_amount()` to populate `penalty_amount`
 
+## Skills to Load
+
+At the start of each session, load these skills using the Skill tool:
+
+- `erpnext-syntax-controllers` – DocType lifecycle hooks, submittable docs, autoname, override patterns
+- `erpnext-syntax-hooks` – `doc_events`, `scheduler_events`, fixtures, permission hooks
+- `erpnext-syntax-scheduler` – `frappe.enqueue`, queue types, job deduplication, background jobs
+- `erpnext-syntax-whitelisted` – `@frappe.whitelist()`, permission patterns, error handling, client calls
+
 ### Important Conventions
 
 - Use `frappe.get_cached_doc()` for frequently read master data (Shift Type, Attendance, etc.).
