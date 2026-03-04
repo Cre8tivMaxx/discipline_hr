@@ -76,7 +76,7 @@ def _create_attendance_penalty(permission_doc, ledger):
         shift_doc.custom_attendance_penalty_policy or config.attendance_penalty_policy
     )
     penalty.attendance_permission = permission_doc.name
-    penalty.salary_component = config.salary_component or ""
+    penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
     penalty.employee_grace_ledger = ledger.name
     penalty.grace_consumed = ledger.consumed_minutes
     penalty.penalty_minutes = ledger.penalty_minutes
