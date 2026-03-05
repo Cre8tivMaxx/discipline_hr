@@ -53,7 +53,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nAuto Processed\nAccepted\nPending\nRejected"
+   "options": "\nAuto Processed\nProcessed\nPending\nRejected"
   },
   {
    "default": "0",
@@ -142,7 +142,7 @@
   },
   {
    "color": "Green",
-   "title": "Accepted"
+   "title": "Processed"
   },
   {
    "color": "Yellow",

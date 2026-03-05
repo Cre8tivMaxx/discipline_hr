@@ -135,7 +135,7 @@ def create_attendance_permissions(employee, attendance, minutes, shift_name, dat
     doc.employee = employee
     doc.attendance = attendance
     doc.minutes = max(cint(shift_doc.custom_minimum_grace_minutes), minutes)
-    doc.status = _get_attendance_permission_status(shift_doc) or "Approved"
+    doc.status = _get_attendance_permission_status(shift_doc) or "Auto Processed"
     doc.date = date or today()
     doc.auto_created = 1
     doc.shift_type = shift_doc.name

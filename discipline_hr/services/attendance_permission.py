@@ -140,7 +140,7 @@ def _should_continue_workflow(permission_doc):
     """Check whether the permission is ready to be processed.
 
     Returns ``False`` if required fields are missing or the status is not
-    ``"Auto Processed"`` or ``"Accepted"``.
+    ``"Auto Processed"`` or ``"Processed"``.
 
     Args:
         permission_doc: The ``AttendancePermissions`` document to check.
@@ -151,7 +151,7 @@ def _should_continue_workflow(permission_doc):
     if not permission_doc.employee or not permission_doc.attendance or not permission_doc.minutes:
         return False
 
-    if permission_doc.status not in ["Auto Processed", "Accepted"]:
+    if permission_doc.status not in ["Auto Processed", "Processed"]:
         logger.info(
             "Workflow Stopped for permission %s with status %s",
             permission_doc.name,

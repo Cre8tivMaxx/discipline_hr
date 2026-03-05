@@ -104,7 +104,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nAuto Processed\nPending\nApproved\nRejected"
+   "options": "\nAuto Processed\nPending\nProcessed\nRejected"
   },
   {
    "fieldname": "violation_date",
