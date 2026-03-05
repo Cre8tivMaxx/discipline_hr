@@ -4,7 +4,9 @@
       "Bash(git remote:*)",
       "Bash(GH_HOST=github.com gh issue:*)",
       "Bash(gh api:*)",
-      "Bash(gh issue:*)"
+      "Bash(gh issue:*)",
+      "Read(//home/frappe/frappe-bench/**)",
+      "Bash(bench build --app discipline_hr)"
     ]
   }
 }
