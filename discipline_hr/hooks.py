@@ -83,7 +83,7 @@ required_apps = ["hrms"]
 # ------------
 
 # before_install = "discipline_hr.install.before_install"
-# after_install = "discipline_hr.install.after_install"
+after_install = "discipline_hr.install.after_install"
 
 # Uninstallation
 # ------------

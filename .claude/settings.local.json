@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git remote:*)",
       "Bash(GH_HOST=github.com gh issue:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(gh issue:*)"
     ]
   }
 }
