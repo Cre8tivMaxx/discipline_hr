@@ -16,7 +16,9 @@
   "allowed_minutes",
   "remaining_minutes",
   "penalty_section",
-  "penalty_minutes"
+  "penalty_minutes",
+  "column_break_cwnw",
+  "attendance_penalty"
  ],
  "fields": [
   {
@@ -91,13 +93,23 @@
    "in_list_view": 1,
    "label": "Penalty Minutes",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cwnw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attendance_penalty",
+   "fieldtype": "Link",
+   "label": "Attendance Penalty",
+   "options": "Attendance Penalty",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
- "in_create": 0,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 17:13:27.209801",
+ "modified": "2026-03-05 11:01:43.291852",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Employee Grace Ledger",

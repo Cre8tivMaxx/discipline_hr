@@ -12,6 +12,9 @@ from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_pe
 from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_settings import (
     DisciplineHRSettings,
 )
+from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
+    EmployeeGraceLedger,
+)
 from discipline_hr.services.utils import logger
 
 
@@ -46,6 +49,18 @@ class AttendancePenalty(Document):
 
     def after_insert(self):
         self.create_additional_salary()
+        self.create_grace_ledger_entry()
+
+    def create_grace_ledger_entry(self):
+        ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
+        ledger.employee = self.employee
+        ledger.attendance = self.attendance
+        ledger.period_start = self.start_period
+        ledger.period_end = self.end_period
+        ledger.consumed_minutes = -self.penalty_minutes
+        ledger.penalty_minutes = 0
+        ledger.attendance_penalty = self.name
+        ledger.insert(ignore_permissions=True)
 
     def validate(self):
         """Calculate and store the penalty amount before saving."""
