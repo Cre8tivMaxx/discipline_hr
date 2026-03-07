@@ -113,6 +113,7 @@ def _create_grace_ledger(permission_doc):
                 "employee": permission_doc.employee,
                 "period_start": shift.custom_period_start_date,
                 "period_end": shift.custom_period_end_date,
+                "attendance_penalty": ("is", "not set"),
             },
             fieldname="sum(consumed_minutes)",
         )
@@ -134,13 +135,17 @@ def _create_grace_ledger(permission_doc):
         _create_attendance_penalty(permission_doc, ledger)
     except Exception:
         logger.exception("Couldn't create the grace ledger")
+        frappe.log_error(
+            title=f"Grace Ledger Creation Failed for {permission_doc.employee}",
+            message=frappe.get_traceback(),
+        )
 
 
 def _should_continue_workflow(permission_doc):
     """Check whether the permission is ready to be processed.
 
     Returns ``False`` if required fields are missing or the status is not
-    ``"Auto Processed"`` or ``"Processed"``.
+    ``"Auto Processed"`` or ``"Accepted"``.
 
     Args:
         permission_doc: The ``AttendancePermissions`` document to check.
@@ -151,7 +156,7 @@ def _should_continue_workflow(permission_doc):
     if not permission_doc.employee or not permission_doc.attendance or not permission_doc.minutes:
         return False
 
-    if permission_doc.status not in ["Auto Processed", "Processed"]:
+    if permission_doc.status not in ["Auto Processed", "Accepted"]:
         logger.info(
             "Workflow Stopped for permission %s with status %s",
             permission_doc.name,

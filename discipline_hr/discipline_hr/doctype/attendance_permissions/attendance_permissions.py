@@ -29,9 +29,14 @@ class AttendancePermissions(Document):
         """Trigger permission workflow after the record is saved."""
         process_submitted_attendance_permission(self)
 
+    def on_update(self):
+        """Re-trigger workflow when HR changes status to 'Accepted'."""
+        status_changed = self.has_value_changed("status")
+        if status_changed and self.status == "Accepted":
+            process_submitted_attendance_permission(self)
+
     def validate(self):
         """Run field validations before saving."""
-        # process_submitted_attendance_permission(self)  # JUST FOR TEST
         self.validate_shift_minimum_grace()
 
     def validate_shift_minimum_grace(self):

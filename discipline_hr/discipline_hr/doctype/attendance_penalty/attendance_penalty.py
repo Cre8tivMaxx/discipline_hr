@@ -57,6 +57,7 @@ class AttendancePenalty(Document):
         ledger.attendance = self.attendance
         ledger.period_start = self.start_period
         ledger.period_end = self.end_period
+        ledger.allowed_minutes = 0
         ledger.consumed_minutes = -self.penalty_minutes
         ledger.penalty_minutes = 0
         ledger.attendance_penalty = self.name
@@ -65,9 +66,6 @@ class AttendancePenalty(Document):
     def validate(self):
         """Calculate and store the penalty amount before saving."""
         self.penalty_amount = self.get_penalty_amount()
-
-    # def fixed_price_penalty(self):
-    #     pass
 
     def create_additional_salary(self):
         # TODO If salary structure raise just log the error inside the attendance penalty
@@ -97,8 +95,6 @@ class AttendancePenalty(Document):
             )
             self.error = str(e)
 
-        pass
-
     def _get_employee_daily_rate(self):
         """Get Employee Base from salary structure assignment to compute daily rate"""
         try:
@@ -116,7 +112,7 @@ class AttendancePenalty(Document):
 
                 daily_rate = flt(assignment) / 30.0
                 logger.debug(
-                    "Successfully Fetched Daily rate | Employee s% | Base %s | daily_rate %s",
+                    "Successfully Fetched Daily rate | Employee %s | Base %s | daily_rate %s",
                     self.employee,
                     assignment,
                     daily_rate,
