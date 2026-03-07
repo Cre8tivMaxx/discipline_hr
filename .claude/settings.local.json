@@ -8,5 +8,6 @@
       "Read(//home/frappe/frappe-bench/**)",
       "Bash(bench build --app discipline_hr)"
     ]
-  }
+  },
+  "outputStyle": "Learning"
 }

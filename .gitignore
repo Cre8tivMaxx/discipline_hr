@@ -7,3 +7,6 @@ node_modules
 __pycache__
 penalty.design.md
 shift.png
+PRODUCTION_REVIEW.md
+.claude
+.claude/settings.local.json

@@ -1,19 +1,19 @@
 {
  "charts": [],
- "content": "[{\"id\":\"hYBo592y2A\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\" data--h-bstatus=\\\"0OBSERVED\\\">Discipline Hr</span>\",\"col\":12}},{\"id\":\"CCCl-hJxBG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":9}},{\"id\":\"ltlaSg1WwY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Discipline Hr Settings\",\"col\":3}},{\"id\":\"dR-SPccZJ7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":9}},{\"id\":\"646oYwmPeC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Grace Ledger\",\"col\":9}},{\"id\":\"fI6AKR5qaw\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Permissions\",\"col\":9}},{\"id\":\"7KkLzhnI91\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty\",\"col\":9}},{\"id\":\"sE3CMV-CtH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty Policy\",\"col\":9}}]",
+ "content": "[{\"id\":\"hYBo592y2A\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Discipline HR</span>\",\"col\":12}},{\"id\":\"txn-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\">Transactions</span>\",\"col\":12}},{\"id\":\"sc-attendance\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":4}},{\"id\":\"sc-permissions\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Permissions\",\"col\":4}},{\"id\":\"sc-penalty\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty\",\"col\":4}},{\"id\":\"sc-ledger\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Grace Ledger\",\"col\":4}},{\"id\":\"cfg-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\">Configuration</span>\",\"col\":12}},{\"id\":\"sc-policy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty Policy\",\"col\":4}},{\"id\":\"sc-shift\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":4}},{\"id\":\"sc-settings\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Discipline Hr Settings\",\"col\":4}}]",
  "creation": "2026-02-24 13:40:42.345311",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
- "icon": "shrink",
+ "icon": "permission",
  "idx": 0,
- "indicator_color": "green",
+ "indicator_color": "blue",
  "is_hidden": 0,
  "label": "Discipline Hr",
  "links": [],
- "modified": "2026-02-28 13:18:18.688082",
+ "modified": "2026-03-05 17:19:58.689908",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline Hr",
@@ -26,15 +26,7 @@
  "sequence_id": 20.0,
  "shortcuts": [
   {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Attendance Penalty",
-   "link_to": "Attendance Penalty",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
+   "color": "Blue",
    "doc_view": "List",
    "label": "Attendance",
    "link_to": "Attendance",
@@ -42,7 +34,29 @@
    "type": "DocType"
   },
   {
-   "color": "Grey",
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Attendance Permissions",
+   "link_to": "Attendance Permissions",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Attendance Penalty",
+   "link_to": "Attendance Penalty",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Employee Grace Ledger",
+   "link_to": "Employee Grace Ledger",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
    "doc_view": "List",
    "label": "Attendance Penalty Policy",
    "link_to": "Attendance Penalty Policy",
@@ -50,21 +64,7 @@
    "type": "DocType"
   },
   {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Discipline Hr Settings",
-   "link_to": "Discipline HR Settings",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Employee Grace Ledger",
-   "link_to": "Employee Grace Ledger",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
+   "color": "Blue",
    "doc_view": "List",
    "label": "Shift Type",
    "link_to": "Shift Type",
@@ -74,8 +74,8 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Attendance Permissions",
-   "link_to": "Attendance Permissions",
+   "label": "Discipline Hr Settings",
+   "link_to": "Discipline HR Settings",
    "type": "DocType"
   }
  ],

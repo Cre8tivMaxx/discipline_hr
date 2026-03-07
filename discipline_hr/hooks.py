@@ -152,23 +152,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-#     "all": [
-#         "discipline_hr.tasks.all"
-#     ],
-#     "daily": [
-#         "discipline_hr.tasks.daily"
-#     ],
-#     "hourly": [
-#         "discipline_hr.tasks.hourly"
-#     ],
-#     "weekly": [
-#         "discipline_hr.tasks.weekly"
-#     ],
-#     "monthly": [
-#         "discipline_hr.tasks.monthly"
-#     ],
-# }
+scheduler_events = {
+    "daily": [
+        "discipline_hr.services.shift_type.rollover_grace_periods",
+    ],
+}
 
 # Testing
 # -------
