@@ -233,6 +233,10 @@ fixtures = [
         "dt": "Notification",
         "filters": [["name", "=", "Attendance Permission Pending Review"]],
     },
+    {
+        "dt": "Notification",
+        "filters": [["name", "=", "Attendance Penalty Pending Review"]],
+    },
 ]
 
 export_python_type_annotations = True

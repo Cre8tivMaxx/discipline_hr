@@ -1,11 +1,13 @@
 import frappe
 
 PENDING_NOTIFICATION_NAME = "Attendance Permission Pending Review"
+PENALTY_NOTIFICATION_NAME = "Attendance Penalty Pending Review"
 
 
 def after_install():
     _create_discipline_deduction_salary_component()
     _create_pending_attendance_permission_notification()
+    _create_pending_attendance_penalty_notification()
 
 
 def _create_discipline_deduction_salary_component():
@@ -38,6 +40,7 @@ def _create_pending_attendance_permission_notification():
     notification.event = "New"
     notification.channel = "Email"
     notification.condition = 'doc.status == "Pending"'
+    notification.send_system_notification = 1
     notification.message = """<h3>Attendance Permission Needs Review</h3>
 
 <p><b>Employee:</b> {{ doc.employee_name or doc.employee }}</p>
@@ -52,4 +55,33 @@ def _create_pending_attendance_permission_notification():
     settings = frappe.get_single("Discipline HR Settings")
     if not settings.default_pending_notification:
         settings.default_pending_notification = PENDING_NOTIFICATION_NAME
+        settings.save(ignore_permissions=True)
+
+
+def _create_pending_attendance_penalty_notification():
+    if frappe.db.exists("Notification", PENALTY_NOTIFICATION_NAME):
+        return
+
+    notification = frappe.new_doc("Notification")
+    notification.name = PENALTY_NOTIFICATION_NAME
+    notification.subject = "Attendance Penalty Pending: {{ doc.employee_name or doc.employee }}"
+    notification.document_type = "Attendance Penalty"
+    notification.event = "New"
+    notification.channel = "Email"
+    notification.condition = 'doc.status == "Pending"'
+    notification.send_system_notification = 1
+    notification.message = """<h3>Attendance Penalty Needs Review</h3>
+
+<p><b>Employee:</b> {{ doc.employee_name or doc.employee }}</p>
+<p><b>Violation Date:</b> {{ doc.violation_date }}</p>
+<p><b>Penalty Minutes:</b> {{ doc.penalty_minutes }}</p>
+<p><b>Penalty Amount:</b> {{ doc.penalty_amount }}</p>
+
+<p>Please review and take action.</p>"""
+    notification.append("recipients", {"receiver_by_role": "HR Manager"})
+    notification.insert(ignore_permissions=True)
+
+    settings = frappe.get_single("Discipline HR Settings")
+    if not settings.default_penalty_notification:
+        settings.default_penalty_notification = PENALTY_NOTIFICATION_NAME
         settings.save(ignore_permissions=True)

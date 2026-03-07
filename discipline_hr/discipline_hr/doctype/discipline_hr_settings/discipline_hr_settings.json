@@ -11,7 +11,8 @@
   "auto_submit_additional_salary",
   "auto_process_attendance_permission",
   "section_break_notifications",
-  "default_pending_notification"
+  "default_pending_notification",
+  "default_penalty_notification"
  ],
  "fields": [
   {
@@ -58,6 +59,13 @@
    "fieldname": "default_pending_notification",
    "fieldtype": "Link",
    "label": "Default Pending Notification",
+   "options": "Notification"
+  },
+  {
+   "description": "Notification sent to HR when an Attendance Penalty is created with status Pending.",
+   "fieldname": "default_penalty_notification",
+   "fieldtype": "Link",
+   "label": "Default Penalty Notification",
    "options": "Notification"
   }
  ],
