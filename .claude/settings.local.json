@@ -6,7 +6,8 @@
       "Bash(gh api:*)",
       "Bash(gh issue:*)",
       "Read(//home/frappe/frappe-bench/**)",
-      "Bash(bench build --app discipline_hr)"
+      "Bash(bench build --app discipline_hr)",
+      "Skill(code-review:code-review)"
     ]
   },
   "outputStyle": "Learning"

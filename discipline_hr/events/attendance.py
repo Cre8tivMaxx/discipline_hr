@@ -132,25 +132,24 @@ def create_attendance_permissions(employee, attendance, minutes, shift_name, dat
     doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
     if not employee:
         return
+
     doc.employee = employee
     doc.attendance = attendance
     doc.minutes = max(cint(shift_doc.custom_minimum_grace_minutes), minutes)
-    doc.status = _get_attendance_permission_status(shift_doc) or "Auto Processed"
+    doc.status = _get_attendance_permission_status() or "Auto Processed"
     doc.date = date or today()
     doc.auto_created = 1
     doc.shift_type = shift_doc.name
     doc.insert(ignore_if_duplicate=True, ignore_permissions=True)
 
 
-def _get_attendance_permission_status(shift_doc):
+def _get_attendance_permission_status():
     """Return the initial status for an auto-created Attendance Permission.
-
-    Args:
-        shift_doc: A ``Shift Type`` document.
 
     Returns:
         ``"Pending"`` if HR approval is required, ``"Auto Processed"`` otherwise.
     """
-    if cint(shift_doc.custom_enable_permissions) == 1:
-        return "Pending"
-    return "Auto Processed"
+    config = frappe.get_cached_doc("Discipline HR Settings")
+    if cint(config.auto_process_attendance_permission) == 1:
+        return "Auto Processed"
+    return "Pending"

@@ -8,7 +8,8 @@
   "salary_component",
   "attendance_penalty_policy",
   "ignore_grace_ledger_duplicates",
-  "auto_submit_additional_salary"
+  "auto_submit_additional_salary",
+  "auto_process_attendance_permission"
  ],
  "fields": [
   {
@@ -37,13 +38,20 @@
    "fieldname": "auto_submit_additional_salary",
    "fieldtype": "Check",
    "label": "Auto Submit Additional Salary"
+  },
+  {
+   "default": "1",
+   "description": "If checked Attendance Permissions will be created as auto processed, else will be pending.",
+   "fieldname": "auto_process_attendance_permission",
+   "fieldtype": "Check",
+   "label": "Auto Process Attendance Permission"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-04 14:14:45.610845",
+ "modified": "2026-03-07 10:10:11.301121",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",
