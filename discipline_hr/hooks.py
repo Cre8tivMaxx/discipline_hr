@@ -228,6 +228,13 @@ scheduler_events = {
 # ]
 
 # Automatically update python controller files with type annotations for this app.
+fixtures = [
+    {
+        "dt": "Notification",
+        "filters": [["name", "=", "Attendance Permission Pending Review"]],
+    },
+]
+
 export_python_type_annotations = True
 
 # default_log_clearing_doctypes = {

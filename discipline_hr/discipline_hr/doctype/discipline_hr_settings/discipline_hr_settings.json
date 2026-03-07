@@ -9,7 +9,9 @@
   "attendance_penalty_policy",
   "ignore_grace_ledger_duplicates",
   "auto_submit_additional_salary",
-  "auto_process_attendance_permission"
+  "auto_process_attendance_permission",
+  "section_break_notifications",
+  "default_pending_notification"
  ],
  "fields": [
   {
@@ -45,6 +47,18 @@
    "fieldname": "auto_process_attendance_permission",
    "fieldtype": "Check",
    "label": "Auto Process Attendance Permission"
+  },
+  {
+   "fieldname": "section_break_notifications",
+   "fieldtype": "Section Break",
+   "label": "Notifications"
+  },
+  {
+   "description": "Notification sent to HR when an Attendance Permission is created with status Pending.",
+   "fieldname": "default_pending_notification",
+   "fieldtype": "Link",
+   "label": "Default Pending Notification",
+   "options": "Notification"
   }
  ],
  "grid_page_length": 50,

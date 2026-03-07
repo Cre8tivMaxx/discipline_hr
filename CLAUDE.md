@@ -68,8 +68,8 @@ Attendance (before_submit)
       If penalty_minutes > 0 → enqueues create_attendance_permissions()
 
   → Attendance Permissions (created via queue, after_insert)
-      status = "Auto Processed"  (if custom_enable_permissions == 0)
-      status = "Pending"         (if custom_enable_permissions == 1, requires HR approval)
+      status = "Auto Processed"  (if Discipline HR Settings.auto_process_attendance_permission == 1)
+      status = "Pending"         (if auto_process_attendance_permission == 0, requires HR approval)
 
   → process_submitted_attendance_permission()  [services/attendance_permission.py]
       Runs on after_insert of AttendancePermissions when status ∈ {Auto Processed, Accepted}
