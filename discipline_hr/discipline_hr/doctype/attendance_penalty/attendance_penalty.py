@@ -69,6 +69,8 @@ class AttendancePenalty(Document):
 
     def create_additional_salary(self):
         # TODO If salary structure raise just log the error inside the attendance penalty
+        if not self.salary_component:
+            logger.warning("Couldn't create Additional Salary Salary Component is None | Penalty %s", self)
         try:
             config = self._get_discipline_hr_settings()
             additional_salary = frappe.get_doc(

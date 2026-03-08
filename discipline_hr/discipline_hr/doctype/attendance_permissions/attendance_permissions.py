@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 import frappe
 from frappe.model.document import Document
+from frappe.utils import cint
 
 from discipline_hr.services.attendance_permission import process_submitted_attendance_permission
 
@@ -44,4 +45,4 @@ class AttendancePermissions(Document):
         shift = frappe.get_value("Attendance", self.attendance, "shift")
         min_grace = frappe.get_value("Shift Type", shift, "custom_minimum_grace_minutes")
         if self.minutes:
-            self.minutes = max(min_grace, self.minutes)
+            self.minutes = max(cint(min_grace), self.minutes)
