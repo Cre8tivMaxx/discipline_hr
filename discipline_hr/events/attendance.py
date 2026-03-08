@@ -93,25 +93,21 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
     doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
 
+
+def trigger_create_attendance_permission(doc, method=None):
+    shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
     if doc.custom_penalty_minutes:
         try:
-            q = "short"
-            # TODO use on_submit event to avoid using the scheduler
-            frappe.enqueue(
-                create_attendance_permissions,
-                queue=q,
-                employee=doc.employee,
-                attendance=doc.name,
-                minutes=doc.custom_penalty_minutes,
-                shift_name=shift_doc.name,
-                date=doc.attendance_date,
+            at = create_attendance_permissions(
+                doc.employee, doc.name, doc.custom_penalty_minutes, shift_doc.name, doc.attendance_date
             )
+
             logger.info(
-                "Queued a job to create attendance permission | queue: %s | employee: %s", q, doc.employee
+                "Successfull create attendance permission | queue: %s | employee: %s", at, doc.employee
             )
         except Exception:
             logger.exception(
-                "Couldn't queue create attendance permission | queue: %s | employee: %s", q, doc.employee
+                "Couldn't create attendance permission | queue: %s | employee: %s", at, doc.employee
             )
 
 

@@ -1,6 +1,20 @@
 import frappe
 
-logger = frappe.logger("discipline_hr", allow_site=True)
+
+class _LazyLogger:
+    """Proxy that delegates to frappe.logger() on every attribute access.
+
+    This ensures the logger is always fetched after frappe.log_level is set,
+    so configure_log_level() takes effect even though the logger was created
+    before the level was configured.
+    """
+
+    def __getattr__(self, name):
+        return getattr(frappe.logger("discipline_hr", allow_site=True), name)
+
+
+logger = _LazyLogger()
+
 
 _log_level_configured = False
 

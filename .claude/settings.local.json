@@ -7,7 +7,14 @@
       "Bash(gh issue:*)",
       "Read(//home/frappe/frappe-bench/**)",
       "Bash(bench build --app discipline_hr)",
-      "Skill(code-review:code-review)"
+      "Skill(code-review:code-review)",
+      "Bash(python3:*)",
+      "Bash(bench:*)",
+      "Bash(do echo:*)",
+      "Skill(commit-commands:commit)",
+      "Bash(grep:*)",
+      "Bash(pre-commit run:*)",
+      "Bash(gh pr:*)"
     ]
   },
   "outputStyle": "Learning"
