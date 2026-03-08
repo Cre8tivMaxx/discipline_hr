@@ -22,7 +22,7 @@ class AttendancePermissions(Document):
         minutes: DF.Int
         reason: DF.SmallText | None
         shift_type: DF.Link | None
-        status: DF.Literal["", "Auto Processed", "Accepted", "Pending", "Rejected"]
+        status: DF.Literal["", "Auto Processed", "Processed", "Pending", "Rejected"]
     # end: auto-generated types
 
     def after_insert(self):
@@ -32,7 +32,7 @@ class AttendancePermissions(Document):
     def on_update(self):
         """Re-trigger workflow when HR changes status to 'Accepted'."""
         status_changed = self.has_value_changed("status")
-        if status_changed and self.status == "Accepted":
+        if status_changed and self.status == "Processed":
             process_submitted_attendance_permission(self)
 
     def validate(self):

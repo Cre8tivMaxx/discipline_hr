@@ -42,7 +42,7 @@ class AttendancePenalty(Document):
         penalty_minutes: DF.Int
         salary_component: DF.Link | None
         start_period: DF.Date | None
-        status: DF.Literal["", "Auto Processed", "Pending", "Approved", "Rejected"]
+        status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
         violation_date: DF.Date
         violation_number: DF.Int
     # end: auto-generated types
@@ -79,6 +79,7 @@ class AttendancePenalty(Document):
                     "salary_component": self.salary_component,
                     "type": "Deduction",
                     "amount": self.penalty_amount,
+                    "custom_attendance_penalty": self.name,
                 }
             )
             logger.debug("Created Additional Salary: %s | Attendance Penalty %s", additional_salary, self)

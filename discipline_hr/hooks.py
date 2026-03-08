@@ -188,6 +188,7 @@ scheduler_events = {
 
 # Request Events
 # ----------------
+before_request = ["discipline_hr.services.utils.configure_log_level"]
 # before_request = ["discipline_hr.utils.before_request"]
 # after_request = ["discipline_hr.utils.after_request"]
 

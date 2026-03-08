@@ -27,7 +27,8 @@
   "penalty_amount",
   "status",
   "auto_create_salary",
-  "error"
+  "error",
+  "connection_tab"
  ],
  "fields": [
   {
@@ -167,12 +168,22 @@
    "fieldtype": "Small Text",
    "label": "error",
    "read_only": 1
+  },
+  {
+   "fieldname": "connection_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-03-04 14:10:32.336016",
+ "links": [
+  {
+   "link_doctype": "Additional Salary",
+   "link_fieldname": "custom_attendance_penalty"
+  }
+ ],
+ "modified": "2026-03-08 11:36:09.626033",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty",
