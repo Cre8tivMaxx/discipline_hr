@@ -5,22 +5,22 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "salary_component",
   "attendance_penalty_policy",
-  "ignore_grace_ledger_duplicates",
-  "auto_submit_additional_salary",
+  "salary_component",
+  "section_break_automation",
   "auto_process_attendance_permission",
+  "auto_submit_additional_salary",
+  "ignore_grace_ledger_duplicates",
   "section_break_notifications",
   "default_pending_notification",
   "default_penalty_notification"
  ],
  "fields": [
   {
-   "default": "0",
-   "description": "prevents duplicates in grace ledger for same `Attendance`, `Employee` and the day",
-   "fieldname": "ignore_grace_ledger_duplicates",
-   "fieldtype": "Check",
-   "label": "Ignore Grace Ledger duplicates"
+   "fieldname": "attendance_penalty_policy",
+   "fieldtype": "Link",
+   "label": "Attendance Penalty Policy",
+   "options": "Attendance Penalty Policy"
   },
   {
    "fieldname": "salary_component",
@@ -30,10 +30,16 @@
    "options": "Salary Component"
   },
   {
-   "fieldname": "attendance_penalty_policy",
-   "fieldtype": "Link",
-   "label": "Attendance Penalty Policy ",
-   "options": "Attendance Penalty Policy"
+   "fieldname": "section_break_automation",
+   "fieldtype": "Section Break",
+   "label": "Automation"
+  },
+  {
+   "default": "1",
+   "description": "If checked Attendance Permissions will be created as auto processed, else will be pending.",
+   "fieldname": "auto_process_attendance_permission",
+   "fieldtype": "Check",
+   "label": "Auto Process Attendance Permission"
   },
   {
    "default": "0",
@@ -43,11 +49,11 @@
    "label": "Auto Submit Additional Salary"
   },
   {
-   "default": "1",
-   "description": "If checked Attendance Permissions will be created as auto processed, else will be pending.",
-   "fieldname": "auto_process_attendance_permission",
+   "default": "0",
+   "description": "prevents duplicates in grace ledger for same `Attendance`, `Employee` and the day",
+   "fieldname": "ignore_grace_ledger_duplicates",
    "fieldtype": "Check",
-   "label": "Auto Process Attendance Permission"
+   "label": "Prevent Grace Ledger Duplicates"
   },
   {
    "fieldname": "section_break_notifications",
@@ -58,14 +64,14 @@
    "description": "Notification sent to HR when an Attendance Permission is created with status Pending.",
    "fieldname": "default_pending_notification",
    "fieldtype": "Link",
-   "label": "Default Pending Notification",
+   "label": "Attendance Permission Pending",
    "options": "Notification"
   },
   {
    "description": "Notification sent to HR when an Attendance Penalty is created with status Pending.",
    "fieldname": "default_penalty_notification",
    "fieldtype": "Link",
-   "label": "Default Penalty Notification",
+   "label": "Attendance Penalty Pending",
    "options": "Notification"
   }
  ],
@@ -73,7 +79,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-07 10:10:11.301121",
+ "modified": "2026-03-08 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

@@ -94,7 +94,7 @@ The app extends `Shift Type` with custom fields (prefix `custom_`):
 | `custom_period_start_date` / `custom_period_end_date` | Grace period window; penalties only apply inside this range |
 | `custom_total_allowed_grace_minutes` | Pool of grace minutes per employee per period |
 | `custom_minimum_grace_minutes` | Floor applied to `AttendancePermissions.minutes` |
-| `custom_enable_permissions` | 1 = require HR approval before processing; 0 = auto-process |
+| `custom_salary_component` | Override deduction salary component (under Penalties and Deductions section) |
 | `custom_attendance_penalty_policy` | Overrides global policy from `Discipline HR Settings` |
 
 ### Key DocTypes
