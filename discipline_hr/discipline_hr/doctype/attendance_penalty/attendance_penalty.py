@@ -4,7 +4,7 @@ from typing import cast
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt, today
+from frappe.utils import cint, flt, today
 
 from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_penalty_policy import (
     AttendancePenaltyPolicy,
@@ -76,6 +76,9 @@ class AttendancePenalty(Document):
 
     def create_additional_salary(self):
         # TODO If salary structure raise just log the error inside the attendance penalty
+        if cint(self.penalty_amount) == 0:
+            logger.info("Ignore Additional Salary due amount == 0 | ATP: %s | Penalty Amount: %s")
+            return
         if not self.salary_component:
             logger.warning("Couldn't create Additional Salary Salary Component is None | Penalty %s", self)
         try:
