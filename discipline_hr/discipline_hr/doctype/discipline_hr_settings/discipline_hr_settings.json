@@ -9,6 +9,7 @@
   "salary_component",
   "section_break_automation",
   "auto_process_attendance_permission",
+  "auto_process_attendance_penalty",
   "auto_submit_additional_salary",
   "ignore_grace_ledger_duplicates",
   "section_break_notifications",
@@ -40,6 +41,13 @@
    "fieldname": "auto_process_attendance_permission",
    "fieldtype": "Check",
    "label": "Auto Process Attendance Permission"
+  },
+  {
+   "default": "1",
+   "description": "If checked Attendance Penalties will be created as auto processed, else will be pending.",
+   "fieldname": "auto_process_attendance_penalty",
+   "fieldtype": "Check",
+   "label": "Auto Process Attendance Penalty"
   },
   {
    "default": "0",
@@ -79,7 +87,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-08 00:00:00.000000",
+ "modified": "2026-03-09 11:27:17.623217",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

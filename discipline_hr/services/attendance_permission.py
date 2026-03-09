@@ -80,6 +80,7 @@ def _create_attendance_penalty(permission_doc, ledger):
     penalty.employee_grace_ledger = ledger.name
     penalty.grace_consumed = ledger.consumed_minutes
     penalty.penalty_minutes = ledger.penalty_minutes
+    penalty.status = "Auto Processed" if config.auto_process_attendance_penalty else "Pending"
     penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
 
 
