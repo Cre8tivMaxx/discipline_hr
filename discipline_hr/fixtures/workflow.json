@@ -1,0 +1,93 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow",
+  "document_type": "Attendance Permissions",
+  "is_active": 1,
+  "modified": "2026-03-09 12:52:45.739910",
+  "name": "Attendance Permission",
+  "override_status": 1,
+  "send_email_alert": 0,
+  "states": [
+   {
+    "allow_edit": "HR Manager",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Attendance Permission",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 1,
+    "state": "Pending",
+    "update_field": "status",
+    "update_value": "Pending",
+    "workflow_builder_id": "1"
+   },
+   {
+    "allow_edit": "HR Manager",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Attendance Permission",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 0,
+    "state": "Processed",
+    "update_field": "status",
+    "update_value": "Processed",
+    "workflow_builder_id": null
+   },
+   {
+    "allow_edit": "HR Manager",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Attendance Permission",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 1,
+    "state": "Rejected",
+    "update_field": "status",
+    "update_value": "Rejected",
+    "workflow_builder_id": "3"
+   }
+  ],
+  "transitions": [
+   {
+    "action": "Process",
+    "allow_self_approval": 0,
+    "allowed": "HR Manager",
+    "condition": null,
+    "next_state": "Processed",
+    "parent": "Attendance Permission",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Pending",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Reject",
+    "allow_self_approval": 1,
+    "allowed": "HR Manager",
+    "condition": null,
+    "next_state": "Rejected",
+    "parent": "Attendance Permission",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Pending",
+    "workflow_builder_id": null
+   }
+  ],
+  "workflow_data": "[{\"type\":\"state\",\"dimensions\":{\"width\":106,\"height\":53},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":49.638916015625,\"y\":-11.111114501953125,\"width\":7,\"height\":7},{\"id\":\"right\",\"position\":\"right\",\"x\":110.40280151367188,\"y\":22.888885498046875,\"width\":7,\"height\":7},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":49.638916015625,\"y\":56.888885498046875,\"width\":7,\"height\":7},{\"id\":\"left\",\"position\":\"left\",\"x\":-11.111114501953125,\"y\":22.888885498046875,\"width\":7,\"height\":7}]},\"computedPosition\":{\"x\":152.44442749023438,\"y\":27.111106872558594,\"z\":0},\"id\":\"1\",\"position\":{\"x\":152.44442749023438,\"y\":27.111106872558594}},{\"type\":\"state\",\"dimensions\":{\"width\":117,\"height\":53},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":54.819369757366296,\"y\":-11.111106609915957,\"width\":7,\"height\":7},{\"id\":\"right\",\"position\":\"right\",\"x\":120.7498382493071,\"y\":22.88884512243134,\"width\":7,\"height\":7},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":54.819369757366296,\"y\":56.888804730120086,\"width\":7,\"height\":7},{\"id\":\"left\",\"position\":\"left\",\"x\":-11.111098734574512,\"y\":22.88884512243134,\"width\":7,\"height\":7}]},\"computedPosition\":{\"x\":500.4444274902344,\"y\":-28.388893127441406,\"z\":0},\"id\":\"2\",\"position\":{\"x\":500.4444274902344,\"y\":-28.388893127441406}},{\"type\":\"state\",\"dimensions\":{\"width\":110,\"height\":53},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":51.66668701171875,\"y\":-11.111114501953125,\"width\":7,\"height\":7},{\"id\":\"right\",\"position\":\"right\",\"x\":114.44448852539062,\"y\":22.888885498046875,\"width\":7,\"height\":7},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":51.66668701171875,\"y\":56.888885498046875,\"width\":7,\"height\":7},{\"id\":\"left\",\"position\":\"left\",\"x\":-11.111114501953125,\"y\":22.888885498046875,\"width\":7,\"height\":7}]},\"computedPosition\":{\"x\":499.4444274902344,\"y\":71.1111068725586,\"z\":0},\"id\":\"3\",\"position\":{\"x\":499.4444274902344,\"y\":71.1111068725586}},{\"type\":\"action\",\"dimensions\":{\"width\":75,\"height\":33},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":34.6944580078125,\"y\":-2.1111068725585938,\"width\":6,\"height\":6},{\"id\":\"right\",\"position\":\"right\",\"x\":71.51388549804688,\"y\":13.388893127441406,\"width\":6,\"height\":6},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":34.6944580078125,\"y\":28.888893127441406,\"width\":6,\"height\":6},{\"id\":\"left\",\"position\":\"left\",\"x\":-2.111114501953125,\"y\":13.388893127441406,\"width\":6,\"height\":6}]},\"computedPosition\":{\"x\":355.6944274902344,\"y\":-29.388893127441406,\"z\":0},\"id\":\"action-1\",\"position\":{\"x\":355.6944274902344,\"y\":-29.388893127441406},\"data\":{\"from_id\":\"1\",\"to_id\":\"2\"}},{\"type\":\"action\",\"dimensions\":{\"width\":64,\"height\":33},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":28.833343505859375,\"y\":-2.111114501953125,\"width\":6,\"height\":6},{\"id\":\"right\",\"position\":\"right\",\"x\":59.79168701171875,\"y\":13.388885498046875,\"width\":6,\"height\":6},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":28.833343505859375,\"y\":28.888885498046875,\"width\":6,\"height\":6},{\"id\":\"left\",\"position\":\"left\",\"x\":-2.111114501953125,\"y\":13.388885498046875,\"width\":6,\"height\":6}]},\"computedPosition\":{\"x\":379.9444274902344,\"y\":106.1111068725586,\"z\":0},\"id\":\"action-2\",\"position\":{\"x\":379.9444274902344,\"y\":106.1111068725586},\"data\":{\"from_id\":\"1\",\"to_id\":\"3\"}},{\"sourceHandle\":\"right\",\"targetHandle\":\"left\",\"type\":\"transition\",\"source\":\"1\",\"target\":\"action-1\",\"updatable\":true,\"animated\":true,\"id\":\"vueflow__edge-1right-action-1left\",\"sourceX\":269.84722900390625,\"sourceY\":53.49999237060547,\"targetX\":353.58331298828125,\"targetY\":-13},{\"sourceHandle\":\"right\",\"targetHandle\":\"left\",\"type\":\"transition\",\"source\":\"action-1\",\"target\":\"2\",\"updatable\":true,\"animated\":true,\"id\":\"vueflow__edge-action-1right-2left\",\"sourceX\":433.20831298828125,\"sourceY\":-13,\"targetX\":489.33332875565986,\"targetY\":-2.000048005010065,\"markerEnd\":{\"type\":\"arrow\",\"width\":15,\"height\":15,\"strokeWidth\":1.5,\"color\":\"#687178\"}},{\"sourceHandle\":\"bottom\",\"targetHandle\":\"left\",\"type\":\"transition\",\"source\":\"1\",\"target\":\"action-2\",\"updatable\":true,\"animated\":true,\"id\":\"vueflow__edge-1bottom-action-2left\",\"sourceX\":205.58334350585938,\"sourceY\":90.99999237060547,\"targetX\":377.83331298828125,\"targetY\":122.49999237060547},{\"sourceHandle\":\"right\",\"targetHandle\":\"left\",\"type\":\"transition\",\"source\":\"action-2\",\"target\":\"3\",\"updatable\":true,\"animated\":true,\"id\":\"vueflow__edge-action-2right-3left\",\"sourceX\":445.7361145019531,\"sourceY\":122.49999237060547,\"targetX\":488.33331298828125,\"targetY\":97.49999237060547,\"markerEnd\":{\"type\":\"arrow\",\"width\":15,\"height\":15,\"strokeWidth\":1.5,\"color\":\"#687178\"}}]",
+  "workflow_name": "Attendance Permission",
+  "workflow_state_field": "workflow_state"
+ }
+]
