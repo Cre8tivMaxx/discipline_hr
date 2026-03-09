@@ -53,13 +53,15 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nAuto Processed\nProcessed\nPending\nRejected"
+   "options": "\nAuto Processed\nProcessed\nPending\nRejected",
+   "read_only": 1
   },
   {
    "default": "0",
    "fieldname": "auto_created",
    "fieldtype": "Check",
-   "label": "Auto Created"
+   "label": "Auto Created",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_ajdf",
@@ -80,7 +82,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-08 11:43:18.024317",
+ "modified": "2026-03-09 13:18:02.278609",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",

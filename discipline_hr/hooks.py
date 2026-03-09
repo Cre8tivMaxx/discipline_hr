@@ -233,7 +233,7 @@ fixtures = [
         "filters": [["name", "=", "Attendance Penalty Pending Review"]],
     },
     {"dt": "Workflow State"},
-    {"dt": "Workflow", "filters": [["name", "in", ["Attendance Permission"]]]},
+    {"dt": "Workflow", "filters": [["name", "in", ["Attendance Permission", "Attendance Penalty"]]]},
 ]
 
 export_python_type_annotations = True
