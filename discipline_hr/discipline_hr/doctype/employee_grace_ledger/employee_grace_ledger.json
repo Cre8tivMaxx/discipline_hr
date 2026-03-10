@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "HR-GR-.#####",
+ "autoname": "HR-GR-{employee}-.#####",
  "creation": "2026-02-16 13:16:18.919688",
  "doctype": "DocType",
  "engine": "InnoDB",

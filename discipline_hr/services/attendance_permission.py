@@ -22,7 +22,7 @@ def process_submitted_attendance_permission(doc):
     _create_grace_ledger(doc)
 
 
-def _create_attendance_penalty(permission_doc, ledger):
+def _create_attendance_penalty(permission_doc, ledger, attendance_status):
     """Create an Attendance Penalty record from a grace ledger entry.
 
     Does nothing if ``ledger.penalty_minutes`` is zero. The penalty policy is
@@ -31,6 +31,8 @@ def _create_attendance_penalty(permission_doc, ledger):
     Args:
         permission_doc: The ``AttendancePermissions`` being processed.
         ledger: The ``EmployeeGraceLedger`` that was just inserted.
+        attendance_status: The Status of Attendance is It Absent or Present.
+                            to consider violation type.
     """
     # If no penalties to be applied
     if ledger.penalty_minutes <= 0:
@@ -55,9 +57,6 @@ def _create_attendance_penalty(permission_doc, ledger):
     penalty.employee = permission_doc.employee
     penalty.attendance = permission_doc.attendance
     penalty.violation_date = permission_doc.date or attendance.attendance_date
-    penalty.deviation_minutes = cint(attendance.custom_late_entry_minutes) + cint(
-        attendance.custom_early_exist_minutes
-    )
     penalty.start_period = ledger.period_start
     penalty.end_period = ledger.period_end
 
@@ -67,6 +66,7 @@ def _create_attendance_penalty(permission_doc, ledger):
             "employee": permission_doc.employee,
             "start_period": ledger.period_start,
             "end_period": ledger.period_end,
+            "penalty_status": attendance_status,
         },
     )
 
@@ -98,6 +98,7 @@ def _create_grace_ledger(permission_doc):
 
     shift = frappe.get_cached_doc("Shift Type", permission_doc.shift_type)
     ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
+    attendance_doc = frappe.get_cached_doc("Attendance", permission_doc.attendance)
     logger.debug(
         f"Creating grace ledger for {permission_doc.employee} " f"({permission_doc.minutes} minutes)"
     )
@@ -133,7 +134,7 @@ def _create_grace_ledger(permission_doc):
     try:
         ledger.insert(ignore_permissions=True)
         logger.info("Ledger Inserted successfuly. %s", ledger)
-        _create_attendance_penalty(permission_doc, ledger)
+        _create_attendance_penalty(permission_doc, ledger, attendance_doc.status)
     except Exception:
         logger.exception("Couldn't create the grace ledger")
         frappe.log_error(
