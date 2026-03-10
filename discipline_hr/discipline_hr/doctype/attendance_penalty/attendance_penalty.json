@@ -11,7 +11,6 @@
   "salary_component",
   "column_break_diql",
   "attendance",
-  "penalty_status",
   "employee_grace_ledger",
   "attendance_penalty_policy",
   "section_break_details",
@@ -22,6 +21,7 @@
   "violation_number",
   "grace_consumed",
   "penalty_minutes",
+  "deviation_minutes",
   "section_break_penalty",
   "final_penalty_type",
   "penalty_amount",
@@ -59,6 +59,12 @@
    "fieldname": "section_break_details",
    "fieldtype": "Section Break",
    "label": "Violation Details"
+  },
+  {
+   "fieldname": "deviation_minutes",
+   "fieldtype": "Int",
+   "label": "Deviation Minutes",
+   "read_only": 1
   },
   {
    "default": "0",
@@ -176,17 +182,6 @@
    "fieldname": "connection_tab",
    "fieldtype": "Tab Break",
    "label": "Connections"
-  },
-  {
-   "fetch_from": "attendance.status",
-   "fieldname": "penalty_status",
-   "fieldtype": "Data",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Penalty Status",
-   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -197,7 +192,7 @@
    "link_fieldname": "custom_attendance_penalty"
   }
  ],
- "modified": "2026-03-10 14:29:38.659176",
+ "modified": "2026-03-10 09:56:04.319322",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty",

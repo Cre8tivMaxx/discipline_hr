@@ -31,6 +31,7 @@ class AttendancePenalty(Document):
         attendance_penalty_policy: DF.Link | None
         attendance_permission: DF.Link | None
         auto_create_salary: DF.Check
+        deviation_minutes: DF.Int
         employee: DF.Link
         employee_grace_ledger: DF.Link | None
         end_period: DF.Date | None
@@ -39,7 +40,6 @@ class AttendancePenalty(Document):
         grace_consumed: DF.Int
         penalty_amount: DF.Currency
         penalty_minutes: DF.Int
-        penalty_status: DF.Data | None
         salary_component: DF.Link | None
         start_period: DF.Date | None
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
