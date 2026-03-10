@@ -43,7 +43,7 @@
    "label": "Auto Process Attendance Permission"
   },
   {
-   "default": "1",
+   "default": "0",
    "description": "If checked Attendance Penalties will be created as auto processed, else will be pending.",
    "fieldname": "auto_process_attendance_penalty",
    "fieldtype": "Check",
@@ -87,7 +87,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-09 11:27:17.623217",
+ "modified": "2026-03-10 10:14:14.795145",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",
@@ -104,8 +104,11 @@
    "write": 1
   },
   {
+   "create": 1,
+   "delete": 1,
    "read": 1,
-   "role": "HR Manager"
+   "role": "HR Manager",
+   "write": 1
   }
  ],
  "row_format": "Dynamic",

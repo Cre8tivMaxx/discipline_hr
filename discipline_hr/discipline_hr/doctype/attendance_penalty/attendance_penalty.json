@@ -34,7 +34,10 @@
   {
    "fieldname": "employee",
    "fieldtype": "Link",
+   "in_filter": 1,
    "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee",
    "read_only": 1,
@@ -161,6 +164,10 @@
   {
    "fieldname": "attendance_penalty_policy",
    "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Attendance Penalty Policy",
    "options": "Attendance Penalty Policy",
    "read_only": 1
@@ -185,7 +192,7 @@
    "link_fieldname": "custom_attendance_penalty"
   }
  ],
- "modified": "2026-03-09 13:12:48.862499",
+ "modified": "2026-03-10 09:56:04.319322",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty",

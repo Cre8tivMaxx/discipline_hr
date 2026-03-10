@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Abdelrahman Elsayed and Contributors
 # See license.txt
 
+from unittest.mock import MagicMock, patch
+
 import frappe
 from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
@@ -34,7 +36,6 @@ class TestAttendancePenalty(FrappeTestCase):
                 "doctype": "Attendance Penalty",
                 "employee": self.employee,
                 "attendance_penalty_policy": self.policy.name,
-                "penalty_minutes": 30,
                 "violation_date": today(),
             }
         )
@@ -42,4 +43,11 @@ class TestAttendancePenalty(FrappeTestCase):
         self.penalty.insert()
 
     def test_fixed_per_hour_penalty(self):
-        self.assertEqual(self.penalty.penalty_minutes, 30.0)
+        self.penalty.penalty_minutes = 30
+
+        mock_policy = MagicMock()
+        mock_policy.rate_per_hour = 60
+
+        with patch.object(self.penalty, "_get_attendance_penalty_policy_doc", return_value=mock_policy):
+            result = self.penalty._fixed_per_hour_deduction()
+        self.assertEqual(result, 30.0)

@@ -22,9 +22,8 @@ from discipline_hr.services.utils import logger
 def calculate_attendance_penalty_minutes(doc, method=None):
     """Calculate penalty minutes for a submitted Attendance record.
 
-    Runs on ``Attendance.before_submit``. Writes late/early custom fields and
-    enqueues :func:`create_attendance_permissions` if penalisable minutes remain
-    after grace. Skips non-Present records and attendances outside the shift period.
+    Runs on ``Attendance.before_submit``. Writes late/early custom fields
+    Skips non-Present records and attendances outside the shift period.
 
     Args:
         doc: The ``Attendance`` document being submitted.
@@ -107,7 +106,7 @@ def trigger_create_attendance_permission(doc, method=None):
             )
         except Exception:
             logger.exception(
-                "Couldn't create attendance permission | queue: %s | employee: %s", at, doc.employee
+                "Couldn't create attendance permission | queue: %s | employee: %s", doc, doc.employee
             )
 
 
