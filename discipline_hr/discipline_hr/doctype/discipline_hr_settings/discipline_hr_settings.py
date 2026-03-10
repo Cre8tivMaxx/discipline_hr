@@ -14,6 +14,7 @@ class DisciplineHRSettings(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
+        absence_penalty_policy: DF.Link | None
         attendance_penalty_policy: DF.Link | None
         auto_process_attendance_penalty: DF.Check
         auto_process_attendance_permission: DF.Check

@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "attendance_penalty_policy",
+  "absence_penalty_policy",
   "salary_component",
   "section_break_automation",
   "auto_process_attendance_permission",
@@ -22,6 +23,12 @@
    "fieldtype": "Link",
    "label": "Attendance Penalty Policy",
    "options": "Attendance Penalty Policy"
+  },
+  {
+   "fieldname": "absence_penalty_policy",
+   "fieldtype": "Link",
+   "label": "Absence Penalty Policy",
+   "options": "Absence Penalty Policy"
   },
   {
    "fieldname": "salary_component",
@@ -87,7 +94,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-10 10:14:14.795145",
+ "modified": "2026-03-10 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",
