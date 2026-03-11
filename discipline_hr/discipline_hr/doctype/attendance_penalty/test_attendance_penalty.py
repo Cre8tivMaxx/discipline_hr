@@ -1,12 +1,13 @@
 # Copyright (c) 2026, Abdelrahman Elsayed and Contributors
 # See license.txt
 
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import frappe
 from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
-from frappe.utils import getdate, today
+from frappe.utils import today
 from hrms.payroll.doctype.salary_structure.test_salary_structure import (
     create_salary_structure_assignment,
     make_salary_structure,
