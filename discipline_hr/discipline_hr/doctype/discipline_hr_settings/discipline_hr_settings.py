@@ -23,5 +23,6 @@ class DisciplineHRSettings(Document):
         default_pending_notification: DF.Link | None
         ignore_grace_ledger_duplicates: DF.Check
         salary_component: DF.Link | None
+        split_permissions_and_penalties: DF.Check
     # end: auto-generated types
     pass

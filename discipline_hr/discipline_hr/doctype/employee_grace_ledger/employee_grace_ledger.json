@@ -8,6 +8,7 @@
  "field_order": [
   "employee",
   "attendance",
+  "attendance_permission",
   "period_start",
   "period_end",
   "column_break_illc",
@@ -73,6 +74,13 @@
    "in_standard_filter": 1,
    "label": "Attendance",
    "options": "Attendance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "attendance_permission",
+   "fieldtype": "Link",
+   "label": "Attendance Permission",
+   "options": "Attendance Permissions",
    "read_only": 1
   },
   {
