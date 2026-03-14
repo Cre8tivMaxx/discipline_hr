@@ -90,8 +90,19 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-03-12 14:19:08.920724",
+ "links": [
+  {
+   "group": "Discipline Hr",
+   "link_doctype": "Employee Grace Ledger",
+   "link_fieldname": "attendance"
+  },
+  {
+   "group": "Discipline Hr",
+   "link_doctype": "Attendance Penalty",
+   "link_fieldname": "attendance"
+  }
+ ],
+ "modified": "2026-03-14 09:33:39.539925",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",
