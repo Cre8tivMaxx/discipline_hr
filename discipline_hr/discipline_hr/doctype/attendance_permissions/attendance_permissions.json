@@ -94,12 +94,12 @@
   {
    "group": "Discipline Hr",
    "link_doctype": "Employee Grace Ledger",
-   "link_fieldname": "attendance"
+   "link_fieldname": "attendance_permission"
   },
   {
    "group": "Discipline Hr",
    "link_doctype": "Attendance Penalty",
-   "link_fieldname": "attendance"
+   "link_fieldname": "attendance_permission"
   }
  ],
  "modified": "2026-03-14 09:33:39.539925",

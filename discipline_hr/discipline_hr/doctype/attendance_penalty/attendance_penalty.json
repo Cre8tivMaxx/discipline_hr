@@ -204,6 +204,11 @@
  "index_web_pages_for_search": 1,
  "links": [
   {
+   "group": "Discipline Hr",
+   "link_doctype": "Employee Grace Ledger",
+   "link_fieldname": "attendance_penalty"
+  },
+  {
    "link_doctype": "Additional Salary",
    "link_fieldname": "custom_attendance_penalty"
   }
