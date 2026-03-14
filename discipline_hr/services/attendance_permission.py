@@ -78,19 +78,83 @@ def process_attendance_without_permission(attendance_doc):
     # Proceeding here would create a duplicate grace ledger + penalty.
     existing_permission = frappe.db.exists(
         "Attendance Permissions",
-        {"employee": attendance_doc.employee, "date": attendance_doc.attendance_date},
+        {
+            "employee": attendance_doc.employee,
+            "date": attendance_doc.attendance_date,
+            "status": ("in", ["Auto Processed", "Processed"]),
+        },
     )
     if existing_permission:
+        frappe.db.set_value(
+            "Attendance Permissions",
+            existing_permission,
+            "attendance",
+            attendance_doc.name,
+            update_modified=False,
+        )
+
+        permission_minutes = frappe.db.get_value("Attendance Permissions", existing_permission, "minutes")
+        extra_minutes = attendance_doc.custom_penalty_minutes - cint(permission_minutes)
+        if extra_minutes > 0:
+            _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permission)
+
         logger.info(
-            "Bypass skipped for %s on %s: manual Attendance Permission %s exists",
+            "Bypass skipped for %s on %s: manual Attendance Permission %s exists, linked attendance %s",
             attendance_doc.employee,
             attendance_doc.attendance_date,
             existing_permission,
+            attendance_doc.name,
         )
         return
 
     ctx = _context_from_attendance(attendance_doc)
     _create_grace_ledger(ctx)
+
+
+def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permission):
+    """Create a penalty for minutes exceeding an existing permission, bypassing grace ledger.
+
+    Args:
+        attendance_doc: The submitted ``Attendance`` document.
+        extra_minutes: Number of penalty minutes beyond the permission.
+        existing_permission: Name of the existing ``Attendance Permissions`` record.
+    """
+    config = frappe.get_cached_doc("Discipline HR Settings")
+    if not config.extra_minutes_penalty_policy:
+        logger.warning(
+            "No extra minutes penalty policy configured, skipping penalty for %s", attendance_doc.name
+        )
+        return
+
+    shift_doc = frappe.get_cached_doc("Shift Type", attendance_doc.shift)
+
+    penalty = frappe.new_doc("Attendance Penalty")
+    penalty.employee = attendance_doc.employee
+    penalty.attendance = attendance_doc.name
+    penalty.attendance_permission = existing_permission
+    penalty.violation_date = str(attendance_doc.attendance_date)
+    penalty.start_period = shift_doc.custom_period_start_date
+    penalty.end_period = shift_doc.custom_period_end_date
+    penalty.violation_number = 1 + frappe.db.count(
+        "Attendance Penalty",
+        {
+            "employee": attendance_doc.employee,
+            "start_period": shift_doc.custom_period_start_date,
+            "end_period": shift_doc.custom_period_end_date,
+        },
+    )
+    penalty.attendance_penalty_policy = config.extra_minutes_penalty_policy
+    penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
+    penalty.penalty_minutes = extra_minutes
+    penalty.grace_consumed = 0
+    penalty.status = "Auto Processed" if config.auto_process_attendance_penalty else "Pending"
+    penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
+    logger.info(
+        "Extra minutes penalty created for %s: %s minutes beyond permission %s",
+        attendance_doc.employee,
+        extra_minutes,
+        existing_permission,
+    )
 
 
 def _create_attendance_penalty(ctx: _AttendanceContext, ledger):

@@ -1,7 +1,7 @@
 # Copyright (c) 2026, Abdelrahman Elsayed and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 from frappe.model.document import Document
 
 
@@ -21,8 +21,24 @@ class DisciplineHRSettings(Document):
         auto_submit_additional_salary: DF.Check
         default_penalty_notification: DF.Link | None
         default_pending_notification: DF.Link | None
+        extra_minutes_penalty_policy: DF.Link | None
         ignore_grace_ledger_duplicates: DF.Check
         salary_component: DF.Link | None
         split_permissions_and_penalties: DF.Check
     # end: auto-generated types
-    pass
+
+    def validate(self):
+        self.validate_extra_minutes_penalty_policy()
+
+    def validate_extra_minutes_penalty_policy(self):
+        if not self.extra_minutes_penalty_policy:
+            return
+        penalty_type = frappe.db.get_value(
+            "Attendance Penalty Policy", self.extra_minutes_penalty_policy, "penalty_type"
+        )
+        if penalty_type not in ("Factor", "Fixed Per Hour"):
+            frappe.throw(
+                frappe._(
+                    "Extra Minutes Penalty Policy must be of type Factor or Fixed Per Hour, not {0}."
+                ).format(penalty_type)
+            )
