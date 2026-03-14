@@ -27,8 +27,28 @@ class DisciplineHRSettings(Document):
         split_permissions_and_penalties: DF.Check
     # end: auto-generated types
 
+    NOTIFICATION_FIELDS = ("default_pending_notification", "default_penalty_notification")
+
     def validate(self):
         self.validate_extra_minutes_penalty_policy()
+
+    def on_update(self):
+        self.toggle_notifications()
+
+    def toggle_notifications(self):
+        previous = self.get_doc_before_save()
+        for field in self.NOTIFICATION_FIELDS:
+            old_value = previous.get(field) if previous else None
+            new_value = self.get(field)
+
+            if old_value == new_value:
+                continue
+
+            if old_value:
+                frappe.db.set_value("Notification", old_value, "enabled", 0)
+
+            if new_value:
+                frappe.db.set_value("Notification", new_value, "enabled", 1)
 
     def validate_extra_minutes_penalty_policy(self):
         if not self.extra_minutes_penalty_policy:

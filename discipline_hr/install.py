@@ -50,6 +50,7 @@ def _create_pending_attendance_permission_notification():
 
 <p>Please review and take action.</p>"""
     notification.append("recipients", {"receiver_by_role": "HR Manager"})
+    notification.enabled = 1
     notification.insert(ignore_permissions=True)
 
     settings = frappe.get_single("Discipline HR Settings")
@@ -79,6 +80,7 @@ def _create_pending_attendance_penalty_notification():
 
 <p>Please review and take action.</p>"""
     notification.append("recipients", {"receiver_by_role": "HR Manager"})
+    notification.enabled = 1
     notification.insert(ignore_permissions=True)
 
     settings = frappe.get_single("Discipline HR Settings")
