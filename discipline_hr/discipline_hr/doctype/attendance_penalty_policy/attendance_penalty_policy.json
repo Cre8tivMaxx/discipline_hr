@@ -45,7 +45,13 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
+ "links": [
+  {
+   "group": "Discipline Hr",
+   "link_doctype": "Attendance Penalty",
+   "link_fieldname": "attendance_penalty_policy"
+  }
+ ],
  "modified": "2026-03-08 15:10:44.805461",
  "modified_by": "Administrator",
  "module": "Discipline Hr",

@@ -8,6 +8,7 @@
  "field_order": [
   "employee",
   "attendance",
+  "attendance_permission",
   "period_start",
   "period_end",
   "column_break_illc",
@@ -76,6 +77,13 @@
    "read_only": 1
   },
   {
+   "fieldname": "attendance_permission",
+   "fieldtype": "Link",
+   "label": "Attendance Permission",
+   "options": "Attendance Permissions",
+   "read_only": 1
+  },
+  {
    "fieldname": "remaining_minutes_before_consume",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -108,7 +116,13 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
+ "links": [
+  {
+   "group": "Discipline Hr",
+   "link_doctype": "Attendance Penalty",
+   "link_fieldname": "employee_grace_ledger"
+  }
+ ],
  "modified": "2026-03-05 11:01:43.291852",
  "modified_by": "Administrator",
  "module": "Discipline Hr",

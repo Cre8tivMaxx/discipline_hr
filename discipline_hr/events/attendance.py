@@ -55,7 +55,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
     # Fetch Grace Directly From Shift
     if not doc.shift:
-        logger.error("Attendance missing for Shift Type")
+        logger.error("Attendance missing Shift Type")
         return
 
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
@@ -94,6 +94,26 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
 
 def trigger_create_attendance_permission(doc, method=None):
+    """Create an Attendance Permission or directly process a penalty for a submitted Attendance.
+
+    When ``split_permissions_and_penalties`` is enabled in Discipline HR Settings,
+    penalties are created directly without an intermediate Attendance Permission record.
+    Otherwise, an Attendance Permission is created (which in turn triggers the grace
+    ledger and penalty pipeline via its ``after_insert`` hook).
+
+    Only acts when ``doc.custom_penalty_minutes`` is non-zero (standard path).
+
+    Args:
+        doc: The ``Attendance`` document that was just submitted.
+        method: Unused; required by Frappe hook signature.
+    """
+    config = frappe.get_cached_doc("Discipline HR Settings")
+    if cint(config.split_permissions_and_penalties) == 1:
+        from discipline_hr.services.attendance_permission import process_attendance_without_permission
+
+        logger.debug("Creating Penalty without permission | split_permissions_and_penalties == 1")
+        process_attendance_without_permission(doc)
+        return
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
     if doc.custom_penalty_minutes:
         try:

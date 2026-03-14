@@ -49,12 +49,13 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Attendance",
-   "options": "Attendance",
-   "reqd": 1
+   "options": "Attendance"
   },
   {
+   "default": "Pending",
    "fieldname": "status",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Status",
    "options": "\nAuto Processed\nProcessed\nPending\nRejected",
    "read_only": 1
@@ -73,7 +74,8 @@
   {
    "fieldname": "date",
    "fieldtype": "Date",
-   "label": "Date"
+   "label": "Date",
+   "reqd": 1
   },
   {
    "fieldname": "shift_type",
@@ -88,8 +90,19 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-03-10 09:55:01.305181",
+ "links": [
+  {
+   "group": "Discipline Hr",
+   "link_doctype": "Employee Grace Ledger",
+   "link_fieldname": "attendance_permission"
+  },
+  {
+   "group": "Discipline Hr",
+   "link_doctype": "Attendance Penalty",
+   "link_fieldname": "attendance_permission"
+  }
+ ],
+ "modified": "2026-03-14 09:33:39.539925",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Permissions",

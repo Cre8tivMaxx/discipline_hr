@@ -13,6 +13,8 @@
   "auto_process_attendance_penalty",
   "auto_submit_additional_salary",
   "ignore_grace_ledger_duplicates",
+  "split_permissions_and_penalties",
+  "extra_minutes_penalty_policy",
   "section_break_notifications",
   "default_pending_notification",
   "default_penalty_notification"
@@ -88,13 +90,30 @@
    "fieldtype": "Link",
    "label": "Attendance Penalty Pending",
    "options": "Notification"
+  },
+  {
+   "default": "0",
+   "description": "If checked, penalties are processed directly from Attendance without creating an Attendance Permissions record.",
+   "fieldname": "split_permissions_and_penalties",
+   "fieldtype": "Check",
+   "label": "Split Permissions and Penalties"
+  },
+  {
+   "depends_on": "eval:doc.split_permissions_and_penalties == 1",
+   "description": "Policy for penalizing minutes beyond an existing Attendance Permission (Factor or Fixed Per Hour only).",
+   "fieldname": "extra_minutes_penalty_policy",
+   "fieldtype": "Link",
+   "label": "Extra Minutes Penalty Policy",
+   "link_filters": "[[\"Attendance Penalty Policy\",\"penalty_type\",\"in\",[\"Factor\",\"Fixed Per Hour\"]]]",
+   "mandatory_depends_on": "eval:doc.split_permissions_and_penalties == 1",
+   "options": "Attendance Penalty Policy"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-10 12:00:00.000000",
+ "modified": "2026-03-12 10:17:00.566502",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

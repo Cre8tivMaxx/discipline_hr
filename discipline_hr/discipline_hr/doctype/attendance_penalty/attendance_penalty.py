@@ -50,16 +50,19 @@ class AttendancePenalty(Document):
 
     def after_insert(self):
         if self.status in ["Auto Processed", "Processed"]:
+            self.create_grace_ledger_entry()
             self.create_additional_salary()
-        self.create_grace_ledger_entry()
 
     def on_update(self):
         """Re-trigger workflow when HR changes status to 'Accepted'."""
         status_changed = self.has_value_changed("status")
         if status_changed and self.status in ["Auto Processed", "Processed"]:
+            self.create_grace_ledger_entry()
             self.create_additional_salary()
 
     def create_grace_ledger_entry(self):
+        if frappe.db.exists("Employee Grace Ledger", {"attendance_penalty": self.name}):
+            return
         ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
         ledger.employee = self.employee
         ledger.attendance = self.attendance
