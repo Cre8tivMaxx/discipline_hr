@@ -5,13 +5,16 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "section_break_policies",
   "attendance_penalty_policy",
   "absence_penalty_policy",
+  "column_break_policies",
   "salary_component",
   "section_break_automation",
   "auto_process_attendance_permission",
   "auto_process_attendance_penalty",
   "auto_submit_additional_salary",
+  "column_break_automation",
   "ignore_grace_ledger_duplicates",
   "split_permissions_and_penalties",
   "extra_minutes_penalty_policy",
@@ -20,6 +23,12 @@
   "default_penalty_notification"
  ],
  "fields": [
+  {
+   "description": "Fallback policies used when not configured on the Shift Type.",
+   "fieldname": "section_break_policies",
+   "fieldtype": "Section Break",
+   "label": "Default Policies"
+  },
   {
    "fieldname": "attendance_penalty_policy",
    "fieldtype": "Link",
@@ -31,6 +40,10 @@
    "fieldtype": "Link",
    "label": "Absence Penalty Policy",
    "options": "Absence Penalty Policy"
+  },
+  {
+   "fieldname": "column_break_policies",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "salary_component",
@@ -66,8 +79,12 @@
    "label": "Auto Submit Additional Salary"
   },
   {
+   "fieldname": "column_break_automation",
+   "fieldtype": "Column Break"
+  },
+  {
    "default": "0",
-   "description": "prevents duplicates in grace ledger for same `Attendance`, `Employee` and the day",
+   "description": "Prevents duplicates in grace ledger for same Attendance, Employee and day.",
    "fieldname": "ignore_grace_ledger_duplicates",
    "fieldtype": "Check",
    "label": "Prevent Grace Ledger Duplicates"

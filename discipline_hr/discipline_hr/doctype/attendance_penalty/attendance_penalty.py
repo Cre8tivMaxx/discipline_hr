@@ -188,12 +188,12 @@ class AttendancePenalty(Document):
         try:
             matrix = at_pp.penalty_matrix or []
             row = next(
-                (r for r in matrix if r.idx == self.violation_number),
+                (r for r in matrix if r.violation_number == self.violation_number),
                 None,
             )
 
             if not row and matrix:
-                row = max(matrix, key=lambda r: r.idx)
+                row = max(matrix, key=lambda r: r.violation_number)
 
             if not row:
                 return 0

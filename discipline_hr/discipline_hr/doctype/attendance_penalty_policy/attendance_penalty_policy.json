@@ -15,6 +15,7 @@
    "fieldname": "penalty_type",
    "fieldtype": "Select",
    "in_list_view": 1,
+   "description": "Factor: multiply penalty minutes by a factor and minute rate. Fixed Per Hour: flat rate per hour of penalty. Penalty Matrix: escalating % of daily rate per violation count.",
    "label": "Penalty Type",
    "options": "\nFactor\nFixed Per Hour\nPenalty Matrix",
    "reqd": 1

@@ -7,14 +7,17 @@
  "engine": "InnoDB",
  "field_order": [
   "employee",
+  "employee_name",
   "attendance",
   "attendance_permission",
+  "column_break_illc",
   "period_start",
   "period_end",
-  "column_break_illc",
+  "allowed_minutes",
+  "section_break_consumption",
   "remaining_minutes_before_consume",
   "consumed_minutes",
-  "allowed_minutes",
+  "column_break_consumption",
   "remaining_minutes",
   "penalty_section",
   "penalty_minutes",
@@ -30,6 +33,30 @@
    "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "attendance",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Attendance",
+   "options": "Attendance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "attendance_permission",
+   "fieldtype": "Link",
+   "label": "Attendance Permission",
+   "options": "Attendance Permissions",
    "read_only": 1
   },
   {
@@ -55,6 +82,18 @@
    "read_only": 1
   },
   {
+   "fieldname": "section_break_consumption",
+   "fieldtype": "Section Break",
+   "label": "Grace Consumption"
+  },
+  {
+   "fieldname": "remaining_minutes_before_consume",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Remaining Minutes Before Consume",
+   "read_only": 1
+  },
+  {
    "fieldname": "consumed_minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -62,32 +101,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "column_break_consumption",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "remaining_minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Remaining Minutes",
-   "read_only": 1
-  },
-  {
-   "fieldname": "attendance",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Attendance",
-   "options": "Attendance",
-   "read_only": 1
-  },
-  {
-   "fieldname": "attendance_permission",
-   "fieldtype": "Link",
-   "label": "Attendance Permission",
-   "options": "Attendance Permissions",
-   "read_only": 1
-  },
-  {
-   "fieldname": "remaining_minutes_before_consume",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Remaining Minutes Before Consume",
    "read_only": 1
   },
   {

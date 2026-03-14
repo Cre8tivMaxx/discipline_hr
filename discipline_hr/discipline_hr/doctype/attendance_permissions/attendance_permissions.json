@@ -6,11 +6,12 @@
  "engine": "InnoDB",
  "field_order": [
   "employee",
-  "minutes",
-  "shift_type",
+  "employee_name",
+  "date",
   "column_break_dtde",
   "attendance",
-  "date",
+  "shift_type",
+  "minutes",
   "section_break_ajdf",
   "reason",
   "auto_created",
@@ -26,19 +27,24 @@
    "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee",
+   "read_only_depends_on": "eval:doc.status !== 'Pending'",
    "reqd": 1
   },
   {
-   "fieldname": "minutes",
-   "fieldtype": "Int",
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Minutes",
-   "reqd": 1
+   "in_preview": 1,
+   "label": "Employee Name",
+   "read_only": 1
   },
   {
-   "fieldname": "reason",
-   "fieldtype": "Small Text",
-   "label": "Reason"
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "read_only_depends_on": "eval:doc.status !== 'Pending'",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_dtde",
@@ -49,33 +55,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Attendance",
-   "options": "Attendance"
-  },
-  {
-   "default": "Pending",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "hidden": 1,
-   "label": "Status",
-   "options": "\nAuto Processed\nProcessed\nPending\nRejected",
-   "read_only": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "auto_created",
-   "fieldtype": "Check",
-   "label": "Auto Created",
-   "read_only": 1
-  },
-  {
-   "fieldname": "section_break_ajdf",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "date",
-   "fieldtype": "Date",
-   "label": "Date",
-   "reqd": 1
+   "options": "Attendance",
+   "read_only_depends_on": "eval:doc.status !== 'Pending'"
   },
   {
    "fieldname": "shift_type",
@@ -85,7 +66,43 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Shift Type",
-   "options": "Shift Type"
+   "options": "Shift Type",
+   "read_only_depends_on": "eval:doc.status !== 'Pending'"
+  },
+  {
+   "fieldname": "minutes",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Late/Early Minutes",
+   "read_only_depends_on": "eval:doc.status !== 'Pending'",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_ajdf",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "read_only_depends_on": "eval:doc.status !== 'Pending'"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_created",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Auto Created",
+   "read_only": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nAuto Processed\nProcessed\nPending\nRejected",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,

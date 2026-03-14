@@ -7,28 +7,32 @@
  "engine": "InnoDB",
  "field_order": [
   "employee",
-  "attendance_permission",
-  "salary_component",
-  "column_break_diql",
+  "employee_name",
   "attendance",
+  "attendance_permission",
+  "column_break_diql",
   "penalty_status",
-  "employee_grace_ledger",
-  "attendance_penalty_policy",
-  "absence_penalty_policy",
-  "section_break_details",
   "violation_date",
+  "status",
+  "section_break_details",
+  "violation_number",
   "start_period",
   "end_period",
   "column_break_policy",
-  "violation_number",
   "grace_consumed",
   "penalty_minutes",
   "section_break_penalty",
+  "attendance_penalty_policy",
+  "absence_penalty_policy",
   "final_penalty_type",
+  "column_break_penalty_calc",
+  "salary_component",
   "penalty_amount",
-  "status",
   "auto_create_salary",
+  "section_break_error",
   "error",
+  "section_break_refs",
+  "employee_grace_ledger",
   "connection_tab"
  ],
  "fields": [
@@ -45,8 +49,13 @@
    "reqd": 1
   },
   {
-   "fieldname": "column_break_diql",
-   "fieldtype": "Column Break"
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Employee Name",
+   "read_only": 1
   },
   {
    "fieldname": "attendance",
@@ -56,9 +65,66 @@
    "read_only": 1
   },
   {
+   "fieldname": "attendance_permission",
+   "fieldtype": "Link",
+   "label": "Attendance Permission",
+   "options": "Attendance Permissions",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_diql",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "attendance.status",
+   "fieldname": "penalty_status",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Attendance Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "violation_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Violation Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nAuto Processed\nPending\nProcessed\nRejected",
+   "read_only": 1
+  },
+  {
    "fieldname": "section_break_details",
    "fieldtype": "Section Break",
    "label": "Violation Details"
+  },
+  {
+   "fieldname": "violation_number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Violation Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "start_period",
+   "fieldtype": "Date",
+   "label": "Start Period"
+  },
+  {
+   "fieldname": "end_period",
+   "fieldtype": "Date",
+   "label": "End Period"
+  },
+  {
+   "fieldname": "column_break_policy",
+   "fieldtype": "Column Break"
   },
   {
    "default": "0",
@@ -76,20 +142,27 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_policy",
-   "fieldtype": "Column Break"
+   "fieldname": "section_break_penalty",
+   "fieldtype": "Section Break",
+   "label": "Penalty Calculation"
   },
   {
-   "fieldname": "violation_number",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Violation Number",
+   "fieldname": "attendance_penalty_policy",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Attendance Penalty Policy",
+   "options": "Attendance Penalty Policy",
    "read_only": 1
   },
   {
-   "fieldname": "section_break_penalty",
-   "fieldtype": "Section Break",
-   "label": "Final Penalty"
+   "fieldname": "absence_penalty_policy",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Absence Penalty Policy",
+   "options": "Absence Penalty Policy",
+   "read_only": 1
   },
   {
    "fieldname": "final_penalty_type",
@@ -99,42 +172,8 @@
    "read_only": 1
   },
   {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "\nAuto Processed\nPending\nProcessed\nRejected",
-   "read_only": 1
-  },
-  {
-   "fieldname": "violation_date",
-   "fieldtype": "Date",
-   "in_list_view": 1,
-   "label": "Violation Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "start_period",
-   "fieldtype": "Date",
-   "label": "Start Period"
-  },
-  {
-   "fieldname": "end_period",
-   "fieldtype": "Date",
-   "label": "End period"
-  },
-  {
-   "fieldname": "attendance_permission",
-   "fieldtype": "Link",
-   "label": "Attendance Permission",
-   "options": "Attendance Permissions",
-   "read_only": 1
-  },
-  {
-   "fieldname": "employee_grace_ledger",
-   "fieldtype": "Link",
-   "label": "Employee Grace Ledger",
-   "options": "Employee Grace Ledger",
-   "read_only": 1
+   "fieldname": "column_break_penalty_calc",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "salary_component",
@@ -146,7 +185,8 @@
   {
    "fieldname": "penalty_amount",
    "fieldtype": "Currency",
-   "label": "Penalty Amount"
+   "label": "Penalty Amount",
+   "read_only": 1
   },
   {
    "default": "0",
@@ -156,48 +196,35 @@
    "read_only": 1
   },
   {
-   "fieldname": "attendance_penalty_policy",
-   "fieldtype": "Link",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Attendance Penalty Policy",
-   "options": "Attendance Penalty Policy",
-   "read_only": 1
+   "collapsible": 1,
+   "depends_on": "eval:doc.error",
+   "fieldname": "section_break_error",
+   "fieldtype": "Section Break",
+   "label": "Error Log"
   },
   {
    "fieldname": "error",
    "fieldtype": "Small Text",
-   "label": "error",
+   "label": "Error",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_refs",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "employee_grace_ledger",
+   "fieldtype": "Link",
+   "label": "Employee Grace Ledger",
+   "options": "Employee Grace Ledger",
    "read_only": 1
   },
   {
    "fieldname": "connection_tab",
    "fieldtype": "Tab Break",
    "label": "Connections"
-  },
-  {
-   "fetch_from": "attendance.status",
-   "fieldname": "penalty_status",
-   "fieldtype": "Data",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Penalty Status",
-   "read_only": 1
-  },
-  {
-   "fieldname": "absence_penalty_policy",
-   "fieldtype": "Link",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Absence Penalty Policy",
-   "options": "Absence Penalty Policy",
-   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -273,5 +300,6 @@
    "color": "Yellow",
    "title": "Pending"
   }
- ]
+ ],
+ "track_changes": 1
 }

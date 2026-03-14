@@ -6,10 +6,19 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "violation_number",
   "percentage",
   "description"
  ],
  "fields": [
+  {
+   "fieldname": "violation_number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Violation Number",
+   "reqd": 1
+  },
   {
    "default": "0",
    "fieldname": "percentage",
