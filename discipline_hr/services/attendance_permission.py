@@ -135,12 +135,14 @@ def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permis
     penalty.violation_date = str(attendance_doc.attendance_date)
     penalty.start_period = shift_doc.custom_period_start_date
     penalty.end_period = shift_doc.custom_period_end_date
+    penalty.penalty_status = attendance_doc.status
     penalty.violation_number = 1 + frappe.db.count(
         "Attendance Penalty",
         {
             "employee": attendance_doc.employee,
             "start_period": shift_doc.custom_period_start_date,
             "end_period": shift_doc.custom_period_end_date,
+            "penalty_status": attendance_doc.status,
         },
     )
     penalty.attendance_penalty_policy = config.extra_minutes_penalty_policy
@@ -182,6 +184,7 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger):
 
     shift_doc = frappe.get_cached_doc("Shift Type", ctx.shift_type)
     config = frappe.get_cached_doc("Discipline HR Settings")
+    attendance = frappe.get_cached_doc("Attendance", ctx.attendance) if ctx.attendance else None
 
     penalty = frappe.new_doc("Attendance Penalty")
     penalty.employee = ctx.employee
@@ -189,17 +192,19 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger):
     penalty.start_period = ledger.period_start
     penalty.end_period = ledger.period_end
 
+    if ctx.attendance:
+        penalty.attendance = ctx.attendance
+    penalty.penalty_status = attendance.status if attendance else "Present"
     penalty.violation_number = 1 + frappe.db.count(
         "Attendance Penalty",
         {
             "employee": ctx.employee,
             "start_period": ledger.period_start,
             "end_period": ledger.period_end,
+            "penalty_status": penalty.penalty_status,
         },
     )
 
-    if ctx.attendance:
-        penalty.attendance = ctx.attendance
     penalty.attendance_permission = ctx.attendance_permission
     penalty.attendance_penalty_policy = (
         shift_doc.custom_attendance_penalty_policy or config.attendance_penalty_policy

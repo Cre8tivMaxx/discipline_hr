@@ -28,15 +28,15 @@ class AttendancePenalty(Document):
         from frappe.types import DF
 
         absence_penalty_policy: DF.Link | None
-        attendance: DF.Link
+        attendance: DF.Link | None
         attendance_penalty_policy: DF.Link | None
         attendance_permission: DF.Link | None
         auto_create_salary: DF.Check
         employee: DF.Link
         employee_grace_ledger: DF.Link | None
+        employee_name: DF.Data | None
         end_period: DF.Date | None
         error: DF.SmallText | None
-        final_penalty_type: DF.Literal["Factor", "Fixed Per Hour", "Penalty Matrix"]
         grace_consumed: DF.Int
         penalty_amount: DF.Currency
         penalty_minutes: DF.Int
@@ -159,7 +159,6 @@ class AttendancePenalty(Document):
             self.attendance_penalty_policy,
             penalty_type,
         )
-        self.final_penalty_type = penalty_type
 
         # Get Penalty
         handlers = {

@@ -14,7 +14,8 @@
       "Skill(commit-commands:commit)",
       "Bash(grep:*)",
       "Bash(pre-commit run:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(find /home/frappe/frappe-bench/apps/discipline_hr/discipline_hr/fixtures -name \"*.json\" | xargs ls -la)"
     ]
   },
   "outputStyle": "Explanatory"

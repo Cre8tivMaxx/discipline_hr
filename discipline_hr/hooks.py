@@ -140,7 +140,10 @@ after_install = "discipline_hr.install.after_install"
 doc_events = {
     "Attendance": {
         "before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
-        "on_submit": "discipline_hr.events.attendance.trigger_create_attendance_permission",
+        "on_submit": [
+            "discipline_hr.events.attendance.trigger_create_attendance_permission",
+            "discipline_hr.events.attendance.create_absence_penalty",
+        ],
     },
 }
 # Scheduled Tasks

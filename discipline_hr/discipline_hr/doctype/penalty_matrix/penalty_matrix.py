@@ -19,5 +19,6 @@ class PenaltyMatrix(Document):
         parentfield: DF.Data
         parenttype: DF.Data
         percentage: DF.Float
+        violation_number: DF.Int
     # end: auto-generated types
     pass

@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.model.naming import make_autoname
 
 
 class AbsencePenaltyPolicy(Document):
@@ -22,6 +23,9 @@ class AbsencePenaltyPolicy(Document):
         penalty_type: DF.Literal["", "Penalty Matrix", "Special Days", "Both"]
         special_days: DF.Table[SpecialDays]
     # end: auto-generated types
+
+    def autoname(self):
+        self.name = make_autoname("ABP-.####")
 
     def validate(self):
         seen = set()

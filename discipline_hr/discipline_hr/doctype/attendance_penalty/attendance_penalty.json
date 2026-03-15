@@ -24,7 +24,6 @@
   "section_break_penalty",
   "attendance_penalty_policy",
   "absence_penalty_policy",
-  "final_penalty_type",
   "column_break_penalty_calc",
   "salary_component",
   "penalty_amount",
@@ -165,13 +164,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "final_penalty_type",
-   "fieldtype": "Select",
-   "label": "Final Penalty Type",
-   "options": "Factor\nFixed Per Hour\nPenalty Matrix",
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_penalty_calc",
    "fieldtype": "Column Break"
   },
@@ -240,7 +232,7 @@
    "link_fieldname": "custom_attendance_penalty"
   }
  ],
- "modified": "2026-03-10 14:53:49.475145",
+ "modified": "2026-03-15 10:42:09.200530",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Penalty",

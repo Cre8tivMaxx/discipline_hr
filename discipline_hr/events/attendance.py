@@ -168,3 +168,76 @@ def _get_attendance_permission_status():
     if cint(config.auto_process_attendance_permission) == 1:
         return "Auto Processed"
     return "Pending"
+
+
+def create_absence_penalty(doc, method=None):
+    """Create an Attendance Penalty for an absent employee on Attendance submit.
+
+    Reads the Absence Penalty Policy from the Shift Type or Discipline HR Settings,
+    counts existing violations in the same period, and inserts a new penalty record.
+    """
+    if doc.status != "Absent":
+        return
+
+    logger.info(
+        "Creating absence penalty | Attendance: %s | Employee: %s",
+        doc.name,
+        doc.employee,
+    )
+    shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
+    config = frappe.get_cached_doc("Discipline HR Settings")
+
+    if not _should_create_absence_penalty(shift_doc, config):
+        return
+
+    penalty = frappe.new_doc("Attendance Penalty")
+    penalty.employee = doc.employee
+    penalty.attendance = doc.name
+    penalty.violation_date = doc.attendance_date
+    penalty.start_period = shift_doc.custom_period_start_date
+    penalty.end_period = shift_doc.custom_period_end_date
+    penalty.absence_penalty_policy = shift_doc.custom_absence_penalty_policy or config.absence_penalty_policy
+    penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
+    penalty.penalty_status = doc.status
+    penalty.violation_number = 1 + frappe.db.count(
+        "Attendance Penalty",
+        {
+            "employee": doc.employee,
+            "start_period": shift_doc.custom_period_start_date,
+            "end_period": shift_doc.custom_period_end_date,
+            "penalty_status": doc.status,
+        },
+    )
+    penalty.status = "Auto Processed" if cint(config.auto_process_attendance_penalty) else "Pending"
+    penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
+    logger.info(
+        "Absence penalty created | Penalty: %s | Employee: %s | Violation #%s",
+        penalty.name,
+        doc.employee,
+        penalty.violation_number,
+    )
+
+
+def _should_create_absence_penalty(shift_doc, config):
+    """Return True if absence penalties should be created for this shift.
+
+    Returns False when:
+    - Auto Attendance is disabled on the shift
+    - No grace period start date is configured on the shift
+    - No Absence Penalty Policy is set on either the shift or Discipline HR Settings
+    """
+    if not shift_doc.enable_auto_attendance or not shift_doc.custom_period_start_date:
+        logger.info(
+            "Absence Penalty is not applicable for this shift | Shift: %s",
+            shift_doc.name,
+        )
+        return False
+
+    if not shift_doc.custom_absence_penalty_policy and not config.absence_penalty_policy:
+        logger.info(
+            "Absence Penalty policy not configured | Shift: %s",
+            shift_doc.name,
+        )
+        return False
+
+    return True
