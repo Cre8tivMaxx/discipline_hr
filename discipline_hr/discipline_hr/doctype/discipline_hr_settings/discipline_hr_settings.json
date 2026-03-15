@@ -10,6 +10,7 @@
   "absence_penalty_policy",
   "column_break_policies",
   "salary_component",
+  "month_days",
   "section_break_automation",
   "auto_process_attendance_permission",
   "auto_process_attendance_penalty",
@@ -51,6 +52,14 @@
    "label": "Salary Component",
    "link_filters": "[[\"Salary Component\",\"type\",\"=\",\"Deduction\"]]",
    "options": "Salary Component"
+  },
+  {
+   "default": "30",
+   "description": "Number of days in a month used to compute the employee daily rate (base / month days). Default is 30.",
+   "fieldname": "month_days",
+   "fieldtype": "Int",
+   "label": "Month Days",
+   "non_negative": 1
   },
   {
    "fieldname": "section_break_automation",

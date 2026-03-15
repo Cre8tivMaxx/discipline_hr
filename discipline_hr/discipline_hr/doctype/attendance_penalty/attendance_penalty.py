@@ -125,9 +125,8 @@ class AttendancePenalty(Document):
                 "Found structure assignment | Employee %s | Assignment %s", self.employee, assignment
             )
             if assignment:
-                # TODO Add config to let the user set the count of days in month (30).
-
-                daily_rate = flt(assignment) / 30.0
+                month_days = cint(frappe.db.get_single_value("Discipline HR Settings", "month_days")) or 30
+                daily_rate = flt(assignment) / month_days
                 logger.debug(
                     "Successfully Fetched Daily rate | Employee %s | Base %s | daily_rate %s",
                     self.employee,
