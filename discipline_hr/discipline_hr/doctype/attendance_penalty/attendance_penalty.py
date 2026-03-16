@@ -6,6 +6,9 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cint, flt, today
 
+from discipline_hr.discipline_hr.doctype.absence_penalty_policy.absence_penalty_policy import (
+    AbsencePenaltyPolicy,
+)
 from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_penalty_policy import (
     AttendancePenaltyPolicy,
 )
@@ -145,25 +148,46 @@ class AttendancePenalty(Document):
 
     def get_penalty_amount(self):
         """Calculate Deduction amount based on Configuration"""
-        if not self.attendance_penalty_policy:
-            logger.warning("Attendance Policy is not set. %s", self)
+        if self.penalty_status == "Present":
+            if not self.attendance_penalty_policy:
+                logger.warning("attendance_penalty_policy is not set | Penalty: %s", self.name)
+                return 0.0
+
+            penalty_type = frappe.get_value(
+                "Attendance Penalty Policy", self.attendance_penalty_policy, "penalty_type"
+            )
+            penalty_type = f"Attendance {penalty_type}"
+
+            logger.debug(
+                "Found Penalty Type for | ATP: %s | Penalty Type: %s ",
+                self.attendance_penalty_policy,
+                penalty_type,
+            )
+        elif self.penalty_status == "Absent":
+            if not self.absence_penalty_policy:
+                logger.warning("absence_penalty_policy is not set | Penalty: %s", self.name)
+                return 0.0
+
+            penalty_type = frappe.get_value(
+                "Absence Penalty Policy", self.absence_penalty_policy, "penalty_type"
+            )
+            penalty_type = f"Absence {penalty_type}"
+
+            logger.debug(
+                "Found Penalty Type for | APP: %s | Penalty Type: %s ",
+                self.absence_penalty_policy,
+                penalty_type,
+            )
+        else:
+            logger.warning("Penalty Policy is not set. %s", self)
             return 0.0
-
-        penalty_type = frappe.get_value(
-            "Attendance Penalty Policy", self.attendance_penalty_policy, "penalty_type"
-        )
-
-        logger.debug(
-            "Found Penalty Type for | ATP: %s | Penalty Type: %s ",
-            self.attendance_penalty_policy,
-            penalty_type,
-        )
 
         # Get Penalty
         handlers = {
-            "Fixed Per Hour": self._fixed_per_hour_deduction,
-            "Penalty Matrix": self._penalty_matrix_deduction,
-            "Factor": self._factor_deduction,
+            "Attendance Fixed Per Hour": self._fixed_per_hour_deduction,
+            "Attendance Penalty Matrix": self._penalty_matrix_deduction,
+            "Attendance Factor": self._factor_deduction,
+            "Absence Penalty Matrix": self._absence_penalty_matrix,
         }
         handler = handlers.get(penalty_type)
 
@@ -173,18 +197,21 @@ class AttendancePenalty(Document):
 
         return handler()
 
-    def _penalty_matrix_deduction(self):
+    def _matrix_deduction_from_policy(self, policy_doc: Document, label: str) -> float:
         """Calculate penalty using a violation-number lookup table.
 
         Finds the matrix row matching ``violation_number``; uses the last row
         if no exact match exists. Returns ``daily_rate * percentage``.
 
+        Args:
+            policy_doc: The penalty policy document containing ``penalty_matrix``.
+            label: Human-readable label for log messages (e.g. "Attendance Penalty").
+
         Returns:
             Penalty amount as a float.
         """
-        at_pp = self._get_attendance_penalty_policy_doc()
         try:
-            matrix = at_pp.penalty_matrix or []
+            matrix = policy_doc.penalty_matrix or []
             row = next(
                 (r for r in matrix if r.violation_number == self.violation_number),
                 None,
@@ -194,26 +221,37 @@ class AttendancePenalty(Document):
                 row = max(matrix, key=lambda r: r.violation_number)
 
             if not row:
+                logger.warning("Matrix has no penalties to apply | Penalty Policy: %s", policy_doc)
                 return 0
 
             percentage = flt(row.percentage)
 
             logger.debug(
-                "Successfully fetched PM percentage | Attendance Penalty %s | PM %s | Percentage %s",
+                "Successfully fetched PM percentage | %s %s | PM %s | Percentage %s",
+                label,
                 self,
-                at_pp,
+                policy_doc,
                 percentage,
             )
 
             return flt(self._get_employee_daily_rate() * percentage)
         except Exception as e:
             logger.warning(
-                "Failed to fetch PM Percentage | Attendance Penalty %s | PM %s | Exception %s",
+                "Failed to fetch PM Percentage | %s %s | PM %s | Exception %s",
+                label,
                 self,
-                at_pp,
+                policy_doc,
                 e,
             )
         return 0
+
+    def _penalty_matrix_deduction(self):
+        return self._matrix_deduction_from_policy(
+            self._get_attendance_penalty_policy_doc(), "Attendance Penalty"
+        )
+
+    def _absence_penalty_matrix(self) -> float:
+        return self._matrix_deduction_from_policy(self._get_absence_penalty_policy_doc(), "Absence Penalty")
 
     def _fixed_per_hour_deduction(self):
         """Calculate penalty as ``penalty_minutes * (rate_per_hour / 60)``.
@@ -235,11 +273,18 @@ class AttendancePenalty(Document):
 
         return self.penalty_minutes * rate_per_minute
 
+    def _get_absence_penalty_policy_doc(self):
+        """Fetch and return the linked ``AbsencePenaltyPolicy`` document."""
+        return cast(
+            AbsencePenaltyPolicy,
+            frappe.get_cached_doc("Absence Penalty Policy", self.absence_penalty_policy),
+        )
+
     def _get_attendance_penalty_policy_doc(self):
         """Fetch and return the linked ``AttendancePenaltyPolicy`` document."""
         return cast(
             AttendancePenaltyPolicy,
-            frappe.get_doc("Attendance Penalty Policy", self.attendance_penalty_policy),
+            frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy),
         )
 
     def _factor_deduction(self) -> float:

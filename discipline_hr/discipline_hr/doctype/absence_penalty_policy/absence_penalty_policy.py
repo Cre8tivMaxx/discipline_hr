@@ -20,7 +20,7 @@ class AbsencePenaltyPolicy(Document):
         from discipline_hr.discipline_hr.doctype.special_days.special_days import SpecialDays
 
         penalty_matrix: DF.Table[PenaltyMatrix]
-        penalty_type: DF.Literal["", "Penalty Matrix", "Special Days", "Both"]
+        penalty_type: DF.Literal["", "Penalty Matrix", "Special Days", "Matrix & Special Days"]
         special_days: DF.Table[SpecialDays]
     # end: auto-generated types
 

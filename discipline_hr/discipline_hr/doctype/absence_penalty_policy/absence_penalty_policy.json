@@ -14,17 +14,17 @@
    "fieldname": "penalty_type",
    "fieldtype": "Select",
    "label": "Penalty Type",
-   "options": "\nPenalty Matrix\nSpecial Days\nBoth"
+   "options": "\nPenalty Matrix\nSpecial Days\nMatrix & Special Days"
   },
   {
-   "depends_on": "eval:doc.penalty_type == \"Both\" || doc.penalty_type == \"Penalty Matrix\"",
+   "depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Penalty Matrix\"",
    "fieldname": "penalty_matrix",
    "fieldtype": "Table",
    "label": "Penalty Matrix",
    "options": "Penalty Matrix"
   },
   {
-   "depends_on": "eval:doc.penalty_type == \"Both\" || doc.penalty_type == \"Special Days\"",
+   "depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Special Days\"",
    "fieldname": "special_days",
    "fieldtype": "Table",
    "label": "Special Days",
@@ -40,10 +40,11 @@
    "link_fieldname": "absence_penalty_policy"
   }
  ],
- "modified": "2026-03-10 11:04:13.439560",
+ "modified": "2026-03-15 13:21:11.471760",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Absence Penalty Policy",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {
@@ -61,7 +62,6 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "naming_rule": "By script",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
