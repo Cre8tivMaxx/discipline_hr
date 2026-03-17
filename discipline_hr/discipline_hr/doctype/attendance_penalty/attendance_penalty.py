@@ -190,6 +190,7 @@ class AttendancePenalty(Document):
             "Attendance Factor": self._factor_deduction,
             "Absence Penalty Matrix": self._absence_penalty_matrix,
             "Absence Special Days": self._special_day_deduction,
+            "Absence Matrix & Special Days": self._matrix_and_special_days,
         }
         handler = handlers.get(penalty_type)
 
@@ -275,6 +276,9 @@ class AttendancePenalty(Document):
             percentage,
         )
         return flt(self._get_employee_daily_rate() * percentage)
+
+    def _matrix_and_special_days(self):
+        return self._special_day_deduction() + self._absence_penalty_matrix()
 
     def _penalty_matrix_deduction(self):
         return self._matrix_deduction_from_policy(
