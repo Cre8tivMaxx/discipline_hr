@@ -80,6 +80,7 @@ class AttendancePenalty(Document):
 
     def validate(self):
         """Calculate and store the penalty amount before saving."""
+        self.description = ""
         self.penalty_amount = self.get_penalty_amount()
 
     def create_additional_salary(self):
@@ -105,6 +106,7 @@ class AttendancePenalty(Document):
                     "type": "Deduction",
                     "amount": self.penalty_amount,
                     "custom_attendance_penalty": self.name,
+                    "custom_penalty_description": self.description,
                     "overwrite_salary_structure_amount": 0,
                 }
             )
@@ -233,6 +235,7 @@ class AttendancePenalty(Document):
                 logger.warning("Matrix has no penalties to apply | Penalty Policy: %s", policy_doc)
                 return 0
 
+            self.description = row.description or ""
             percentage = flt(row.percentage)
 
             logger.debug(
@@ -272,6 +275,7 @@ class AttendancePenalty(Document):
             logger.info("No special day entry for %s | Policy: %s", violation_day, policy_doc.name)
             return 0
 
+        self.description = row.description or ""
         percentage = flt(row.percentage_of_daily_rate)
 
         logger.debug(
@@ -284,7 +288,12 @@ class AttendancePenalty(Document):
         return flt(self._get_employee_daily_rate() * percentage)
 
     def _matrix_and_special_days(self):
-        return self._special_day_deduction() + self._absence_penalty_matrix()
+        special_amount = self._special_day_deduction()
+        special_desc = self.description or ""
+        matrix_amount = self._absence_penalty_matrix()
+        matrix_desc = self.description or ""
+        self.description = "\n".join(filter(None, [special_desc, matrix_desc]))
+        return special_amount + matrix_amount
 
     def _penalty_matrix_deduction(self):
         return self._matrix_deduction_from_policy(
