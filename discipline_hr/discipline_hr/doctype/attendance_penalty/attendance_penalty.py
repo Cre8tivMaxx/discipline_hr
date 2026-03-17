@@ -1,10 +1,11 @@
 # Copyright (c) 2026, Abdelrahman Elsayed and contributors
 # For license information, please see license.txt
+from calendar import day_name
 from typing import cast
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import cint, flt, today
+from frappe.utils import cint, flt, getdate, today
 
 from discipline_hr.discipline_hr.doctype.absence_penalty_policy.absence_penalty_policy import (
     AbsencePenaltyPolicy,
@@ -188,6 +189,7 @@ class AttendancePenalty(Document):
             "Attendance Penalty Matrix": self._penalty_matrix_deduction,
             "Attendance Factor": self._factor_deduction,
             "Absence Penalty Matrix": self._absence_penalty_matrix,
+            "Absence Special Days": self._special_day_deduction,
         }
         handler = handlers.get(penalty_type)
 
@@ -244,6 +246,35 @@ class AttendancePenalty(Document):
                 e,
             )
         return 0
+
+    def _special_day_deduction(self):
+        """Calculate penalty as ``daily_rate * percentage_of_daily_rate`` for the violation weekday.
+
+        Looks up the violation date's weekday in the policy's ``special_days``
+        table. Returns 0 if the weekday has no entry.
+
+        Returns:
+            Penalty amount as a float.
+        """
+        policy_doc = self._get_absence_penalty_policy_doc()
+        violation_day = day_name[getdate(self.violation_date).weekday()]
+        special_days = policy_doc.special_days or []
+        row = next((r for r in special_days if r.week_day == violation_day), None)
+
+        if not row:
+            logger.info("No special day entry for %s | Policy: %s", violation_day, policy_doc.name)
+            return 0
+
+        percentage = flt(row.percentage_of_daily_rate)
+
+        logger.debug(
+            "Successfully fetched Special Day percentage | %s %s | SD %s | Percentage %s",
+            violation_day,
+            self,
+            policy_doc,
+            percentage,
+        )
+        return flt(self._get_employee_daily_rate() * percentage)
 
     def _penalty_matrix_deduction(self):
         return self._matrix_deduction_from_policy(

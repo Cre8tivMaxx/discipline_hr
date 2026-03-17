@@ -27,6 +27,12 @@ class TestAttendancePenalty(TestCase):
         cls.absence_policy.append("penalty_matrix", {"violation_number": 2, "percentage": 0.50})
         cls.absence_policy.append("penalty_matrix", {"violation_number": 3, "percentage": 1})
 
+        cls.special_days = AbsencePenaltyPolicy({"doctype": "Absence Penalty Policy"})
+        cls.special_days.append("special_days", {"week_day": "Tuesday", "percentage_of_daily_rate": 0.25})
+        cls.special_days.append("special_days", {"week_day": "Wednesday", "percentage_of_daily_rate": 0.50})
+        cls.special_days.append("special_days", {"week_day": "Saturday", "percentage_of_daily_rate": 1})
+        cls.special_days.append("special_days", {"week_day": "Sunday", "percentage_of_daily_rate": 2})
+
     def setUp(self):
         self.penalty = AttendancePenalty({"doctype": "Attendance Penalty", "attendance": "Fake Att"})
 
@@ -301,3 +307,60 @@ class TestAttendancePenalty(TestCase):
 
         # Assert
         self.assertEqual(result, 0.0)
+
+    @patch(
+        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
+    )
+    @patch(
+        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
+    )
+    def test_special_day_deduction_missing_day(self, mock_policy_doc, mock_daily_rate):
+        """Test that missing day in special_days returns 0.0"""
+        # Arrange
+        self.penalty.violation_date = "2026-03-13"  # Friday — not in special_days
+        mock_policy_doc.return_value = self.special_days
+        mock_daily_rate.return_value = 300
+
+        # Act
+        result = self.penalty._special_day_deduction()
+
+        # Assert
+        self.assertEqual(result, 0.0, "Non-special weekday should return 0.0")
+
+    @patch(
+        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
+    )
+    @patch(
+        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
+    )
+    def test_special_day_deduction_existing_day(self, mock_policy_doc, mock_daily_rate):
+        """Test that existing day in special_days returns percentage * daily_rate"""
+        # Arrange
+        self.penalty.violation_date = "2026-03-15"  # Sunday — percentage 2 in special_days
+        mock_daily_rate.return_value = 300
+        mock_policy_doc.return_value = self.special_days
+
+        # Act
+        result = self.penalty._special_day_deduction()
+
+        # Assert
+        self.assertEqual(result, 600.0, "Sunday (2.0 x 300) should return 600.0")
+
+    @patch(
+        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
+    )
+    @patch(
+        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
+    )
+    def test_empty_special_day_table(self, mock_policy_doc, mock_daily_rate):
+        """Test that an empty special_days table returns 0.0"""
+        # Arrange
+        self.penalty.violation_date = "2026-03-15"  # Any date — table is empty
+        mock_daily_rate.return_value = 300
+        mock_policy_doc.return_value = AbsencePenaltyPolicy({"doctype": "Absence Penalty Policy"})
+
+        # Act
+        result = self.penalty._special_day_deduction()
+
+        # Assert
+        self.assertEqual(result, 0.0, "Empty special_days table should return 0.0")
