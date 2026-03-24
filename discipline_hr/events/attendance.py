@@ -241,3 +241,88 @@ def _should_create_absence_penalty(shift_doc, config):
         return False
 
     return True
+
+
+def cascade_cancel_attendance(doc, method=None):
+    """Hard-delete all downstream discipline_hr docs when an Attendance is cancelled.
+
+    Deletion order (leaf-first to respect link references):
+      1. Additional Salary  (cancel if submitted, then delete)
+      2. Attendance Penalty
+      3. Employee Grace Ledger  (both permission-flow and penalty-flow entries)
+      4. Attendance Permissions  (only auto_created=1)
+
+    Args:
+        doc: The ``Attendance`` document being cancelled.
+        method: Unused; required by Frappe hook signature.
+    """
+    config = frappe.get_cached_doc("Discipline HR Settings")
+    if not cint(config.cascade_cancel_attendance):
+        logger.info("Cascade cancel skipped for %s: disabled in Discipline HR Settings", doc.name)
+        return
+
+    attendance_name = doc.name
+
+    # Step 1: Collect penalties linked to this attendance
+    penalty_names = frappe.get_all(
+        "Attendance Penalty",
+        filters={"attendance": attendance_name},
+        pluck="name",
+    )
+
+    # Step 2: Delete Additional Salaries linked to those penalties
+    if penalty_names:
+        additional_salaries = frappe.get_all(
+            "Additional Salary",
+            filters={"custom_attendance_penalty": ("in", penalty_names)},
+            fields=["name", "docstatus"],
+        )
+        for sal in additional_salaries:
+            if sal.docstatus == 1:
+                sal_doc = frappe.get_doc("Additional Salary", sal.name)
+                sal_doc.cancel()
+            frappe.delete_doc("Additional Salary", sal.name, force=True, ignore_permissions=True)
+            logger.info(
+                "Cascade cancel: deleted Additional Salary %s (Attendance %s)", sal.name, attendance_name
+            )
+
+    # Step 3: Delete Attendance Penalties
+    for penalty_name in penalty_names:
+        frappe.delete_doc("Attendance Penalty", penalty_name, force=True, ignore_permissions=True)
+        logger.info(
+            "Cascade cancel: deleted Attendance Penalty %s (Attendance %s)", penalty_name, attendance_name
+        )
+
+    # Step 4: Delete all Employee Grace Ledger entries (permission-flow + penalty-flow)
+    ledger_names = frappe.get_all(
+        "Employee Grace Ledger",
+        filters={"attendance": attendance_name},
+        pluck="name",
+    )
+    for ledger_name in ledger_names:
+        frappe.delete_doc("Employee Grace Ledger", ledger_name, force=True, ignore_permissions=True)
+        logger.info(
+            "Cascade cancel: deleted Employee Grace Ledger %s (Attendance %s)", ledger_name, attendance_name
+        )
+
+    # Step 5: Delete auto-created Attendance Permissions only
+    permission_names = frappe.get_all(
+        "Attendance Permissions",
+        filters={"attendance": attendance_name, "auto_created": 1},
+        pluck="name",
+    )
+    for perm_name in permission_names:
+        frappe.delete_doc("Attendance Permissions", perm_name, force=True, ignore_permissions=True)
+        logger.info(
+            "Cascade cancel: deleted Attendance Permissions %s (Attendance %s)", perm_name, attendance_name
+        )
+
+    total = len(penalty_names) + len(ledger_names) + len(permission_names)
+    if total:
+        logger.info(
+            "Cascade cancel complete for Attendance %s: %d penalties, %d ledgers, %d permissions deleted",
+            attendance_name,
+            len(penalty_names),
+            len(ledger_names),
+            len(permission_names),
+        )
