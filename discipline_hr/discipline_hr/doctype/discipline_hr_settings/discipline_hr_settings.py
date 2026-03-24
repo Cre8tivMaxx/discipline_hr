@@ -16,6 +16,7 @@ class DisciplineHRSettings(Document):
 
         absence_penalty_policy: DF.Link | None
         attendance_penalty_policy: DF.Link | None
+        cascade_cancel_attendance: DF.Check
         auto_process_attendance_penalty: DF.Check
         auto_process_attendance_permission: DF.Check
         auto_submit_additional_salary: DF.Check

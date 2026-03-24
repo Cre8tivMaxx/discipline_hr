@@ -19,6 +19,7 @@
   "ignore_grace_ledger_duplicates",
   "split_permissions_and_penalties",
   "extra_minutes_penalty_policy",
+  "cascade_cancel_attendance",
   "section_break_notifications",
   "default_pending_notification",
   "default_penalty_notification"
@@ -133,6 +134,13 @@
    "link_filters": "[[\"Attendance Penalty Policy\",\"penalty_type\",\"in\",[\"Factor\",\"Fixed Per Hour\"]]]",
    "mandatory_depends_on": "eval:doc.split_permissions_and_penalties == 1",
    "options": "Attendance Penalty Policy"
+  },
+  {
+   "default": "0",
+   "description": "If checked, cancelling an Attendance will cascade-delete all downstream documents (Attendance Permissions, Grace Ledger, Attendance Penalty, Additional Salary).",
+   "fieldname": "cascade_cancel_attendance",
+   "fieldtype": "Check",
+   "label": "Cascade Cancel Attendance"
   }
  ],
  "grid_page_length": 50,
