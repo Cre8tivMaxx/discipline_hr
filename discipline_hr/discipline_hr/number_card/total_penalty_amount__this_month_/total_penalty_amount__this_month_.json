@@ -1,0 +1,22 @@
+{
+ "aggregate_function_based_on": "penalty_amount",
+ "creation": "2026-03-25 15:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Discipline Penalty",
+ "dynamic_filters_json": "",
+ "filters_json": "[[\"Discipline Penalty\",\"violation_date\",\"Timespan\",\"this month\",false]]",
+ "function": "Sum",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Total Penalty Amount (This Month)",
+ "modified": "2026-03-25 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Discipline Hr",
+ "name": "Total Penalty Amount (This Month)",
+ "owner": "Administrator",
+ "show_percentage_stats": 1,
+ "stats_time_interval": "Monthly",
+ "type": "Document Type"
+}

@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"hYBo592y2A\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\" data--h-bstatus=\\\"0OBSERVED\\\">Discipline HR</span>\",\"col\":12}},{\"id\":\"txn-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\" data--h-bstatus=\\\"0OBSERVED\\\">Transactions</span>\",\"col\":12}},{\"id\":\"sc-attendance\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":4}},{\"id\":\"sc-permissions\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Permissions\",\"col\":4}},{\"id\":\"TRTg8dsxgj\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Discipline Penalty\",\"col\":3}},{\"id\":\"sc-ledger\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Grace Ledger\",\"col\":4}},{\"id\":\"cfg-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\" data--h-bstatus=\\\"0OBSERVED\\\">Configuration</span>\",\"col\":12}},{\"id\":\"sc-policy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty Policy\",\"col\":5}},{\"id\":\"IjDiAK8u_0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Absence Penalty Policy\",\"col\":5}},{\"id\":\"sc-shift\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":5}},{\"id\":\"sc-settings\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Discipline Hr Settings\",\"col\":5}}]",
+ "content": "[{\"id\":\"hYBo592y2A\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\" data--h-bstatus=\\\"0OBSERVED\\\">Discipline HR</span>\",\"col\":12}},{\"id\":\"dashboard-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\" data--h-bstatus=\\\"0OBSERVED\\\">Dashboard</span>\",\"col\":12}},{\"id\":\"nc-pending-permissions\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Attendance Permissions\",\"col\":6}},{\"id\":\"nc-pending-penalty\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Discipline Penalty\",\"col\":6}},{\"id\":\"txn-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\" data--h-bstatus=\\\"0OBSERVED\\\">Transactions</span>\",\"col\":12}},{\"id\":\"sc-attendance\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":4}},{\"id\":\"sc-permissions\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Permissions\",\"col\":4}},{\"id\":\"sc-penalty\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Discipline Penalty\",\"col\":4}},{\"id\":\"sc-ledger\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Grace Ledger\",\"col\":4}},{\"id\":\"cfg-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted uppercase\\\" data--h-bstatus=\\\"0OBSERVED\\\">Configuration</span>\",\"col\":12}},{\"id\":\"sc-policy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Penalty Policy\",\"col\":4}},{\"id\":\"sc-absence-policy\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Absence Penalty Policy\",\"col\":4}},{\"id\":\"sc-shift\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":4}},{\"id\":\"sc-settings\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Discipline Hr Settings\",\"col\":4}}]",
  "creation": "2026-02-24 13:40:42.345311",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,11 +13,20 @@
  "is_hidden": 0,
  "label": "Discipline Hr",
  "links": [],
- "modified": "2026-03-25 14:06:00.647354",
+ "modified": "2026-03-25 20:42:26.587486",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline Hr",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Pending Attendance Permissions",
+   "number_card_name": "Pending Attendance Permissions"
+  },
+  {
+   "label": "Pending Discipline Penalty",
+   "number_card_name": "Pending Discipline Penalty"
+  }
+ ],
  "owner": "Administrator",
  "parent_page": "HR",
  "public": 1,

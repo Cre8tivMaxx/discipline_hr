@@ -239,6 +239,8 @@ fixtures = [
     },
     {"dt": "Workflow State"},
     {"dt": "Workflow", "filters": [["name", "in", ["Attendance Permission", "Discipline Penalty"]]]},
+    {"dt": "Number Card", "filters": [["module", "=", "Discipline Hr"]]},
+    {"dt": "Dashboard Chart", "filters": [["module", "=", "Discipline Hr"]]},
 ]
 
 export_python_type_annotations = True
