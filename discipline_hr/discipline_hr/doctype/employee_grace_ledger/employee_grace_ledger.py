@@ -16,7 +16,7 @@ class EmployeeGraceLedger(Document):
 
         allowed_minutes: DF.Int
         attendance: DF.Link | None
-        attendance_penalty: DF.Link | None
+        discipline_penalty: DF.Link | None
         consumed_minutes: DF.Int
         employee: DF.Link | None
         penalty_minutes: DF.Int

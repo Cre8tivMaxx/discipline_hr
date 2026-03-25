@@ -128,10 +128,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "attendance_penalty",
+   "fieldname": "discipline_penalty",
    "fieldtype": "Link",
-   "label": "Attendance Penalty",
-   "options": "Attendance Penalty",
+   "label": "Discipline Penalty",
+   "options": "Discipline Penalty",
    "read_only": 1
   }
  ],
@@ -140,7 +140,7 @@
  "links": [
   {
    "group": "Discipline Hr",
-   "link_doctype": "Attendance Penalty",
+   "link_doctype": "Discipline Penalty",
    "link_fieldname": "employee_grace_ledger"
   }
  ],

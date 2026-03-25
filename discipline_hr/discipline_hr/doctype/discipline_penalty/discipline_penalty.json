@@ -1,8 +1,8 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "ATT-PEN-.####",
- "creation": "2026-02-21 11:03:09.659556",
+ "autoname": "DIS-PEN-.####",
+ "creation": "2026-03-25 13:23:25.243748",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -232,17 +232,17 @@
   {
    "group": "Discipline Hr",
    "link_doctype": "Employee Grace Ledger",
-   "link_fieldname": "attendance_penalty"
+   "link_fieldname": "discipline_penalty"
   },
   {
    "link_doctype": "Additional Salary",
-   "link_fieldname": "custom_attendance_penalty"
+   "link_fieldname": "custom_discipline_penalty"
   }
  ],
- "modified": "2026-03-15 10:42:09.200530",
+ "modified": "2026-03-25 13:23:25.243748",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
- "name": "Attendance Penalty",
+ "name": "Discipline Penalty",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [

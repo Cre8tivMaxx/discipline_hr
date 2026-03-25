@@ -500,7 +500,7 @@
    "hidden": 0,
    "idx": 2,
    "is_child_table": 0,
-   "link_doctype": "Attendance Penalty",
+   "link_doctype": "Discipline Penalty",
    "link_fieldname": "attendance",
    "modified": "2026-03-08 11:41:39.246871",
    "modified_by": "Administrator",

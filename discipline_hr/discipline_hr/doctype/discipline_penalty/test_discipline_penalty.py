@@ -7,13 +7,15 @@ from unittest.mock import MagicMock, patch
 from discipline_hr.discipline_hr.doctype.absence_penalty_policy.absence_penalty_policy import (
     AbsencePenaltyPolicy,
 )
-from discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty import AttendancePenalty
 from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_penalty_policy import (
     AttendancePenaltyPolicy,
 )
+from discipline_hr.discipline_hr.doctype.discipline_penalty.discipline_penalty import DisciplinePenalty
+
+MODULE = "discipline_hr.discipline_hr.doctype.discipline_penalty.discipline_penalty"
 
 
-class TestAttendancePenalty(TestCase):
+class TestDisciplinePenalty(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -34,7 +36,7 @@ class TestAttendancePenalty(TestCase):
         cls.special_days.append("special_days", {"week_day": "Sunday", "percentage_of_daily_rate": 2})
 
     def setUp(self):
-        self.penalty = AttendancePenalty({"doctype": "Attendance Penalty", "attendance": "Fake Att"})
+        self.penalty = DisciplinePenalty({"doctype": "Discipline Penalty", "attendance": "Fake Att"})
 
     def test_fixed_per_hour_penalty(self):
         """Test fixed per hour deduction normal case (30min, rate=60 → 30.0)"""
@@ -64,12 +66,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Fixed per hour should result 30")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_attendance_penalty_policy_doc"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_minute_rate"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
+    @patch(f"{MODULE}.DisciplinePenalty._get_minute_rate")
     def test_valid_factor_deduction(self, mock_minute_rate, mock_policy):
         """Test normal case 5mins * factor=5 * rate=5 = 125"""
         # Arrange
@@ -83,12 +81,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 125.0, "Factor Deduction 5 * 5 * 5 failed")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_attendance_penalty_policy_doc"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_minute_rate"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
+    @patch(f"{MODULE}.DisciplinePenalty._get_minute_rate")
     def test_factor_deduction_zero(self, mock_minute_rate, mock_policy):
         "Test minutes factor = 0, should result 0 penalty"
         # Arrange
@@ -102,12 +96,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Factor Deduction  deducted_minutes_factor = 0 * n * n failed")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_attendance_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
     def test_attendance_penalty_matrix_overflow(self, mock_policy, mock_daily_rate):
         "Test penalty matrix valid maximum day"
         # Arrange
@@ -121,12 +111,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 100.0, "violation number=4 > Penalty Matrix=3 idx didn't pass")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
     def test_absence_penalty_matrix_overflow(self, mock_policy, mock_daily_rate):
         "Test absence penalty matrix valid maximum day"
         # Arrange
@@ -140,12 +126,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 100.0, "violation number=4 > Penalty Matrix=3 idx didn't pass")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_attendance_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
     def test_attendance_penalty_matrix_exact_number(self, mock_policy, mock_daily_rate):
         "Test attendance penalty matrix valid exact number 2 -> 0.5 * daily_rate"
         # Arrange
@@ -159,12 +141,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 50.0, "violation number=2 > Penalty Matrix=2 should return 0.5 * 100 -> 50")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
     def test_absence_penalty_matrix_exact_number(self, mock_policy, mock_daily_rate):
         "Test absence penalty matrix valid exact number 2 -> 0.5 * daily_rate"
         # Arrange
@@ -178,9 +156,7 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 50.0, "violation number=2 > Penalty Matrix=2 should return 0.5 * 100 -> 50")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_attendance_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
     def test_penalty_matrix_deduction_empty_matrix(self, mock_policy):
         """Test empty matrix [] should return 0"""
         # Arrange
@@ -193,9 +169,7 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Empty Matrix should return 0 deduction")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
     def test_absence_penalty_matrix_empty_matrix(self, mock_policy):
         """Test empty matrix [] should return 0"""
         # Arrange
@@ -208,10 +182,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Empty Matrix should return 0 deduction")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.db.get_single_value"
-    )
-    @patch("discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.db.get_value")
+    @patch(f"{MODULE}.frappe.db.get_single_value")
+    @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate(self, mock_assignment, mock_single_value):
         """Test Daily rate for monthly 3000 / 30 -> 100"""
         # Arrange
@@ -224,10 +196,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 100, "Failed to get employee daily rate 3000 -> 100")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.db.get_single_value"
-    )
-    @patch("discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.db.get_value")
+    @patch(f"{MODULE}.frappe.db.get_single_value")
+    @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate_custom_month_days(self, mock_assignment, mock_single_value):
         """Test Daily rate with custom month_days: 3000 / 26 ≈ 115.38"""
         # Arrange
@@ -240,7 +210,7 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertAlmostEqual(result, 3000 / 26, places=2)
 
-    @patch("discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.db.get_value")
+    @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate_zero_assignment(self, mock_assignment):
         """Test Daily rate for Missing Salary Structure assignment or 0 -> 0"""
         # Arrange
@@ -252,7 +222,7 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0, "Failed to get employee daily rate 0 -> 0")
 
-    @patch("discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.db.get_value")
+    @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate_none_assignment(self, mock_assignment):
         """Test Daily rate for Missing Salary Structure assignment or 0 -> 0"""
         # Arrange
@@ -264,7 +234,7 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0, "Failed to get employee daily rate 0 -> 0")
 
-    @patch("discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.get_value")
+    @patch(f"{MODULE}.frappe.get_value")
     def test_get_penalty_amount_present_dispatches_attendance_handler(self, mock_get_value):
         """Test that penalty_status=Present dispatches to attendance handler"""
         # Arrange
@@ -280,7 +250,7 @@ class TestAttendancePenalty(TestCase):
         mock_handler.assert_called_once()
         self.assertEqual(result, 50.0)
 
-    @patch("discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.frappe.get_value")
+    @patch(f"{MODULE}.frappe.get_value")
     def test_get_penalty_amount_absent_dispatches_absence_handler(self, mock_get_value):
         """Test that penalty_status=Absent dispatches to absence handler"""
         # Arrange
@@ -308,12 +278,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0)
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
     def test_special_day_deduction_missing_day(self, mock_policy_doc, mock_daily_rate):
         """Test that missing day in special_days returns 0.0"""
         # Arrange
@@ -327,12 +293,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Non-special weekday should return 0.0")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
     def test_special_day_deduction_existing_day(self, mock_policy_doc, mock_daily_rate):
         """Test that existing day in special_days returns percentage * daily_rate"""
         # Arrange
@@ -346,12 +308,8 @@ class TestAttendancePenalty(TestCase):
         # Assert
         self.assertEqual(result, 600.0, "Sunday (2.0 x 300) should return 600.0")
 
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_employee_daily_rate"
-    )
-    @patch(
-        "discipline_hr.discipline_hr.doctype.attendance_penalty.attendance_penalty.AttendancePenalty._get_absence_penalty_policy_doc"
-    )
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
     def test_empty_special_day_table(self, mock_policy_doc, mock_daily_rate):
         """Test that an empty special_days table returns 0.0"""
         # Arrange

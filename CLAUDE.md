@@ -19,10 +19,10 @@ All commands are run from the bench root (`/home/frappe/frappe-bench`), not from
 bench run-tests --app discipline_hr
 
 # Run tests for a specific doctype
-bench run-tests --app discipline_hr --doctype "Attendance Penalty"
+bench run-tests --app discipline_hr --doctype "Discipline Penalty"
 
 # Run a single test module
-bench run-tests --app discipline_hr --module discipline_hr.discipline_hr.doctype.attendance_penalty.test_attendance_penalty
+bench run-tests --app discipline_hr --module discipline_hr.discipline_hr.doctype.discipline_penalty.test_discipline_penalty
 
 # Apply database migrations after changing a DocType JSON
 bench migrate
@@ -77,7 +77,7 @@ Attendance (before_submit)
         Reads total consumed minutes for the period
         Computes remaining_minutes_before_consume, remaining_minutes, penalty_minutes
 
-  → Attendance Penalty (created if penalty_minutes > 0)
+  → Discipline Penalty (created if penalty_minutes > 0)
       Reads Attendance Penalty Policy (from Shift Type or global config)
       Calculates penalty_amount via one of three strategies:
         - Fixed Per Hour: rate_per_hour / 60 × penalty_minutes
@@ -103,7 +103,7 @@ The app extends `Shift Type` with custom fields (prefix `custom_`):
 |---|---|
 | `Attendance Permissions` | Bridge between submitted Attendance and penalty processing; holds status workflow |
 | `Employee Grace Ledger` | Ledger entry per attendance event; tracks allowed vs consumed minutes |
-| `Attendance Penalty` | Final penalty record with computed `penalty_amount` |
+| `Discipline Penalty` | Final penalty record with computed `penalty_amount` |
 | `Attendance Penalty Policy` | Defines calculation method (Factor / Fixed Per Hour / Penalty Matrix) |
 | `Penalty Matrix` | Child table of Policy; defines % of daily rate per violation number |
 | `Discipline HR Settings` | Global singleton: default policy, salary component, duplicate-guard toggle |
@@ -122,7 +122,7 @@ The app extends `Shift Type` with custom fields (prefix `custom_`):
 
 Business logic lives in the service layer; controllers are thin:
 - `AttendancePermissions.after_insert` → calls `process_submitted_attendance_permission`
-- `AttendancePenalty.validate` → calls `get_penalty_amount()` to populate `penalty_amount`
+- `DisciplinePenalty.validate` → calls `get_penalty_amount()` to populate `penalty_amount`
 
 ## Skills to Load
 

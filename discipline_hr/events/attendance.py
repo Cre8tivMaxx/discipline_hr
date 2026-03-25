@@ -171,7 +171,7 @@ def _get_attendance_permission_status():
 
 
 def create_absence_penalty(doc, method=None):
-    """Create an Attendance Penalty for an absent employee on Attendance submit.
+    """Create a Discipline Penalty for an absent employee on Attendance submit.
 
     Reads the Absence Penalty Policy from the Shift Type or Discipline HR Settings,
     counts existing violations in the same period, and inserts a new penalty record.
@@ -190,7 +190,7 @@ def create_absence_penalty(doc, method=None):
     if not _should_create_absence_penalty(shift_doc, config):
         return
 
-    penalty = frappe.new_doc("Attendance Penalty")
+    penalty = frappe.new_doc("Discipline Penalty")
     penalty.employee = doc.employee
     penalty.attendance = doc.name
     penalty.violation_date = doc.attendance_date
@@ -200,7 +200,7 @@ def create_absence_penalty(doc, method=None):
     penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
     penalty.penalty_status = doc.status
     penalty.violation_number = 1 + frappe.db.count(
-        "Attendance Penalty",
+        "Discipline Penalty",
         {
             "employee": doc.employee,
             "start_period": shift_doc.custom_period_start_date,
@@ -248,7 +248,7 @@ def cascade_cancel_attendance(doc, method=None):
 
     Deletion order (leaf-first to respect link references):
       1. Additional Salary  (cancel if submitted, then delete)
-      2. Attendance Penalty
+      2. Discipline Penalty
       3. Employee Grace Ledger  (both permission-flow and penalty-flow entries)
       4. Attendance Permissions  (only auto_created=1)
 
@@ -265,7 +265,7 @@ def cascade_cancel_attendance(doc, method=None):
 
     # Step 1: Collect penalties linked to this attendance
     penalty_names = frappe.get_all(
-        "Attendance Penalty",
+        "Discipline Penalty",
         filters={"attendance": attendance_name},
         pluck="name",
     )
@@ -274,7 +274,7 @@ def cascade_cancel_attendance(doc, method=None):
     if penalty_names:
         additional_salaries = frappe.get_all(
             "Additional Salary",
-            filters={"custom_attendance_penalty": ("in", penalty_names)},
+            filters={"custom_discipline_penalty": ("in", penalty_names)},
             fields=["name", "docstatus"],
         )
         for sal in additional_salaries:
@@ -286,11 +286,11 @@ def cascade_cancel_attendance(doc, method=None):
                 "Cascade cancel: deleted Additional Salary %s (Attendance %s)", sal.name, attendance_name
             )
 
-    # Step 3: Delete Attendance Penalties
+    # Step 3: Delete Discipline Penalties
     for penalty_name in penalty_names:
-        frappe.delete_doc("Attendance Penalty", penalty_name, force=True, ignore_permissions=True)
+        frappe.delete_doc("Discipline Penalty", penalty_name, force=True, ignore_permissions=True)
         logger.info(
-            "Cascade cancel: deleted Attendance Penalty %s (Attendance %s)", penalty_name, attendance_name
+            "Cascade cancel: deleted Discipline Penalty %s (Attendance %s)", penalty_name, attendance_name
         )
 
     # Step 4: Delete all Employee Grace Ledger entries (permission-flow + penalty-flow)

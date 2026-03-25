@@ -115,7 +115,7 @@
   },
   {
    "group": "Discipline Hr",
-   "link_doctype": "Attendance Penalty",
+   "link_doctype": "Discipline Penalty",
    "link_fieldname": "attendance_permission"
   }
  ],

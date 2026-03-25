@@ -1,7 +1,4 @@
-// Copyright (c) 2026, Abdelrahman Elsayed and contributors
-// For license information, please see license.txt
-
-frappe.listview_settings["Attendance Penalty"] = {
+frappe.listview_settings["Discipline Penalty"] = {
     get_indicator(doc) {
         const colors = {
             "Auto Processed": "green",

@@ -1,5 +1,3 @@
-# Copyright (c) 2026, Abdelrahman Elsayed and contributors
-# For license information, please see license.txt
 from calendar import day_name
 from typing import cast
 
@@ -22,7 +20,7 @@ from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_le
 from discipline_hr.services.utils import logger
 
 
-class AttendancePenalty(Document):
+class DisciplinePenalty(Document):
     # begin: auto-generated types
     # This code is auto-generated. Do not modify anything in this block.
 
@@ -36,6 +34,7 @@ class AttendancePenalty(Document):
         attendance_penalty_policy: DF.Link | None
         attendance_permission: DF.Link | None
         auto_create_salary: DF.Check
+        description: DF.SmallText | None
         employee: DF.Link
         employee_grace_ledger: DF.Link | None
         employee_name: DF.Data | None
@@ -50,8 +49,8 @@ class AttendancePenalty(Document):
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
         violation_date: DF.Date
         violation_number: DF.Int
-    # end: auto-generated types
 
+    # end: auto-generated types
     def after_insert(self):
         if self.status in ["Auto Processed", "Processed"]:
             self.create_grace_ledger_entry()
@@ -65,7 +64,7 @@ class AttendancePenalty(Document):
             self.create_additional_salary()
 
     def create_grace_ledger_entry(self):
-        if frappe.db.exists("Employee Grace Ledger", {"attendance_penalty": self.name}):
+        if frappe.db.exists("Employee Grace Ledger", {"discipline_penalty": self.name}):
             return
         ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
         ledger.employee = self.employee
@@ -75,7 +74,7 @@ class AttendancePenalty(Document):
         ledger.allowed_minutes = 0
         ledger.consumed_minutes = -self.penalty_minutes
         ledger.penalty_minutes = 0
-        ledger.attendance_penalty = self.name
+        ledger.discipline_penalty = self.name
         ledger.insert(ignore_permissions=True)
 
     def validate(self):
@@ -105,12 +104,12 @@ class AttendancePenalty(Document):
                     "salary_component": self.salary_component,
                     "type": "Deduction",
                     "amount": self.penalty_amount,
-                    "custom_attendance_penalty": self.name,
+                    "custom_discipline_penalty": self.name,
                     "custom_penalty_description": self.description,
                     "overwrite_salary_structure_amount": 0,
                 }
             )
-            logger.debug("Created Additional Salary: %s | Attendance Penalty %s", additional_salary, self)
+            logger.debug("Created Additional Salary: %s | Discipline Penalty %s", additional_salary, self)
 
             additional_salary.insert()
             if config.auto_submit_additional_salary == 1:
@@ -118,7 +117,7 @@ class AttendancePenalty(Document):
 
         except Exception as e:
             logger.exception(
-                "Couldn't create additional salary | Attendance Penalty: %s | Employee: %s ",
+                "Couldn't create additional salary | Discipline Penalty: %s | Employee: %s ",
                 self,
                 self.employee,
             )
@@ -216,7 +215,7 @@ class AttendancePenalty(Document):
 
         Args:
             policy_doc: The penalty policy document containing ``penalty_matrix``.
-            label: Human-readable label for log messages (e.g. "Attendance Penalty").
+            label: Human-readable label for log messages (e.g. "Discipline Penalty").
 
         Returns:
             Penalty amount as a float.
@@ -297,7 +296,7 @@ class AttendancePenalty(Document):
 
     def _penalty_matrix_deduction(self):
         return self._matrix_deduction_from_policy(
-            self._get_attendance_penalty_policy_doc(), "Attendance Penalty"
+            self._get_attendance_penalty_policy_doc(), "Discipline Penalty"
         )
 
     def _absence_penalty_matrix(self) -> float:

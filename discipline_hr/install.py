@@ -1,7 +1,7 @@
 import frappe
 
 PENDING_NOTIFICATION_NAME = "Attendance Permission Pending Review"
-PENALTY_NOTIFICATION_NAME = "Attendance Penalty Pending Review"
+PENALTY_NOTIFICATION_NAME = "Discipline Penalty Pending Review"
 
 
 def after_install():
@@ -65,13 +65,13 @@ def _create_pending_attendance_penalty_notification():
 
     notification = frappe.new_doc("Notification")
     notification.name = PENALTY_NOTIFICATION_NAME
-    notification.subject = "Attendance Penalty Pending: {{ doc.employee_name or doc.employee }}"
-    notification.document_type = "Attendance Penalty"
+    notification.subject = "Discipline Penalty Pending: {{ doc.employee_name or doc.employee }}"
+    notification.document_type = "Discipline Penalty"
     notification.event = "New"
     notification.channel = "Email"
     notification.condition = 'doc.status == "Pending"'
     notification.send_system_notification = 1
-    notification.message = """<h3>Attendance Penalty Needs Review</h3>
+    notification.message = """<h3>Discipline Penalty Needs Review</h3>
 
 <p><b>Employee:</b> {{ doc.employee_name or doc.employee }}</p>
 <p><b>Violation Date:</b> {{ doc.violation_date }}</p>

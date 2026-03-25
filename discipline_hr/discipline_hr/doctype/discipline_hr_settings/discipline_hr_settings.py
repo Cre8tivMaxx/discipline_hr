@@ -16,14 +16,15 @@ class DisciplineHRSettings(Document):
 
         absence_penalty_policy: DF.Link | None
         attendance_penalty_policy: DF.Link | None
-        cascade_cancel_attendance: DF.Check
         auto_process_attendance_penalty: DF.Check
         auto_process_attendance_permission: DF.Check
         auto_submit_additional_salary: DF.Check
+        cascade_cancel_attendance: DF.Check
         default_penalty_notification: DF.Link | None
         default_pending_notification: DF.Link | None
         extra_minutes_penalty_policy: DF.Link | None
         ignore_grace_ledger_duplicates: DF.Check
+        month_days: DF.Int
         salary_component: DF.Link | None
         split_permissions_and_penalties: DF.Check
     # end: auto-generated types

@@ -235,10 +235,10 @@ fixtures = [
     },
     {
         "dt": "Notification",
-        "filters": [["name", "=", "Attendance Penalty Pending Review"]],
+        "filters": [["name", "=", "Discipline Penalty Pending Review"]],
     },
     {"dt": "Workflow State"},
-    {"dt": "Workflow", "filters": [["name", "in", ["Attendance Permission", "Attendance Penalty"]]]},
+    {"dt": "Workflow", "filters": [["name", "in", ["Attendance Permission", "Discipline Penalty"]]]},
 ]
 
 export_python_type_annotations = True

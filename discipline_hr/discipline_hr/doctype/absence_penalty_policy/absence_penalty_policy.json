@@ -36,7 +36,7 @@
  "links": [
   {
    "group": "Discipline Hr",
-   "link_doctype": "Attendance Penalty",
+   "link_doctype": "Discipline Penalty",
    "link_fieldname": "absence_penalty_policy"
   }
  ],

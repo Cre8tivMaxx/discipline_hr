@@ -8,17 +8,17 @@
   "days_in_advance": 0,
   "docstatus": 0,
   "doctype": "Notification",
-  "document_type": "Attendance Penalty",
+  "document_type": "Discipline Penalty",
   "enabled": 1,
   "event": "New",
   "from_attach_field": null,
   "is_standard": 0,
-  "message": "<h3>Attendance Penalty Needs Review</h3>\n\n<p><b>Employee:</b> {{ doc.employee_name or doc.employee }}</p>\n<p><b>Violation Date:</b> {{ doc.violation_date }}</p>\n<p><b>Penalty Minutes:</b> {{ doc.penalty_minutes }}</p>\n<p><b>Penalty Amount:</b> {{ doc.penalty_amount }}</p>\n\n<p>Please review and take action.</p>",
+  "message": "<h3>Discipline Penalty Needs Review</h3>\n\n<p><b>Employee:</b> {{ doc.employee_name or doc.employee }}</p>\n<p><b>Violation Date:</b> {{ doc.violation_date }}</p>\n<p><b>Penalty Minutes:</b> {{ doc.penalty_minutes }}</p>\n<p><b>Penalty Amount:</b> {{ doc.penalty_amount }}</p>\n\n<p>Please review and take action.</p>",
   "message_type": "Markdown",
   "method": null,
   "modified": "2026-03-08 10:56:13.502451",
   "module": null,
-  "name": "Attendance Penalty Pending Review",
+  "name": "Discipline Penalty Pending Review",
   "print_format": null,
   "property_value": null,
   "recipients": [
@@ -26,7 +26,7 @@
     "bcc": null,
     "cc": null,
     "condition": null,
-    "parent": "Attendance Penalty Pending Review",
+    "parent": "Discipline Penalty Pending Review",
     "parentfield": "recipients",
     "parenttype": "Notification",
     "receiver_by_document_field": null,
@@ -39,7 +39,7 @@
   "sender_email": null,
   "set_property_after_alert": null,
   "slack_webhook_url": null,
-  "subject": "Attendance Penalty Pending: {{ doc.employee_name or doc.employee }}",
+  "subject": "Discipline Penalty Pending: {{ doc.employee_name or doc.employee }}",
   "value_changed": null
  }
 ]
