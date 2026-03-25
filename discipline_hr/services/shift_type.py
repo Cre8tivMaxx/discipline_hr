@@ -36,21 +36,24 @@ def rollover_grace_periods():
     """Daily task: roll over grace period on Shift Types whose period ends today."""
     shift_types = frappe.get_all(
         "Shift Type",
-        filters={"custom_period_end_date": today()},
+        filters=[["custom_period_end_date", "<=", today()]],
         fields=["name", "custom_period_end_date", "custom_grace_interval", "custom_grace_count"],
     )
 
+    current_today = getdate(today())
     for st in shift_types:
         if not st.custom_grace_interval or not st.custom_grace_count:
             logger.warning("Skipping %s: missing interval or count", st.name)
             continue
 
-        new_start = add_days(getdate(st.custom_period_end_date), 1)
-        new_end = _calculate_end_date(st.custom_grace_interval, st.custom_grace_count, new_start)
+        end_date = getdate(st.custom_period_end_date)
+        while end_date <= current_today:
+            new_start = end_date
+            end_date = _calculate_end_date(st.custom_grace_interval, st.custom_grace_count, new_start)
 
         frappe.db.set_value(
             "Shift Type",
             st.name,
-            {"custom_period_start_date": new_start, "custom_period_end_date": new_end},
+            {"custom_period_start_date": new_start, "custom_period_end_date": end_date},
         )
-        logger.info("Rolled over %s: %s → %s", st.name, new_start, new_end)
+        logger.info("Rolled over %s: %s → %s", st.name, new_start, end_date)
