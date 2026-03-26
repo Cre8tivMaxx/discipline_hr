@@ -8,10 +8,12 @@ from unittest.mock import MagicMock, call, patch
 import frappe
 from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
+from frappe.utils import today
 
 from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_settings import (
     DisciplineHRSettings,
 )
+from discipline_hr.discipline_hr.doctype.discipline_penalty.discipline_penalty import DisciplinePenalty
 from discipline_hr.events.attendance import cascade_cancel_attendance
 
 
@@ -240,7 +242,7 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
                     "custom_period_start_date": "2026-01-01",
                     "custom_period_end_date": "2026-12-31",
                     "custom_total_allowed_grace_minutes": 60,
-                    "custom_minimum_grace_minutes": 5,
+                    "custom_minimum_grace_minutes": 0,
                     "custom_salary_component": cls.salary_component.name,
                     "custom_attendance_penalty_policy": cls.policy.name,
                 }
@@ -265,6 +267,7 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
         """
         Test valid Attendance Permission -> Employee Grace Ledger -> Discipline Penalty
         """
+
         permission = frappe.get_doc(
             {
                 "doctype": "Attendance Permissions",
@@ -293,18 +296,19 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
 
     def test_attendance_permission_pending_status(self):
         """Test pending Attendance Permission will break the workflow"""
+        employee = make_employee("test_attendance_permission@status.st")
         permission = frappe.get_doc(
             {
                 "doctype": "Attendance Permissions",
-                "employee": self.employee,
+                "employee": employee,
                 "attendance": self.attendance.name,
                 "shift_type": self.shift_type.name,
-                "date": "2026-06-15",
+                "date": "2026-06-25",
                 "minutes": 90,
                 "status": "Pending",
             }
-        ).insert(ignore_permissions=True)
-
+        )
+        permission.insert(ignore_permissions=True)
         # Assert — Grace Ledger was never created
         ledger = frappe.db.get_value(
             "Employee Grace Ledger",
@@ -393,32 +397,99 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
         )
         self.assertEqual(len(grace_ledgers), 1, "Duplicate grace-consumption ledger was created")
 
-    # def test_consumed_so_far(self):
-    #     """Test create multiple ledgers for same employee will calculate the consumed minutes (0 + 30 + 30)"""
+    def test_consumed_so_far(self):
+        """Test create multiple ledgers for same employee will calculate the consumed minutes (0 + 30 + 30)"""
+        employee = make_employee("test_consumed_so_far@c.com")
 
-    # def test_custom_minimum_grace_minutes(self):
-    #     """Test create penalty_minutes less than custom_minimum_grace_minutes"""
+        _p1 = create_attendance_permission(self, employee, 20)
+        _p2 = create_attendance_permission(self, employee, 25)
 
-    # def test_create_discipline_penalty_with_zero_minutes(self):
-    #     """Test penalty minutes == 0 should not insert the discipline penalty"""
+        ledger2 = frappe.get_value(
+            "Employee Grace Ledger",
+            filters={"attendance_permission": _p2.name},
+            fieldname=["remaining_minutes_before_consume", "consumed_minutes"],
+            as_dict=True,
+        )
 
-    # def test_violation_number_increment(self):
-    #     """Test the violation number for the same (employee, start, end, status) is incremented (1, 2)"""
+        self.assertEqual(
+            ledger2.remaining_minutes_before_consume,
+            40,
+            "Ledger Calculated attendance_permission wrongly, it should be 60 - 20 = 40",
+        )
+        self.assertEqual(
+            ledger2.consumed_minutes,
+            25,
+            "Ledger used consumed_minutes wrongly, it should be 25",
+        )
 
-    # def test_adding_shift_penalty_policy(self):
-    #     """Test penlaty policy is fetched from the Shift Type"""
+    def test_create_discipline_penalty_with_zero_minutes(self):
+        """Test penalty minutes == 0 should not insert the Additional Salary"""
+        penalty = cast(DisciplinePenalty, frappe.new_doc("Discipline Penalty"))
+        penalty.violation_date = today()
+        penalty.penalty_amount = 0
+        penalty.employee = self.employee
+        penalty.insert(ignore_permissions=True)
 
-    # def test_adding_config_penalty_policy(self):
-    #     """Test Penalty Policy is fetched from config if it's not definted at Shift Type"""
+        additional_salary = frappe.get_value(
+            "Additional Salary", filters={"custom_discipline_penalty": penalty.name}
+        )
+        self.assertIsNone(additional_salary, "Additional Salary created even with 0 penalty amount")
 
-    # def test_adding_shift_salary_component(self):
-    #     """Test Salary Component is fetched from the Shift Type"""
+    def test_violation_number_increment(self):
+        """Test the violation number for the same (employee, start, end, status) is incremented (1, 2)"""
+        # Create Employee
+        employee = make_employee("test_violation_number@test.co")
+        settings = cast(DisciplineHRSettings, frappe.get_single("Discipline HR Settings"))
+        settings.ignore_grace_ledger_duplicates = 0
+        settings.save()
 
-    # def test_adding_config_salary_component(self):
-    #     """Test Salary Component is fetched from config if it's not definted at Shift Type"""
+        # Create Attendance Permissions -> Auto Processed -> Employee GL -> Discipline Penalty
+        _p1 = create_attendance_permission(self, employee, 90)
+        _p2 = create_attendance_permission(self, employee, 90)
+        _p3 = create_attendance_permission(self, employee, 90)
 
-    # def test_auto_process_config(self):
-    #     """Test Discipline Penalty status == Auto Processed if config.auto_process_attendance_penalty == 1"""
+        # Get the violation number for the last GL
+        violation_number = frappe.get_value(
+            "Discipline Penalty",
+            filters={"attendance_permission": _p3.name},
+            fieldname="violation_number",
+        )
 
-    # def test_none_auto_process_config(self):
-    #     """Test `Discipline Penalty` status == `Pending` if `config.auto_process_attendance_penalty` == 0"""
+        self.assertEqual(
+            violation_number,
+            3,
+            "Violation Number is not counted correctly.",
+        )
+
+    def test_penalty_inherits_policy_from_shift(self):
+        """Test penalty policy is fetched from the Shift Type"""
+        employee = make_employee("test_penalty_inherits_policy@ema.com")
+        p = create_attendance_permission(self, minutes=3000, employee=employee)
+        penalty_policy = frappe.get_value(
+            "Discipline Penalty",
+            filters={"attendance_permission": p.name},
+            fieldname="attendance_penalty_policy",
+        )
+        self.assertEqual(penalty_policy, self.shift_type.custom_attendance_penalty_policy)
+
+
+def create_attendance_permission(
+    ctx, employee=None, minutes=30, shift_type=None, status="Auto Processed", date="2026-06-25"
+):
+    if shift_type is None:
+        shift_type = ctx.shift_type
+
+    if employee is None:
+        employee = ctx.employee
+    permission = frappe.get_doc(
+        {
+            "doctype": "Attendance Permissions",
+            "employee": employee,
+            "attendance": ctx.attendance.name,
+            "shift_type": shift_type.name,
+            "date": date,
+            "minutes": minutes,
+            "status": status,
+        }
+    ).insert(ignore_permissions=True)
+    return permission
