@@ -1,0 +1,36 @@
+{
+ "custom_fields": [],
+ "custom_perms": [],
+ "doctype": "Employee",
+ "links": [
+  {
+   "custom": 1,
+   "group": "Discipline Hr",
+   "link_doctype": "Attendance Permissions",
+   "link_fieldname": "employee",
+   "parent": "Employee",
+   "parentfield": "links",
+   "parenttype": "Customize Form"
+  },
+  {
+   "custom": 1,
+   "group": "Discipline Hr",
+   "link_doctype": "Employee Grace Ledger",
+   "link_fieldname": "employee",
+   "parent": "Employee",
+   "parentfield": "links",
+   "parenttype": "Customize Form"
+  },
+  {
+   "custom": 1,
+   "group": "Discipline Hr",
+   "link_doctype": "Discipline Penalty",
+   "link_fieldname": "employee",
+   "parent": "Employee",
+   "parentfield": "links",
+   "parenttype": "Customize Form"
+  }
+ ],
+ "property_setters": [],
+ "sync_on_migrate": 1
+}
