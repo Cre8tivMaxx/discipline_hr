@@ -20,6 +20,7 @@
   "split_permissions_and_penalties",
   "extra_minutes_penalty_policy",
   "cascade_cancel_attendance",
+  "penalize_manual_attendance_permissions",
   "section_break_notifications",
   "default_pending_notification",
   "default_penalty_notification"
@@ -141,13 +142,20 @@
    "fieldname": "cascade_cancel_attendance",
    "fieldtype": "Check",
    "label": "Cascade Cancel Attendance"
+  },
+  {
+   "default": "0",
+   "description": "If checked, manually created Attendance Permissions will also generate a Discipline Penalty. When unchecked, only auto-created permissions trigger penalties.",
+   "fieldname": "penalize_manual_attendance_permissions",
+   "fieldtype": "Check",
+   "label": "Penalize Manual Attendance Permissions"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-25 11:22:03.532635",
+ "modified": "2026-03-28 11:10:32.503519",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

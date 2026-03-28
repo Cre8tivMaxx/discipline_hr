@@ -25,6 +25,7 @@ class DisciplineHRSettings(Document):
         extra_minutes_penalty_policy: DF.Link | None
         ignore_grace_ledger_duplicates: DF.Check
         month_days: DF.Int
+        penalize_manual_attendance_permissions: DF.Check
         salary_component: DF.Link | None
         split_permissions_and_penalties: DF.Check
     # end: auto-generated types

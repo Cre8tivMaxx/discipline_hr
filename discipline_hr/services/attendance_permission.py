@@ -19,6 +19,7 @@ class _AttendanceContext:
     shift_type: str | None
     date: str
     attendance_permission: str | None = dc_field(default=None)
+    auto_created: int = 1
 
 
 def _context_from_permission(doc) -> _AttendanceContext:
@@ -29,6 +30,7 @@ def _context_from_permission(doc) -> _AttendanceContext:
         shift_type=doc.shift_type,
         date=str(doc.date),
         attendance_permission=doc.name,
+        auto_created=doc.auto_created,
     )
 
 
@@ -159,7 +161,7 @@ def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permis
     )
 
 
-def _create_attendance_penalty(ctx: _AttendanceContext, ledger):
+def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
     """Create a Discipline Penalty record from a grace ledger entry.
 
     Does nothing if ``ledger.penalty_minutes`` is zero. The penalty policy is
@@ -168,6 +170,7 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger):
     Args:
         ctx: The ``_AttendanceContext`` carrying employee/attendance/date data.
         ledger: The ``EmployeeGraceLedger`` that was just inserted.
+        config: The ``DisciplineHRSettings`` single doctype.
     """
     if ledger.penalty_minutes <= 0:
         logger.info(
@@ -183,7 +186,6 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger):
         return
 
     shift_doc = frappe.get_cached_doc("Shift Type", ctx.shift_type)
-    config = frappe.get_cached_doc("Discipline HR Settings")
     attendance = frappe.get_cached_doc("Attendance", ctx.attendance) if ctx.attendance else None
 
     penalty = frappe.new_doc("Discipline Penalty")
@@ -264,8 +266,10 @@ def _create_grace_ledger(ctx: _AttendanceContext):
 
     try:
         ledger.insert(ignore_permissions=True)
-        logger.info("Ledger Inserted successfuly. %s", ledger)
-        _create_attendance_penalty(ctx, ledger)
+        logger.info("Ledger Inserted successfully. %s", ledger)
+        config = frappe.get_cached_doc("Discipline HR Settings")
+        if ctx.auto_created == 1 or config.penalize_manual_attendance_permissions == 1:
+            _create_attendance_penalty(ctx, ledger, config)
     except Exception:
         logger.exception("Couldn't create the grace ledger")
         frappe.log_error(
