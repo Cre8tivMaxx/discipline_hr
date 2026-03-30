@@ -19,5 +19,8 @@
       "Bash(gh project:*)"
     ]
   },
-  "outputStyle": "Explanatory"
+  "outputStyle": "Explanatory",
+  "enabledMcpjsonServers": [
+    "code-review-graph"
+  ]
 }

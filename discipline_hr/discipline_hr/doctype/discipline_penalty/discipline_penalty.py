@@ -124,20 +124,31 @@ class DisciplinePenalty(Document):
             self.error = str(e)
 
     def _get_employee_daily_rate(self):
-        """Get Employee Base from salary structure assignment to compute daily rate"""
+        """Get employee daily rate from Salary Structure Assignment.
+
+        Uses `salary_basis` setting to determine whether the rate
+        is computed from base salary only or total (base + variable).
+        """
         try:
             assignment = frappe.db.get_value(
                 "Salary Structure Assignment",
                 {"employee": self.employee, "docstatus": 1},
-                "base",
+                ["base", "variable"],
                 order_by="from_date desc",
             )
             logger.debug(
                 "Found structure assignment | Employee %s | Assignment %s", self.employee, assignment
             )
             if assignment:
-                month_days = cint(frappe.db.get_single_value("Discipline HR Settings", "month_days")) or 30
-                daily_rate = flt(assignment) / month_days
+                config = frappe.get_cached_doc("Discipline HR Settings")
+                base, variable = assignment
+                month_days = cint(config.month_days) or 30
+                deduction_type = frappe.scrub(config.salary_basis)
+
+                if deduction_type == "total":
+                    daily_rate = (base + variable) / month_days
+                else:
+                    daily_rate = base / month_days
                 logger.debug(
                     "Successfully Fetched Daily rate | Employee %s | Base %s | daily_rate %s",
                     self.employee,

@@ -12,3 +12,5 @@ PRODUCTION_REVIEW.md
 .claude/settings.local.json
 .claude/settings.local.json
 discipline_hr/events/test_attendance.py
+.opencode.json
+.mcp.json

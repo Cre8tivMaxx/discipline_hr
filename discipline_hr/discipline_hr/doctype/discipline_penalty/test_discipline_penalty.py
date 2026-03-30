@@ -182,13 +182,16 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Empty Matrix should return 0 deduction")
 
-    @patch(f"{MODULE}.frappe.db.get_single_value")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.frappe.db.get_value")
-    def test_get_employee_daily_rate(self, mock_assignment, mock_single_value):
+    def test_get_employee_daily_rate(self, mock_db_get_value, mock_get_cached_doc):
         """Test Daily rate for monthly 3000 / 30 -> 100"""
         # Arrange
-        mock_assignment.return_value = 3000
-        mock_single_value.return_value = 30
+        mock_db_get_value.return_value = (3000, 1000)
+        mock_config = MagicMock()
+        mock_config.month_days = 30
+        mock_config.salary_basis = "Base"
+        mock_get_cached_doc.return_value = mock_config
 
         # Act
         result = self.penalty._get_employee_daily_rate()
@@ -196,19 +199,39 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 100, "Failed to get employee daily rate 3000 -> 100")
 
-    @patch(f"{MODULE}.frappe.db.get_single_value")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.frappe.db.get_value")
-    def test_get_employee_daily_rate_custom_month_days(self, mock_assignment, mock_single_value):
+    def test_get_employee_daily_rate_custom_month_days(self, mock_db_get_value, mock_get_cached_doc):
         """Test Daily rate with custom month_days: 3000 / 26 ≈ 115.38"""
         # Arrange
-        mock_assignment.return_value = 3000
-        mock_single_value.return_value = 26
+        mock_db_get_value.return_value = (3000, 1000)
+        mock_config = MagicMock()
+        mock_config.month_days = 26
+        mock_config.salary_basis = "Base"
+        mock_get_cached_doc.return_value = mock_config
 
         # Act
         result = self.penalty._get_employee_daily_rate()
 
         # Assert
         self.assertAlmostEqual(result, 3000 / 26, places=2)
+
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    @patch(f"{MODULE}.frappe.db.get_value")
+    def test_get_valid_daily_total_rate(self, mock_db_get_value, mock_get_cached_doc):
+        """Get Employee Daily rate variable+total if hr settings have `Total` Enabled."""
+        # Arrange
+        mock_db_get_value.return_value = (1000, 8000)
+        mock_config = MagicMock()
+        mock_config.month_days = 30
+        mock_config.salary_basis = "Total"
+        mock_get_cached_doc.return_value = mock_config
+
+        # Act
+        result = self.penalty._get_employee_daily_rate()
+
+        # Assert
+        self.assertEqual(result, 300.0, "Employee Daily Rate should be (1000 + 8000) / 30")
 
     @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate_zero_assignment(self, mock_assignment):

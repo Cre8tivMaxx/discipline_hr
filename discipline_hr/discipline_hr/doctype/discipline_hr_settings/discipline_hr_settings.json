@@ -11,6 +11,7 @@
   "column_break_policies",
   "salary_component",
   "month_days",
+  "salary_basis",
   "section_break_automation",
   "auto_process_attendance_permission",
   "auto_process_attendance_penalty",
@@ -149,13 +150,21 @@
    "fieldname": "penalize_manual_attendance_permissions",
    "fieldtype": "Check",
    "label": "Penalize Manual Attendance Permissions"
+  },
+  {
+   "default": "Base",
+   "description": "Base: daily rate = base / month days. Total: daily rate = (base + variable) / month days.",
+   "fieldname": "salary_basis",
+   "fieldtype": "Select",
+   "label": "Salary Basis",
+   "options": "Base\nTotal"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-28 11:10:32.503519",
+ "modified": "2026-03-30 11:30:29.308214",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",
