@@ -22,7 +22,8 @@
   "penalty_section",
   "penalty_minutes",
   "column_break_cwnw",
-  "attendance_penalty"
+  "attendance_penalty",
+  "remarks"
  ],
  "fields": [
   {
@@ -132,6 +133,12 @@
    "fieldtype": "Link",
    "label": "Discipline Penalty",
    "options": "Discipline Penalty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks",
    "read_only": 1
   }
  ],

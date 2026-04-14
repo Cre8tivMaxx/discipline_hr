@@ -16,7 +16,7 @@ from discipline_hr.discipline_hr.doctype.attendance_permissions.attendance_permi
     AttendancePermissions,
 )
 from discipline_hr.services.grace import get_grace_minutes
-from discipline_hr.services.utils import logger
+from discipline_hr.services.utils import count_prior_violations, logger
 
 
 def calculate_attendance_penalty_minutes(doc, method=None):
@@ -131,7 +131,7 @@ def trigger_create_attendance_permission(doc, method=None):
 
 
 def create_attendance_permissions(employee, attendance, minutes, shift_name, date=""):
-    """Create an Attendance Permissions record. Intended to run as a background job.
+    """Create an Attendance Permissions record.
 
     Status is set to ``"Pending"`` when the shift requires HR approval, otherwise
     ``"Auto Processed"``. Silently returns if ``employee`` is empty.
@@ -143,11 +143,13 @@ def create_attendance_permissions(employee, attendance, minutes, shift_name, dat
         shift_name: Shift Type docname used to resolve config.
         date: Violation date; defaults to today if omitted.
     """
-    shift_doc = frappe.get_cached_doc("Shift Type", shift_name)
-    doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
     if not employee:
         return
-
+    if frappe.db.exists("Attendance Permissions", {"attendance": attendance.name}):
+        logger.info("Skipping ATP insertion as it's duplicate. for attendance %s", attendance.name)
+        return
+    shift_doc = frappe.get_cached_doc("Shift Type", shift_name)
+    doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
     doc.employee = employee
     doc.attendance = attendance
     doc.minutes = max(cint(shift_doc.custom_minimum_grace_minutes), minutes)
@@ -199,14 +201,11 @@ def create_absence_penalty(doc, method=None):
     penalty.absence_penalty_policy = shift_doc.custom_absence_penalty_policy or config.absence_penalty_policy
     penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
     penalty.penalty_status = doc.status
-    penalty.violation_number = 1 + frappe.db.count(
-        "Discipline Penalty",
-        {
-            "employee": doc.employee,
-            "start_period": shift_doc.custom_period_start_date,
-            "end_period": shift_doc.custom_period_end_date,
-            "penalty_status": doc.status,
-        },
+    penalty.violation_number = 1 + count_prior_violations(
+        doc.employee,
+        shift_doc.custom_period_start_date,
+        shift_doc.custom_period_end_date,
+        doc.status,
     )
     penalty.status = "Auto Processed" if cint(config.auto_process_attendance_penalty) else "Pending"
     penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)

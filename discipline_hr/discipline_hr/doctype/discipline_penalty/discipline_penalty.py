@@ -43,7 +43,7 @@ class DisciplinePenalty(Document):
         grace_consumed: DF.Int
         penalty_amount: DF.Currency
         penalty_minutes: DF.Int
-        penalty_status: DF.Data | None
+        penalty_status: DF.Literal["", "Present", "Absent"] | None
         salary_component: DF.Link | None
         start_period: DF.Date | None
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
@@ -52,14 +52,16 @@ class DisciplinePenalty(Document):
 
     # end: auto-generated types
     def after_insert(self):
-        if self.status in ["Auto Processed", "Processed"]:
+        if self.status == "Auto Processed":
             self.create_grace_ledger_entry()
             self.create_additional_salary()
 
     def on_update(self):
-        """Re-trigger workflow when HR changes status to 'Accepted'."""
-        status_changed = self.has_value_changed("status")
-        if status_changed and self.status in ["Auto Processed", "Processed"]:
+        """Trigger workflow when HR moves the penalty to a processed status."""
+        if not self.has_value_changed("status"):
+            return
+
+        if self.status == "Processed":
             self.create_grace_ledger_entry()
             self.create_additional_salary()
 
@@ -75,6 +77,7 @@ class DisciplinePenalty(Document):
         ledger.consumed_minutes = -self.penalty_minutes
         ledger.penalty_minutes = 0
         ledger.discipline_penalty = self.name
+        ledger.remarks = f"Penalty marker: {self.name}"
         ledger.insert(ignore_permissions=True)
 
     def validate(self):
@@ -129,41 +132,33 @@ class DisciplinePenalty(Document):
         Uses `salary_basis` setting to determine whether the rate
         is computed from base salary only or total (base + variable).
         """
-        try:
-            assignment = frappe.db.get_value(
-                "Salary Structure Assignment",
-                {"employee": self.employee, "docstatus": 1},
-                ["base", "variable"],
-                order_by="from_date desc",
-            )
+        assignment = frappe.db.get_value(
+            "Salary Structure Assignment",
+            {"employee": self.employee, "docstatus": 1},
+            ["base", "variable"],
+            order_by="from_date desc",
+        )
+        logger.debug("Found structure assignment | Employee %s | Assignment %s", self.employee, assignment)
+        if assignment:
+            config = frappe.get_cached_doc("Discipline HR Settings")
+            base, variable = assignment
+            month_days = cint(config.month_days) or 30
+            deduction_type = frappe.scrub(config.salary_basis)
+
+            if deduction_type == "total":
+                daily_rate = (base + variable) / month_days
+            else:
+                daily_rate = base / month_days
             logger.debug(
-                "Found structure assignment | Employee %s | Assignment %s", self.employee, assignment
-            )
-            if assignment:
-                config = frappe.get_cached_doc("Discipline HR Settings")
-                base, variable = assignment
-                month_days = cint(config.month_days) or 30
-                deduction_type = frappe.scrub(config.salary_basis)
-
-                if deduction_type == "total":
-                    daily_rate = (base + variable) / month_days
-                else:
-                    daily_rate = base / month_days
-                logger.debug(
-                    "Successfully Fetched Daily rate | Employee %s | Base %s | daily_rate %s",
-                    self.employee,
-                    assignment,
-                    daily_rate,
-                )
-                return daily_rate
-
-        except Exception as e:
-            logger.error(
-                "Failed to get employee Salary Structure Assignment | Employee %s | Exception %s",
+                "Successfully Fetched Daily rate | Employee %s | Base %s | daily_rate %s",
                 self.employee,
-                e,
+                assignment,
+                daily_rate,
             )
-        return 0
+            return daily_rate
+        frappe.throw(
+            f"No active Salary Structure Assignment found for {self.employee}. Cannot calculate penalty."
+        )
 
     def get_penalty_amount(self):
         """Calculate Deduction amount based on Configuration"""
@@ -231,41 +226,31 @@ class DisciplinePenalty(Document):
         Returns:
             Penalty amount as a float.
         """
-        try:
-            matrix = policy_doc.penalty_matrix or []
-            row = next(
-                (r for r in matrix if r.violation_number == self.violation_number),
-                None,
-            )
+        matrix = policy_doc.penalty_matrix or []
+        row = next(
+            (r for r in matrix if r.violation_number == self.violation_number),
+            None,
+        )
 
-            if not row and matrix:
-                row = max(matrix, key=lambda r: r.violation_number)
+        if not row and matrix:
+            row = max(matrix, key=lambda r: r.violation_number)
 
-            if not row:
-                logger.warning("Matrix has no penalties to apply | Penalty Policy: %s", policy_doc)
-                return 0
+        if not row:
+            logger.warning("Matrix has no penalties to apply | Penalty Policy: %s", policy_doc)
+            return 0
 
-            self.description = row.description or ""
-            percentage = flt(row.percentage)
+        self.description = row.description or ""
+        percentage = flt(row.percentage)
 
-            logger.debug(
-                "Successfully fetched PM percentage | %s %s | PM %s | Percentage %s",
-                label,
-                self,
-                policy_doc,
-                percentage,
-            )
+        logger.debug(
+            "Successfully fetched PM percentage | %s %s | PM %s | Percentage %s",
+            label,
+            self,
+            policy_doc,
+            percentage,
+        )
 
-            return flt(self._get_employee_daily_rate() * percentage)
-        except Exception as e:
-            logger.warning(
-                "Failed to fetch PM Percentage | %s %s | PM %s | Exception %s",
-                label,
-                self,
-                policy_doc,
-                e,
-            )
-        return 0
+        return flt(self._get_employee_daily_rate() * percentage)
 
     def _special_day_deduction(self):
         """Calculate penalty as ``daily_rate * percentage_of_daily_rate`` for the violation weekday.

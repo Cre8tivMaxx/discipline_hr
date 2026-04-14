@@ -4,6 +4,8 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+import frappe
+
 from discipline_hr.discipline_hr.doctype.absence_penalty_policy.absence_penalty_policy import (
     AbsencePenaltyPolicy,
 )
@@ -11,6 +13,7 @@ from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_pe
     AttendancePenaltyPolicy,
 )
 from discipline_hr.discipline_hr.doctype.discipline_penalty.discipline_penalty import DisciplinePenalty
+from discipline_hr.services.utils import count_prior_violations
 
 MODULE = "discipline_hr.discipline_hr.doctype.discipline_penalty.discipline_penalty"
 
@@ -235,27 +238,31 @@ class TestDisciplinePenalty(TestCase):
 
     @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate_zero_assignment(self, mock_assignment):
-        """Test Daily rate for Missing Salary Structure assignment or 0 -> 0"""
+        """Missing/zero Salary Structure Assignment must raise a Frappe ValidationError."""
         # Arrange
         mock_assignment.return_value = 0
 
-        # Act
-        result = self.penalty._get_employee_daily_rate()
-
-        # Assert
-        self.assertEqual(result, 0, "Failed to get employee daily rate 0 -> 0")
+        # Act / Assert
+        with self.assertRaises(frappe.exceptions.ValidationError) as ctx:
+            self.penalty._get_employee_daily_rate()
+        self.assertIn(
+            "No active Salary Structure Assignment found for",
+            str(ctx.exception),
+        )
 
     @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate_none_assignment(self, mock_assignment):
-        """Test Daily rate for Missing Salary Structure assignment or 0 -> 0"""
+        """No Salary Structure Assignment row must raise a Frappe ValidationError."""
         # Arrange
         mock_assignment.return_value = None
 
-        # Act
-        result = self.penalty._get_employee_daily_rate()
-
-        # Assert
-        self.assertEqual(result, 0, "Failed to get employee daily rate 0 -> 0")
+        # Act / Assert
+        with self.assertRaises(frappe.exceptions.ValidationError) as ctx:
+            self.penalty._get_employee_daily_rate()
+        self.assertIn(
+            "No active Salary Structure Assignment found for",
+            str(ctx.exception),
+        )
 
     @patch(f"{MODULE}.frappe.get_value")
     def test_get_penalty_amount_present_dispatches_attendance_handler(self, mock_get_value):
@@ -345,3 +352,23 @@ class TestDisciplinePenalty(TestCase):
 
         # Assert
         self.assertEqual(result, 0.0, "Empty special_days table should return 0.0")
+
+    @patch("discipline_hr.services.utils.frappe.db.count")
+    def test_count_prior_violations_excludes_rejected(self, mock_count):
+        """Test that count_prior_violations excludes status='Rejected' penalties."""
+        # Arrange
+        mock_count.return_value = 2
+
+        # Act
+        result = count_prior_violations("EMP-001", "2026-01-01", "2026-12-31", "Present")
+
+        # Assert
+        self.assertEqual(result, 2)
+        # Verify the filter includes status != "Rejected"
+        mock_count.assert_called_once()
+        call_args = mock_count.call_args
+        self.assertEqual(call_args[0][0], "Discipline Penalty")
+        filters = call_args[0][1]
+        self.assertEqual(filters["employee"], "EMP-001")
+        self.assertEqual(filters["penalty_status"], "Present")
+        self.assertEqual(filters["status"], ("!=", "Rejected"))
