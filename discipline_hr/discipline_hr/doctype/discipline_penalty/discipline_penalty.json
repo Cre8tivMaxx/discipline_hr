@@ -78,12 +78,13 @@
   {
    "fetch_from": "attendance.status",
    "fieldname": "penalty_status",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "in_filter": 1,
    "in_list_view": 1,
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Attendance Status",
+   "options": "\nPresent\nAbsent",
    "read_only": 1
   },
   {

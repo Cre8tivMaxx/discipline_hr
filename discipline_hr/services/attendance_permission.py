@@ -8,7 +8,7 @@ from frappe.utils import cint, today
 from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
     EmployeeGraceLedger,
 )
-from discipline_hr.services.utils import logger
+from discipline_hr.services.utils import count_prior_violations, logger
 
 
 @dataclass
@@ -36,7 +36,7 @@ def _context_from_permission(doc) -> _AttendanceContext:
 
 def _context_from_attendance(attendance_doc) -> _AttendanceContext:
     shift = frappe.get_cached_doc("Shift Type", attendance_doc.shift)
-    minutes = max(cint(shift.custom_minimum_grace_minutes), attendance_doc.custom_penalty_minutes)
+    minutes = max(cint(shift.custom_minimum_grace_minutes), cint(attendance_doc.custom_penalty_minutes))
     return _AttendanceContext(
         employee=attendance_doc.employee,
         attendance=attendance_doc.name,
@@ -124,7 +124,9 @@ def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permis
     config = frappe.get_cached_doc("Discipline HR Settings")
     if not config.extra_minutes_penalty_policy:
         logger.warning(
-            "No extra minutes penalty policy configured, skipping penalty for %s", attendance_doc.name
+            "No extra minutes penalty policy configured, skipping penalty for %s | existing attendance permission: %s",
+            attendance_doc.name,
+            existing_permission,
         )
         return
 
@@ -138,14 +140,11 @@ def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permis
     penalty.start_period = shift_doc.custom_period_start_date
     penalty.end_period = shift_doc.custom_period_end_date
     penalty.penalty_status = attendance_doc.status
-    penalty.violation_number = 1 + frappe.db.count(
-        "Discipline Penalty",
-        {
-            "employee": attendance_doc.employee,
-            "start_period": shift_doc.custom_period_start_date,
-            "end_period": shift_doc.custom_period_end_date,
-            "penalty_status": attendance_doc.status,
-        },
+    penalty.violation_number = 1 + count_prior_violations(
+        attendance_doc.employee,
+        shift_doc.custom_period_start_date,
+        shift_doc.custom_period_end_date,
+        attendance_doc.status,
     )
     penalty.attendance_penalty_policy = config.extra_minutes_penalty_policy
     penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
@@ -181,30 +180,30 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
         )
         return
 
-    if not ctx.shift_type:
-        logger.warning("No shift type for %s on %s — cannot create penalty", ctx.employee, ctx.date)
+    if frappe.db.exists("Discipline Penalty", {"attendance": ctx.attendance}):
+        logger.info(
+            "Discipline Penalty for Employee: %s Already Exists. Ignore it | Violation Date: %s | Attendance: %s",
+            ctx.employee,
+            ctx.date,
+            ctx.attendance,
+        )
         return
-
     shift_doc = frappe.get_cached_doc("Shift Type", ctx.shift_type)
     attendance = frappe.get_cached_doc("Attendance", ctx.attendance) if ctx.attendance else None
-
     penalty = frappe.new_doc("Discipline Penalty")
     penalty.employee = ctx.employee
     penalty.violation_date = ctx.date or str(today())
     penalty.start_period = ledger.period_start
     penalty.end_period = ledger.period_end
 
-    if ctx.attendance:
-        penalty.attendance = ctx.attendance
+    if attendance:
+        penalty.attendance = attendance.name
     penalty.penalty_status = attendance.status if attendance else "Present"
-    penalty.violation_number = 1 + frappe.db.count(
-        "Discipline Penalty",
-        {
-            "employee": ctx.employee,
-            "start_period": ledger.period_start,
-            "end_period": ledger.period_end,
-            "penalty_status": penalty.penalty_status,
-        },
+    penalty.violation_number = 1 + count_prior_violations(
+        ctx.employee,
+        ledger.period_start,
+        ledger.period_end,
+        penalty.penalty_status,
     )
 
     penalty.attendance_permission = ctx.attendance_permission
@@ -217,6 +216,7 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
     penalty.penalty_minutes = ledger.penalty_minutes
     penalty.status = "Auto Processed" if config.auto_process_attendance_penalty else "Pending"
     penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
+    return penalty
 
 
 def _create_grace_ledger(ctx: _AttendanceContext):
@@ -241,6 +241,9 @@ def _create_grace_ledger(ctx: _AttendanceContext):
     ledger.period_end = shift.custom_period_end_date
     ledger.allowed_minutes = shift.custom_total_allowed_grace_minutes
     ledger.consumed_minutes = ctx.minutes
+    ledger.remarks = (
+        f"Auto-created from {ctx.attendance_permission}" if ctx.attendance_permission else "Auto-created"
+    )
     consumed_so_far = (
         frappe.db.get_value(
             "Employee Grace Ledger",
@@ -267,15 +270,30 @@ def _create_grace_ledger(ctx: _AttendanceContext):
     try:
         ledger.insert(ignore_permissions=True)
         logger.info("Ledger Inserted successfully. %s", ledger)
+    except Exception:
+        logger.exception(
+            "Couldn't create the Grace Ledger | Employee: %s | Attendance: %s | Attendance Permission: %s | Date: %s | Penalty Minutes: %s",
+            ctx.employee,
+            ctx.attendance,
+            ctx.attendance_permission or "",
+            ctx.date,
+            ctx.minutes,
+        )
+        return
+    try:
         config = frappe.get_cached_doc("Discipline HR Settings")
         if ctx.auto_created == 1 or config.penalize_manual_attendance_permissions == 1:
             _create_attendance_penalty(ctx, ledger, config)
     except Exception:
-        logger.exception("Couldn't create the grace ledger")
-        frappe.log_error(
-            title=f"Grace Ledger Creation Failed for {ctx.employee}",
-            message=frappe.get_traceback(),
+        logger.exception(
+            "Couldn't create the Discipline Penalty | Employee: %s | Attendance: %s | Attendance Permission: %s | Date: %s | Penalty Minutes: %s",
+            ctx.employee,
+            ctx.attendance,
+            ctx.attendance_permission or "",
+            ctx.date,
+            ctx.minutes,
         )
+    return ledger
 
 
 def _should_continue_workflow(permission_doc):
@@ -290,11 +308,10 @@ def _should_continue_workflow(permission_doc):
     Returns:
         ``True`` if processing should continue, ``False`` otherwise.
     """
-    if not permission_doc.employee or not permission_doc.minutes:
+    if not permission_doc.minutes:
         logger.warning(
-            "Workflow stopped for permission %s: missing required fields (employee=%s, minutes=%s)",
+            "Workflow stopped for permission %s: missing required field minutes=%s",
             permission_doc.name,
-            permission_doc.employee,
             permission_doc.minutes,
         )
         return False
@@ -312,8 +329,7 @@ def _should_continue_workflow(permission_doc):
 def _ignore_grace_ledger_duplicates(ctx: _AttendanceContext):
     """Return whether a grace ledger entry should be created for this context.
 
-    When the ``ignore_grace_ledger_duplicates`` setting is on, returns ``False``
-    if a ledger already exists for the same employee and attendance.
+    returns ``False`` if a ledger already exists for the same employee and attendance.
 
     Args:
         ctx: The ``_AttendanceContext`` to check.
@@ -321,11 +337,6 @@ def _ignore_grace_ledger_duplicates(ctx: _AttendanceContext):
     Returns:
         ``True`` if safe to create a new ledger, ``False`` to skip.
     """
-    ignore_duplicates = frappe.db.get_single_value("Discipline HR Settings", "ignore_grace_ledger_duplicates")
-    if cint(ignore_duplicates) != 1:
-        logger.debug("ignore duplicates deactivated")
-        return False  # Don't Consider Duplicates
-
     if ctx.attendance:
         filters = {"employee": ctx.employee, "attendance": ctx.attendance}
     else:

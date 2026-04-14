@@ -15,7 +15,6 @@ class DisciplineHRSettings(Document):
         from frappe.types import DF
 
         absence_penalty_policy: DF.Link | None
-        salary_basis: DF.Literal["Base", "Total"]
         attendance_penalty_policy: DF.Link | None
         auto_process_attendance_penalty: DF.Check
         auto_process_attendance_permission: DF.Check
@@ -24,9 +23,9 @@ class DisciplineHRSettings(Document):
         default_penalty_notification: DF.Link | None
         default_pending_notification: DF.Link | None
         extra_minutes_penalty_policy: DF.Link | None
-        ignore_grace_ledger_duplicates: DF.Check
         month_days: DF.Int
         penalize_manual_attendance_permissions: DF.Check
+        salary_basis: DF.Literal["Base", "Total"]
         salary_component: DF.Link | None
         split_permissions_and_penalties: DF.Check
     # end: auto-generated types

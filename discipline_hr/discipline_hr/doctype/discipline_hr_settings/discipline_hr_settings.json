@@ -17,7 +17,6 @@
   "auto_process_attendance_penalty",
   "auto_submit_additional_salary",
   "column_break_automation",
-  "ignore_grace_ledger_duplicates",
   "split_permissions_and_penalties",
   "extra_minutes_penalty_policy",
   "cascade_cancel_attendance",
@@ -95,13 +94,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "description": "Prevents duplicates in grace ledger for same Attendance, Employee and day.",
-   "fieldname": "ignore_grace_ledger_duplicates",
-   "fieldtype": "Check",
-   "label": "Prevent Grace Ledger Duplicates"
-  },
-  {
    "fieldname": "section_break_notifications",
    "fieldtype": "Section Break",
    "label": "Notifications"
@@ -164,7 +156,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-30 11:30:29.308214",
+ "modified": "2026-04-13 13:30:49.044041",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

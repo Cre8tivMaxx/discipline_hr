@@ -16,6 +16,20 @@ class _LazyLogger:
 logger = _LazyLogger()
 
 
+def count_prior_violations(employee: str, start_period: str, end_period: str, penalty_status: str) -> int:
+    """Count non-rejected penalties in a period for violation number calculation."""
+    return frappe.db.count(
+        "Discipline Penalty",
+        {
+            "employee": employee,
+            "start_period": start_period,
+            "end_period": end_period,
+            "penalty_status": penalty_status,
+            "status": ("!=", "Rejected"),
+        },
+    )
+
+
 _log_level_configured = False
 
 
