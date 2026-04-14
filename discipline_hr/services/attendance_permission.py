@@ -8,7 +8,7 @@ from frappe.utils import cint, today
 from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
     EmployeeGraceLedger,
 )
-from discipline_hr.services.utils import count_prior_violations, logger
+from discipline_hr.services.utils import _log, count_prior_violations
 
 
 @dataclass
@@ -100,12 +100,13 @@ def process_attendance_without_permission(attendance_doc):
         if extra_minutes > 0:
             _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permission)
 
-        logger.info(
-            "Bypass skipped for %s on %s: manual Attendance Permission %s exists, linked attendance %s",
-            attendance_doc.employee,
-            attendance_doc.attendance_date,
-            existing_permission,
-            attendance_doc.name,
+        _log(
+            "info",
+            "bypass_skipped_manual_permission",
+            employee=attendance_doc.employee,
+            date=str(attendance_doc.attendance_date),
+            permission=existing_permission,
+            attendance=attendance_doc.name,
         )
         return
 
@@ -123,10 +124,11 @@ def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permis
     """
     config = frappe.get_cached_doc("Discipline HR Settings")
     if not config.extra_minutes_penalty_policy:
-        logger.warning(
-            "No extra minutes penalty policy configured, skipping penalty for %s | existing attendance permission: %s",
-            attendance_doc.name,
-            existing_permission,
+        _log(
+            "warning",
+            "no_extra_minutes_policy",
+            attendance=attendance_doc.name,
+            permission=existing_permission,
         )
         return
 
@@ -152,11 +154,12 @@ def _create_extra_minutes_penalty(attendance_doc, extra_minutes, existing_permis
     penalty.grace_consumed = 0
     penalty.status = "Auto Processed" if config.auto_process_attendance_penalty else "Pending"
     penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
-    logger.info(
-        "Extra minutes penalty created for %s: %s minutes beyond permission %s",
-        attendance_doc.employee,
-        extra_minutes,
-        existing_permission,
+    _log(
+        "info",
+        "extra_minutes_penalty_created",
+        employee=attendance_doc.employee,
+        extra_minutes=extra_minutes,
+        permission=existing_permission,
     )
 
 
@@ -172,20 +175,22 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
         config: The ``DisciplineHRSettings`` single doctype.
     """
     if ledger.penalty_minutes <= 0:
-        logger.info(
-            "No attendance penalty created for %s. Remaining grace before consume: %s. penalty: %s.",
-            ctx.employee,
-            ledger.remaining_minutes_before_consume,
-            ledger.penalty_minutes,
+        _log(
+            "info",
+            "no_penalty_within_grace",
+            employee=ctx.employee,
+            remaining_grace_before_consume=ledger.remaining_minutes_before_consume,
+            penalty_minutes=ledger.penalty_minutes,
         )
         return
 
     if frappe.db.exists("Discipline Penalty", {"attendance": ctx.attendance}):
-        logger.info(
-            "Discipline Penalty for Employee: %s Already Exists. Ignore it | Violation Date: %s | Attendance: %s",
-            ctx.employee,
-            ctx.date,
-            ctx.attendance,
+        _log(
+            "info",
+            "duplicate_discipline_penalty",
+            employee=ctx.employee,
+            date=ctx.date,
+            attendance=ctx.attendance,
         )
         return
     shift_doc = frappe.get_cached_doc("Shift Type", ctx.shift_type)
@@ -233,7 +238,7 @@ def _create_grace_ledger(ctx: _AttendanceContext):
 
     shift = frappe.get_cached_doc("Shift Type", ctx.shift_type)
     ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
-    logger.debug(f"Creating grace ledger for {ctx.employee} ({ctx.minutes} minutes)")
+    _log("debug", "creating_grace_ledger", employee=ctx.employee, minutes=ctx.minutes)
     ledger.employee = ctx.employee
     ledger.attendance = ctx.attendance
     ledger.attendance_permission = ctx.attendance_permission
@@ -244,6 +249,7 @@ def _create_grace_ledger(ctx: _AttendanceContext):
     ledger.remarks = (
         f"Auto-created from {ctx.attendance_permission}" if ctx.attendance_permission else "Auto-created"
     )
+    ledger.date = ctx.date
     consumed_so_far = (
         frappe.db.get_value(
             "Employee Grace Ledger",
@@ -262,36 +268,61 @@ def _create_grace_ledger(ctx: _AttendanceContext):
     ledger.remaining_minutes = max(0, ledger.remaining_minutes_before_consume - ledger.consumed_minutes)
     penalty_minutes = ledger.remaining_minutes_before_consume - ledger.consumed_minutes
     if penalty_minutes >= 0:
-        logger.info("No violations yet for ledger %s", ledger)
+        _log("info", "no_violations_yet", employee=ctx.employee, ledger=str(ledger))
         ledger.penalty_minutes = 0
     else:
         ledger.penalty_minutes = abs(penalty_minutes)
 
     try:
         ledger.insert(ignore_permissions=True)
-        logger.info("Ledger Inserted successfully. %s", ledger)
+        _log("info", "ledger_inserted", employee=ctx.employee, ledger=ledger.name)
     except Exception:
-        logger.exception(
-            "Couldn't create the Grace Ledger | Employee: %s | Attendance: %s | Attendance Permission: %s | Date: %s | Penalty Minutes: %s",
-            ctx.employee,
-            ctx.attendance,
-            ctx.attendance_permission or "",
-            ctx.date,
-            ctx.minutes,
+        _log(
+            "exception",
+            "grace_ledger_creation_failed",
+            employee=ctx.employee,
+            attendance=ctx.attendance,
+            permission=ctx.attendance_permission or "",
+            date=ctx.date,
+            minutes=ctx.minutes,
         )
+        if ctx.attendance_permission:
+            frappe.db.set_value(
+                "Attendance Permissions",
+                ctx.attendance_permission,
+                "error_log",
+                frappe.get_traceback(),
+                update_modified=False,
+            )
+        elif ctx.attendance:
+            frappe.db.set_value(
+                "Attendance",
+                ctx.attendance,
+                "custom_error_log",
+                frappe.get_traceback(),
+                update_modified=False,
+            )
         return
     try:
         config = frappe.get_cached_doc("Discipline HR Settings")
         if ctx.auto_created == 1 or config.penalize_manual_attendance_permissions == 1:
             _create_attendance_penalty(ctx, ledger, config)
     except Exception:
-        logger.exception(
-            "Couldn't create the Discipline Penalty | Employee: %s | Attendance: %s | Attendance Permission: %s | Date: %s | Penalty Minutes: %s",
-            ctx.employee,
-            ctx.attendance,
-            ctx.attendance_permission or "",
-            ctx.date,
-            ctx.minutes,
+        _log(
+            "exception",
+            "discipline_penalty_creation_failed",
+            employee=ctx.employee,
+            attendance=ctx.attendance,
+            permission=ctx.attendance_permission or "",
+            date=ctx.date,
+            minutes=ctx.minutes,
+        )
+        frappe.db.set_value(
+            "Employee Grace Ledger",
+            ledger.name,
+            "error_log",
+            frappe.get_traceback(),
+            update_modified=False,
         )
     return ledger
 
@@ -309,18 +340,20 @@ def _should_continue_workflow(permission_doc):
         ``True`` if processing should continue, ``False`` otherwise.
     """
     if not permission_doc.minutes:
-        logger.warning(
-            "Workflow stopped for permission %s: missing required field minutes=%s",
-            permission_doc.name,
-            permission_doc.minutes,
+        _log(
+            "warning",
+            "workflow_stopped_missing_minutes",
+            permission=permission_doc.name,
+            minutes=permission_doc.minutes,
         )
         return False
 
     if permission_doc.status not in ["Auto Processed", "Processed"]:
-        logger.info(
-            "Workflow Stopped for permission %s with status %s",
-            permission_doc.name,
-            permission_doc.status,
+        _log(
+            "info",
+            "workflow_stopped_invalid_status",
+            permission=permission_doc.name,
+            status=permission_doc.status,
         )
         return False
     return True
@@ -344,11 +377,12 @@ def _ignore_grace_ledger_duplicates(ctx: _AttendanceContext):
     existing_ledger = frappe.db.exists("Employee Grace Ledger", filters)
 
     if existing_ledger:
-        logger.info(
-            "Grace Ledger already exists for %s (attendance=%s, permission=%s)",
-            ctx.employee,
-            ctx.attendance,
-            ctx.attendance_permission,
+        _log(
+            "info",
+            "grace_ledger_already_exists",
+            employee=ctx.employee,
+            attendance=ctx.attendance,
+            permission=ctx.attendance_permission,
         )
         return True  # Yes ignore grace ledger duplicates
 

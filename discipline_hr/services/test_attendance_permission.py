@@ -612,15 +612,21 @@ class TestAttendancePermissions(FrappeTestCase):
         # Assert DP does not exist
         self.assertFalse(frappe.db.exists("Discipline Penalty", {"attendance": ctx.attendance}))
 
-        # Assert the exception raised and logger called
-        mock_logger.return_value.exception.assert_called_with(
-            "Couldn't create the Discipline Penalty | Employee: %s | Attendance: %s | Attendance Permission: %s | Date: %s | Penalty Minutes: %s",
-            ctx.employee,
-            ctx.attendance,
-            ctx.attendance_permission or "",
-            ctx.date,
-            ctx.minutes,
+        # Assert the exception raised and logger called with structured JSON
+        import json
+
+        expected_payload = json.dumps(
+            {
+                "event": "discipline_penalty_creation_failed",
+                "employee": ctx.employee,
+                "attendance": ctx.attendance,
+                "permission": ctx.attendance_permission or "",
+                "date": ctx.date,
+                "minutes": ctx.minutes,
+            },
+            default=str,
         )
+        mock_logger.return_value.exception.assert_called_with(expected_payload)
 
     def test_duplicate_attendance_one_attendance_permission(self):
         """

@@ -17,7 +17,7 @@ from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_se
 from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
     EmployeeGraceLedger,
 )
-from discipline_hr.services.utils import logger
+from discipline_hr.services.utils import _log
 
 
 class DisciplinePenalty(Document):
@@ -77,6 +77,7 @@ class DisciplinePenalty(Document):
         ledger.consumed_minutes = -self.penalty_minutes
         ledger.penalty_minutes = 0
         ledger.discipline_penalty = self.name
+        ledger.date = self.violation_date
         ledger.remarks = f"Penalty marker: {self.name}"
         ledger.insert(ignore_permissions=True)
 
@@ -88,14 +89,15 @@ class DisciplinePenalty(Document):
     def create_additional_salary(self):
         # TODO If salary structure raise just log the error inside the attendance penalty
         if not flt(self.penalty_amount):
-            logger.info(
-                "Ignore Additional Salary due amount == 0 | ATP: %s | Penalty Amount: %s",
-                self.name,
-                self.penalty_amount,
+            _log(
+                "info",
+                "additional_salary_skipped_zero_amount",
+                penalty=self.name,
+                penalty_amount=self.penalty_amount,
             )
             return
         if not self.salary_component:
-            logger.warning("Couldn't create Additional Salary Salary Component is None | Penalty %s", self)
+            _log("warning", "additional_salary_skipped_no_component", penalty=str(self.name))
             return
         try:
             config = self._get_discipline_hr_settings()
@@ -112,18 +114,19 @@ class DisciplinePenalty(Document):
                     "overwrite_salary_structure_amount": 0,
                 }
             )
-            logger.debug("Created Additional Salary: %s | Discipline Penalty %s", additional_salary, self)
+            _log(
+                "debug",
+                "additional_salary_created",
+                additional_salary=str(additional_salary),
+                penalty=self.name,
+            )
 
             additional_salary.insert()
             if config.auto_submit_additional_salary == 1:
                 additional_salary.submit()
 
         except Exception as e:
-            logger.exception(
-                "Couldn't create additional salary | Discipline Penalty: %s | Employee: %s ",
-                self,
-                self.employee,
-            )
+            _log("exception", "additional_salary_creation_failed", penalty=self.name, employee=self.employee)
             self.error = str(e)
 
     def _get_employee_daily_rate(self):
@@ -138,7 +141,7 @@ class DisciplinePenalty(Document):
             ["base", "variable"],
             order_by="from_date desc",
         )
-        logger.debug("Found structure assignment | Employee %s | Assignment %s", self.employee, assignment)
+        _log("debug", "salary_structure_assignment_found", employee=self.employee, assignment=str(assignment))
         if assignment:
             config = frappe.get_cached_doc("Discipline HR Settings")
             base, variable = assignment
@@ -149,11 +152,12 @@ class DisciplinePenalty(Document):
                 daily_rate = (base + variable) / month_days
             else:
                 daily_rate = base / month_days
-            logger.debug(
-                "Successfully Fetched Daily rate | Employee %s | Base %s | daily_rate %s",
-                self.employee,
-                assignment,
-                daily_rate,
+            _log(
+                "debug",
+                "daily_rate_fetched",
+                employee=self.employee,
+                base=str(assignment),
+                daily_rate=daily_rate,
             )
             return daily_rate
         frappe.throw(
@@ -164,7 +168,7 @@ class DisciplinePenalty(Document):
         """Calculate Deduction amount based on Configuration"""
         if self.penalty_status == "Present":
             if not self.attendance_penalty_policy:
-                logger.warning("attendance_penalty_policy is not set | Penalty: %s", self.name)
+                _log("warning", "attendance_penalty_policy_not_set", penalty=self.name)
                 return 0.0
 
             penalty_type = frappe.get_value(
@@ -172,14 +176,15 @@ class DisciplinePenalty(Document):
             )
             penalty_type = f"Attendance {penalty_type}"
 
-            logger.debug(
-                "Found Penalty Type for | ATP: %s | Penalty Type: %s ",
-                self.attendance_penalty_policy,
-                penalty_type,
+            _log(
+                "debug",
+                "penalty_type_found",
+                policy=self.attendance_penalty_policy,
+                penalty_type=penalty_type,
             )
         elif self.penalty_status == "Absent":
             if not self.absence_penalty_policy:
-                logger.warning("absence_penalty_policy is not set | Penalty: %s", self.name)
+                _log("warning", "absence_penalty_policy_not_set", penalty=self.name)
                 return 0.0
 
             penalty_type = frappe.get_value(
@@ -187,13 +192,9 @@ class DisciplinePenalty(Document):
             )
             penalty_type = f"Absence {penalty_type}"
 
-            logger.debug(
-                "Found Penalty Type for | APP: %s | Penalty Type: %s ",
-                self.absence_penalty_policy,
-                penalty_type,
-            )
+            _log("debug", "penalty_type_found", policy=self.absence_penalty_policy, penalty_type=penalty_type)
         else:
-            logger.warning("Penalty Policy is not set. %s", self)
+            _log("warning", "penalty_policy_not_set", penalty=self.name)
             return 0.0
 
         # Get Penalty
@@ -208,7 +209,7 @@ class DisciplinePenalty(Document):
         handler = handlers.get(penalty_type)
 
         if not handler:
-            logger.error("Unknown Penalty Type: %s", penalty_type)
+            _log("error", "unknown_penalty_type", penalty_type=penalty_type)
             return 0.0
 
         return handler()
@@ -236,18 +237,19 @@ class DisciplinePenalty(Document):
             row = max(matrix, key=lambda r: r.violation_number)
 
         if not row:
-            logger.warning("Matrix has no penalties to apply | Penalty Policy: %s", policy_doc)
+            _log("warning", "penalty_matrix_empty", policy=policy_doc.name)
             return 0
 
         self.description = row.description or ""
         percentage = flt(row.percentage)
 
-        logger.debug(
-            "Successfully fetched PM percentage | %s %s | PM %s | Percentage %s",
-            label,
-            self,
-            policy_doc,
-            percentage,
+        _log(
+            "debug",
+            "matrix_percentage_fetched",
+            label=label,
+            penalty=self.name,
+            policy=policy_doc.name,
+            percentage=percentage,
         )
 
         return flt(self._get_employee_daily_rate() * percentage)
@@ -267,18 +269,19 @@ class DisciplinePenalty(Document):
         row = next((r for r in special_days if r.week_day == violation_day), None)
 
         if not row:
-            logger.info("No special day entry for %s | Policy: %s", violation_day, policy_doc.name)
+            _log("info", "no_special_day_entry", day=violation_day, policy=policy_doc.name)
             return 0
 
         self.description = row.description or ""
         percentage = flt(row.percentage_of_daily_rate)
 
-        logger.debug(
-            "Successfully fetched Special Day percentage | %s %s | SD %s | Percentage %s",
-            violation_day,
-            self,
-            policy_doc,
-            percentage,
+        _log(
+            "debug",
+            "special_day_percentage_fetched",
+            day=violation_day,
+            penalty=self.name,
+            policy=policy_doc.name,
+            percentage=percentage,
         )
         return flt(self._get_employee_daily_rate() * percentage)
 
@@ -308,12 +311,13 @@ class DisciplinePenalty(Document):
 
         # Calculate rate per minute
         rate_per_minute = at_pp.rate_per_hour / 60
-        logger.info(
-            "Penalty Per minute | Employee: %s | APP: %s | Rate Per Hour: %s | Rate Per Minutes: %s",
-            self.employee,
-            at_pp,
-            at_pp.rate_per_hour,
-            rate_per_minute,
+        _log(
+            "info",
+            "fixed_per_hour_rate",
+            employee=self.employee,
+            policy=at_pp.name,
+            rate_per_hour=at_pp.rate_per_hour,
+            rate_per_minute=rate_per_minute,
         )
 
         return self.penalty_minutes * rate_per_minute
@@ -337,10 +341,11 @@ class DisciplinePenalty(Document):
         factor = flt(at_pp.deducted_minutes_factor)
 
         if not factor:
-            logger.warning(
-                "Factor deduction skipped: deducted_minutes_factor is 0 | Employee: %s | Policy: %s",
-                self.employee,
-                self.attendance_penalty_policy,
+            _log(
+                "warning",
+                "factor_deduction_skipped_zero_factor",
+                employee=self.employee,
+                policy=self.attendance_penalty_policy,
             )
             return 0.0
 
@@ -349,13 +354,14 @@ class DisciplinePenalty(Document):
             return 0.0
 
         deduction = self.penalty_minutes * factor * minute_rate
-        logger.debug(
-            "Factor deduction | Employee: %s | Penalty Minutes: %s | Factor: %s | Minute Rate: %s | Deduction: %s",
-            self.employee,
-            self.penalty_minutes,
-            factor,
-            minute_rate,
-            deduction,
+        _log(
+            "debug",
+            "factor_deduction_calculated",
+            employee=self.employee,
+            penalty_minutes=self.penalty_minutes,
+            factor=factor,
+            minute_rate=minute_rate,
+            deduction=deduction,
         )
         return flt(deduction)
 
@@ -366,18 +372,14 @@ class DisciplinePenalty(Document):
         attendance = frappe.get_cached_doc("Attendance", self.attendance)
 
         if not attendance.shift:
-            logger.error(
-                "Cannot compute minute rate: no shift on attendance | Employee: %s | Attendance: %s",
-                self.employee,
-                self.attendance,
-            )
+            _log("error", "minute_rate_no_shift", employee=self.employee, attendance=self.attendance)
             return 0.0
 
         shift = frappe.get_cached_doc("Shift Type", attendance.shift)
         shift_hours = time_diff_in_hours(shift.end_time, shift.start_time)
 
         if not shift_hours:
-            logger.error("Cannot compute minute rate: shift_hours is 0 | Shift: %s", attendance.shift)
+            _log("error", "minute_rate_zero_shift_hours", shift=attendance.shift)
             return 0.0
 
         daily_rate = self._get_employee_daily_rate()
@@ -389,4 +391,4 @@ class DisciplinePenalty(Document):
             config = frappe.get_cached_doc(settings_doctype)
             return cast(DisciplineHRSettings, config)
         except Exception:
-            logger.exception("Cannot fetch %s DocType", settings_doctype)
+            _log("exception", "discipline_hr_settings_fetch_failed", doctype=settings_doctype)

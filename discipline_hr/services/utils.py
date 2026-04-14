@@ -1,3 +1,5 @@
+import json
+
 import frappe
 
 
@@ -50,3 +52,15 @@ def configure_log_level():
         set_log_level(level)
 
     _log_level_configured = True
+
+
+def _log(level, event, **fields):
+    log = {"event": event, **fields}
+    levels = {
+        "info": logger.info,
+        "debug": logger.debug,
+        "warning": logger.warning,
+        "error": logger.error,
+        "exception": logger.exception,
+    }
+    return levels[level.lower()](json.dumps(log, default=str))

@@ -16,7 +16,7 @@ from discipline_hr.discipline_hr.doctype.attendance_permissions.attendance_permi
     AttendancePermissions,
 )
 from discipline_hr.services.grace import get_grace_minutes
-from discipline_hr.services.utils import count_prior_violations, logger
+from discipline_hr.services.utils import _log, count_prior_violations
 
 
 def calculate_attendance_penalty_minutes(doc, method=None):
@@ -39,7 +39,7 @@ def calculate_attendance_penalty_minutes(doc, method=None):
     shift_details = get_actual_start_end_datetime_of_shift(doc.employee, get_datetime(doc.in_time))
 
     if not shift_details:
-        logger.error(f"Shift details missing for {doc.employee} on {doc.attendance_date}")
+        _log("error", "shift_details_missing", employee=doc.employee, date=str(doc.attendance_date))
         return
 
     start_datetime = shift_details["start_datetime"]
@@ -55,33 +55,31 @@ def calculate_attendance_penalty_minutes(doc, method=None):
 
     # Fetch Grace Directly From Shift
     if not doc.shift:
-        logger.error("Attendance missing Shift Type")
+        _log("error", "attendance_missing_shift_type", attendance=doc.name)
         return
 
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
 
     # Guard to start, end period
     if not shift_doc.custom_period_start_date or not shift_doc.custom_period_end_date:
-        logger.info(
-            f"Penalty Skipped for {doc.name}, because shift {doc.shift} doesn't have Period Start/End Date"
-        )
+        _log("info", "penalty_skipped_no_period", attendance=doc.name, shift=doc.shift)
         return
 
     if getdate(doc.attendance_date) < getdate(shift_doc.custom_period_start_date) or getdate(
         doc.attendance_date
     ) > getdate(shift_doc.custom_period_end_date):
-        logger.info(
-            f"Penalty skipped for Attendance {doc.name}: "
-            f"date {doc.attendance_date} is outside shift period "
-            f"({shift_doc.custom_period_start_date} → "
-            f"{shift_doc.custom_period_end_date})"
+        _log(
+            "info",
+            "penalty_skipped_outside_period",
+            attendance=doc.name,
+            date=str(doc.attendance_date),
+            period_start=str(shift_doc.custom_period_start_date),
+            period_end=str(shift_doc.custom_period_end_date),
         )
         return
 
     if not shift_doc.enable_auto_attendance:
-        logger.info(
-            f"Penalty skipped for {doc.name} because Auto Attendance is disabled for shift {doc.shift}"
-        )
+        _log("info", "penalty_skipped_auto_attendance_disabled", attendance=doc.name, shift=doc.shift)
         return
 
     late_grace, early_grace = get_grace_minutes(shift_doc)
@@ -111,7 +109,7 @@ def trigger_create_attendance_permission(doc, method=None):
     if cint(config.split_permissions_and_penalties) == 1:
         from discipline_hr.services.attendance_permission import process_attendance_without_permission
 
-        logger.debug("Creating Penalty without permission | split_permissions_and_penalties == 1")
+        _log("debug", "creating_penalty_without_permission")
         process_attendance_without_permission(doc)
         return
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
@@ -121,12 +119,20 @@ def trigger_create_attendance_permission(doc, method=None):
                 doc.employee, doc.name, doc.custom_penalty_minutes, shift_doc.name, doc.attendance_date
             )
 
-            logger.info(
-                "Successfull create attendance permission | queue: %s | employee: %s", at, doc.employee
-            )
+            _log("info", "attendance_permission_created", permission=str(at), employee=doc.employee)
         except Exception:
-            logger.exception(
-                "Couldn't create attendance permission | queue: %s | employee: %s", doc, doc.employee
+            _log(
+                "exception",
+                "attendance_permission_creation_failed",
+                attendance=doc.name,
+                employee=doc.employee,
+            )
+            frappe.db.set_value(
+                "Attendance",
+                doc.name,
+                "custom_error_log",
+                frappe.get_traceback(),
+                update_modified=False,
             )
 
 
@@ -146,7 +152,7 @@ def create_attendance_permissions(employee, attendance, minutes, shift_name, dat
     if not employee:
         return
     if frappe.db.exists("Attendance Permissions", {"attendance": attendance.name}):
-        logger.info("Skipping ATP insertion as it's duplicate. for attendance %s", attendance.name)
+        _log("info", "attendance_permission_skipped_duplicate", attendance=attendance.name)
         return
     shift_doc = frappe.get_cached_doc("Shift Type", shift_name)
     doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
@@ -181,11 +187,7 @@ def create_absence_penalty(doc, method=None):
     if doc.status != "Absent":
         return
 
-    logger.info(
-        "Creating absence penalty | Attendance: %s | Employee: %s",
-        doc.name,
-        doc.employee,
-    )
+    _log("info", "creating_absence_penalty", attendance=doc.name, employee=doc.employee)
     shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
     config = frappe.get_cached_doc("Discipline HR Settings")
 
@@ -209,11 +211,12 @@ def create_absence_penalty(doc, method=None):
     )
     penalty.status = "Auto Processed" if cint(config.auto_process_attendance_penalty) else "Pending"
     penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
-    logger.info(
-        "Absence penalty created | Penalty: %s | Employee: %s | Violation #%s",
-        penalty.name,
-        doc.employee,
-        penalty.violation_number,
+    _log(
+        "info",
+        "absence_penalty_created",
+        penalty=penalty.name,
+        employee=doc.employee,
+        violation_number=penalty.violation_number,
     )
 
 
@@ -226,17 +229,11 @@ def _should_create_absence_penalty(shift_doc, config):
     - No Absence Penalty Policy is set on either the shift or Discipline HR Settings
     """
     if not shift_doc.enable_auto_attendance or not shift_doc.custom_period_start_date:
-        logger.info(
-            "Absence Penalty is not applicable for this shift | Shift: %s",
-            shift_doc.name,
-        )
+        _log("info", "absence_penalty_not_applicable", shift=shift_doc.name)
         return False
 
     if not shift_doc.custom_absence_penalty_policy and not config.absence_penalty_policy:
-        logger.info(
-            "Absence Penalty policy not configured | Shift: %s",
-            shift_doc.name,
-        )
+        _log("info", "absence_penalty_policy_not_configured", shift=shift_doc.name)
         return False
 
     return True
@@ -257,7 +254,7 @@ def cascade_cancel_attendance(doc, method=None):
     """
     config = frappe.get_cached_doc("Discipline HR Settings")
     if not cint(config.cascade_cancel_attendance):
-        logger.info("Cascade cancel skipped for %s: disabled in Discipline HR Settings", doc.name)
+        _log("info", "cascade_cancel_skipped", attendance=doc.name)
         return
 
     attendance_name = doc.name
@@ -281,16 +278,17 @@ def cascade_cancel_attendance(doc, method=None):
                 sal_doc = frappe.get_doc("Additional Salary", sal.name)
                 sal_doc.cancel()
             frappe.delete_doc("Additional Salary", sal.name, force=True, ignore_permissions=True)
-            logger.info(
-                "Cascade cancel: deleted Additional Salary %s (Attendance %s)", sal.name, attendance_name
+            _log(
+                "info",
+                "cascade_deleted_additional_salary",
+                additional_salary=sal.name,
+                attendance=attendance_name,
             )
 
     # Step 3: Delete Discipline Penalties
     for penalty_name in penalty_names:
         frappe.delete_doc("Discipline Penalty", penalty_name, force=True, ignore_permissions=True)
-        logger.info(
-            "Cascade cancel: deleted Discipline Penalty %s (Attendance %s)", penalty_name, attendance_name
-        )
+        _log("info", "cascade_deleted_discipline_penalty", penalty=penalty_name, attendance=attendance_name)
 
     # Step 4: Delete all Employee Grace Ledger entries (permission-flow + penalty-flow)
     ledger_names = frappe.get_all(
@@ -300,9 +298,7 @@ def cascade_cancel_attendance(doc, method=None):
     )
     for ledger_name in ledger_names:
         frappe.delete_doc("Employee Grace Ledger", ledger_name, force=True, ignore_permissions=True)
-        logger.info(
-            "Cascade cancel: deleted Employee Grace Ledger %s (Attendance %s)", ledger_name, attendance_name
-        )
+        _log("info", "cascade_deleted_grace_ledger", ledger=ledger_name, attendance=attendance_name)
 
     # Step 5: Delete auto-created Attendance Permissions only
     permission_names = frappe.get_all(
@@ -312,16 +308,17 @@ def cascade_cancel_attendance(doc, method=None):
     )
     for perm_name in permission_names:
         frappe.delete_doc("Attendance Permissions", perm_name, force=True, ignore_permissions=True)
-        logger.info(
-            "Cascade cancel: deleted Attendance Permissions %s (Attendance %s)", perm_name, attendance_name
+        _log(
+            "info", "cascade_deleted_attendance_permission", permission=perm_name, attendance=attendance_name
         )
 
     total = len(penalty_names) + len(ledger_names) + len(permission_names)
     if total:
-        logger.info(
-            "Cascade cancel complete for Attendance %s: %d penalties, %d ledgers, %d permissions deleted",
-            attendance_name,
-            len(penalty_names),
-            len(ledger_names),
-            len(permission_names),
+        _log(
+            "info",
+            "cascade_cancel_complete",
+            attendance=attendance_name,
+            penalties=len(penalty_names),
+            ledgers=len(ledger_names),
+            permissions=len(permission_names),
         )
