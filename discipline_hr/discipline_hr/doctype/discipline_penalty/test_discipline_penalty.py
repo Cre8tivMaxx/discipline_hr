@@ -372,3 +372,54 @@ class TestDisciplinePenalty(TestCase):
         self.assertEqual(filters["employee"], "EMP-001")
         self.assertEqual(filters["penalty_status"], "Present")
         self.assertEqual(filters["status"], ("!=", "Rejected"))
+
+    @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
+    @patch(f"{MODULE}.frappe.get_doc")
+    @patch(f"{MODULE}.frappe.db.exists")
+    def test_discipline_penalty_retry_happy_path(self, mock_exists, mock_get_doc, mock_settings):
+        """Retry creates an Additional Salary and clears the stale error."""
+        # Arrange
+        self.penalty.name = "DP-0001"
+        self.penalty.penalty_amount = 100
+        self.penalty.salary_component = "Basic"
+        self.penalty.violation_date = "2026-01-01"
+        self.penalty.error = "some old error"
+        mock_exists.return_value = None  # no AS exists → proceed to create
+        mock_settings.return_value.auto_submit_additional_salary = 0
+
+        # Act
+        with patch.object(self.penalty, "db_set") as mock_db_set:
+            self.penalty.retry()
+
+        # Assert: an Additional Salary was created
+        created_doctypes = [
+            call.args[0].get("doctype")
+            for call in mock_get_doc.call_args_list
+            if call.args and isinstance(call.args[0], dict)
+        ]
+        self.assertIn("Additional Salary", created_doctypes, "Expected an Additional Salary to be created")
+
+        # Assert: the stale error was cleared, and nothing set a non-None error
+        mock_db_set.assert_any_call("error", None)
+        for call_args, _ in mock_db_set.call_args_list:
+            if call_args[0] == "error" and call_args[1] is not None:
+                self.fail(f"db_set called with non-None error during retry: {call_args}")
+
+    @patch(f"{MODULE}._log")
+    @patch(f"{MODULE}.frappe.db.exists")
+    def test_retry_duplicate_guard(self, mock_exists, mock_logger):
+        """If an Additional Salary already exists, retry clears the error and skips creation."""
+        # Arrange
+        self.penalty.name = "DP-0001"
+        self.penalty.penalty_amount = 100
+        self.penalty.salary_component = "Basic"
+        self.penalty.error = "some old error"
+        mock_exists.return_value = "AS-0001"  # duplicate guard trips
+
+        # Act
+        with patch.object(self.penalty, "db_set") as mock_db_set:
+            self.penalty.retry()
+
+        # Assert
+        mock_db_set.assert_any_call("error", None)
+        mock_logger.assert_called_with("info", "additional_salary_exists", penalty=self.penalty.name)

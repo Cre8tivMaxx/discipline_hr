@@ -26,6 +26,12 @@ class AttendancePermissions(Document):
         status: DF.Literal["", "Auto Processed", "Processed", "Pending", "Rejected"]
     # end: auto-generated types
 
+    @frappe.whitelist()
+    def retry(self):
+        # Pre-clear: _create_grace_ledger writes a fresh traceback back on failure.
+        self.db_set("error_log", None, update_modified=False)
+        process_submitted_attendance_permission(self)
+
     def after_insert(self):
         """Trigger permission workflow after the record is saved."""
         process_submitted_attendance_permission(self)

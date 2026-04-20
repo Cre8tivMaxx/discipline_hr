@@ -91,6 +91,21 @@ def calculate_attendance_penalty_minutes(doc, method=None):
     doc.custom_penalty_minutes = doc.custom_late_after_grace_minutes + doc.custom_early_after_grace_minutes
 
 
+@frappe.whitelist()
+def retry_attendance_permission(attendance_name):
+    """Manual retry for Attendance Permissions from the Attendance form.
+
+    Args:
+        attendance_name: The name of the Attendance record to retry.
+    """
+    doc = frappe.get_doc("Attendance", attendance_name)
+    if not doc.custom_penalty_minutes:
+        frappe.throw(frappe._("This attendance has no penalty minutes - nothing to retry."))
+    # Pre-clear: the service writes a fresh traceback back on failure.
+    frappe.db.set_value("Attendance", attendance_name, "custom_error_log", None, update_modified=False)
+    create_attendance_permissions_for(doc)
+
+
 def trigger_create_attendance_permission(doc, method=None):
     """Create an Attendance Permission or directly process a penalty for a submitted Attendance.
 
@@ -105,35 +120,43 @@ def trigger_create_attendance_permission(doc, method=None):
         doc: The ``Attendance`` document that was just submitted.
         method: Unused; required by Frappe hook signature.
     """
-    config = frappe.get_cached_doc("Discipline HR Settings")
-    if cint(config.split_permissions_and_penalties) == 1:
-        from discipline_hr.services.attendance_permission import process_attendance_without_permission
+    create_attendance_permissions_for(doc)
 
-        _log("debug", "creating_penalty_without_permission")
-        process_attendance_without_permission(doc)
+
+def create_attendance_permissions_for(doc):
+    """Synchronous helper to create Attendance Permissions for an Attendance doc."""
+    if not doc.custom_penalty_minutes:
         return
-    shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
-    if doc.custom_penalty_minutes:
-        try:
-            at = create_attendance_permissions(
-                doc.employee, doc.name, doc.custom_penalty_minutes, shift_doc.name, doc.attendance_date
-            )
 
+    config = frappe.get_cached_doc("Discipline HR Settings")
+    try:
+        if cint(config.split_permissions_and_penalties) == 1:
+            from discipline_hr.services.attendance_permission import process_attendance_without_permission
+
+            _log("debug", "creating_penalty_without_permission")
+            process_attendance_without_permission(doc)
+            return
+
+        shift_doc = frappe.get_cached_doc("Shift Type", doc.shift)
+        at = create_attendance_permissions(
+            doc.employee, doc.name, doc.custom_penalty_minutes, shift_doc.name, doc.attendance_date
+        )
+        if at:
             _log("info", "attendance_permission_created", permission=str(at), employee=doc.employee)
-        except Exception:
-            _log(
-                "exception",
-                "attendance_permission_creation_failed",
-                attendance=doc.name,
-                employee=doc.employee,
-            )
-            frappe.db.set_value(
-                "Attendance",
-                doc.name,
-                "custom_error_log",
-                frappe.get_traceback(),
-                update_modified=False,
-            )
+    except Exception:
+        _log(
+            "exception",
+            "attendance_permission_creation_failed",
+            attendance=doc.name,
+            employee=doc.employee,
+        )
+        frappe.db.set_value(
+            "Attendance",
+            doc.name,
+            "custom_error_log",
+            frappe.get_traceback(),
+            update_modified=False,
+        )
 
 
 def create_attendance_permissions(employee, attendance, minutes, shift_name, date=""):
@@ -144,26 +167,30 @@ def create_attendance_permissions(employee, attendance, minutes, shift_name, dat
 
     Args:
         employee: Employee docname.
-        attendance: Attendance docname linked to this permission.
+        attendance: Attendance docname (or object with .name) linked to this permission.
         minutes: Penalty minutes (floored to shift minimum grace).
         shift_name: Shift Type docname used to resolve config.
         date: Violation date; defaults to today if omitted.
     """
     if not employee:
         return
-    if frappe.db.exists("Attendance Permissions", {"attendance": attendance.name}):
-        _log("info", "attendance_permission_skipped_duplicate", attendance=attendance.name)
+
+    attendance_name = getattr(attendance, "name", attendance)
+
+    if frappe.db.exists("Attendance Permissions", {"attendance": attendance_name}):
+        _log("info", "attendance_permission_skipped_duplicate", attendance=attendance_name)
         return
     shift_doc = frappe.get_cached_doc("Shift Type", shift_name)
     doc = cast(AttendancePermissions, frappe.new_doc("Attendance Permissions"))
     doc.employee = employee
-    doc.attendance = attendance
+    doc.attendance = attendance_name
     doc.minutes = max(cint(shift_doc.custom_minimum_grace_minutes), minutes)
     doc.status = _get_attendance_permission_status() or "Auto Processed"
     doc.date = date or today()
     doc.auto_created = 1
     doc.shift_type = shift_doc.name
     doc.insert(ignore_if_duplicate=True, ignore_permissions=True)
+    return doc.name
 
 
 def _get_attendance_permission_status():

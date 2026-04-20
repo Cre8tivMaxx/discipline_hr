@@ -7,3 +7,15 @@ frappe.listview_settings["Employee Grace Ledger"] = {
         listview.page.remove_action_item(__("Delete"));
     },
 };
+
+frappe.ui.form.on("Employee Grace Ledger", {
+    refresh(frm) {
+        if (frm.doc.error_log) {
+            frm.add_custom_button(__("Retry"), () => {
+                frm.call("retry").then(() => {
+                    frm.reload_doc();
+                });
+            });
+        }
+    },
+});

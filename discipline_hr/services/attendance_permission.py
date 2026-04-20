@@ -303,27 +303,7 @@ def _create_grace_ledger(ctx: _AttendanceContext):
                 update_modified=False,
             )
         return
-    try:
-        config = frappe.get_cached_doc("Discipline HR Settings")
-        if ctx.auto_created == 1 or config.penalize_manual_attendance_permissions == 1:
-            _create_attendance_penalty(ctx, ledger, config)
-    except Exception:
-        _log(
-            "exception",
-            "discipline_penalty_creation_failed",
-            employee=ctx.employee,
-            attendance=ctx.attendance,
-            permission=ctx.attendance_permission or "",
-            date=ctx.date,
-            minutes=ctx.minutes,
-        )
-        frappe.db.set_value(
-            "Employee Grace Ledger",
-            ledger.name,
-            "error_log",
-            frappe.get_traceback(),
-            update_modified=False,
-        )
+    insert_attendance_penalty(ledger, ctx)
     return ledger
 
 
@@ -387,3 +367,49 @@ def _ignore_grace_ledger_duplicates(ctx: _AttendanceContext):
         return True  # Yes ignore grace ledger duplicates
 
     return False  # There is no duplicates
+
+
+def retry_discipline_penalty(doc: EmployeeGraceLedger):
+    """Re-run penalty creation for an existing grace ledger entry.
+
+    Pre-clears ``error_log`` before invoking the service; ``insert_attendance_penalty``
+    will write a fresh traceback back to the same field if this call fails.
+    """
+    frappe.db.set_value("Employee Grace Ledger", doc.name, "error_log", None, update_modified=False)
+    doc.reload()
+    if doc.attendance_permission:
+        ctx = _context_from_permission(frappe.get_doc("Attendance Permissions", doc.attendance_permission))
+    else:
+        ctx = _context_from_attendance(frappe.get_doc("Attendance", doc.attendance))
+    insert_attendance_penalty(doc, ctx)
+
+
+def insert_attendance_penalty(doc: EmployeeGraceLedger, ctx: _AttendanceContext):
+    try:
+        config = frappe.get_cached_doc("Discipline HR Settings")
+        if ctx.auto_created == 1 or config.penalize_manual_attendance_permissions == 1:
+            _create_attendance_penalty(ctx, doc, config)
+        frappe.db.set_value(
+            "Employee Grace Ledger",
+            doc.name,
+            "error_log",
+            None,
+            update_modified=False,
+        )
+    except Exception:
+        _log(
+            "exception",
+            "discipline_penalty_creation_failed",
+            employee=ctx.employee,
+            attendance=ctx.attendance,
+            permission=ctx.attendance_permission or "",
+            date=ctx.date,
+            minutes=ctx.minutes,
+        )
+        frappe.db.set_value(
+            "Employee Grace Ledger",
+            doc.name,
+            "error_log",
+            frappe.get_traceback(),
+            update_modified=False,
+        )

@@ -12,3 +12,15 @@ frappe.listview_settings["Attendance Permissions"] = {
         return [__(doc.status), colors[doc.status] || "grey", `status,=,${doc.status}`];
     },
 };
+
+frappe.ui.form.on("Attendance Permissions", {
+    refresh(frm) {
+        if (frm.doc.error_log) {
+            frm.add_custom_button(__("Retry"), () => {
+                frm.call("retry").then(() => {
+                    frm.reload_doc();
+                });
+            });
+        }
+    },
+});

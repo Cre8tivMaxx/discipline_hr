@@ -19,6 +19,7 @@ from discipline_hr.services.attendance_permission import (
     _context_from_attendance,
     _create_attendance_penalty,
     _create_grace_ledger,
+    retry_discipline_penalty,
 )
 
 
@@ -424,6 +425,54 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
         )
         self.assertEqual(penalty_policy, self.shift_type.custom_attendance_penalty_policy)
 
+    def test_attendance_retry_happy_path(self):
+        """Retry creates an attendance permission and clears custom_error_log."""
+        from discipline_hr.events.attendance import retry_attendance_permission
+
+        settings = cast(DisciplineHRSettings, frappe.get_single("Discipline HR Settings"))
+        settings.split_permissions_and_penalties = 0
+        settings.save(ignore_permissions=True)
+
+        # Arrange
+        employee, attendance = make_employee_with_attendance(
+            self.shift_type, email="test_att_retry_happy@happy.path", date="2026-10-01"
+        )
+        attendance.db_set("custom_penalty_minutes", 60, update_modified=False)
+        attendance.db_set("custom_error_log", "some old error", update_modified=False)
+
+        # Act
+        retry_attendance_permission(attendance.name)
+
+        # Assert: an Attendance Permission exists
+        atp = frappe.get_value("Attendance Permissions", {"attendance": attendance.name}, "name")
+        self.assertIsNotNone(atp, "Expected an Attendance Permission to be created")
+
+        # Assert: custom_error_log cleared
+        attendance.reload()
+        self.assertIsNone(attendance.custom_error_log, "Expected custom_error_log to be cleared")
+
+    def test_attendance_retry_duplicate_guard(self):
+        """Duplicate retry should not create duplicate permissions."""
+        from discipline_hr.events.attendance import retry_attendance_permission
+
+        settings = cast(DisciplineHRSettings, frappe.get_single("Discipline HR Settings"))
+        settings.split_permissions_and_penalties = 0
+        settings.save(ignore_permissions=True)
+
+        # Arrange
+        employee, attendance = make_employee_with_attendance(
+            self.shift_type, email="test_att_retry_duplicate@duplicate.path", date="2026-10-02"
+        )
+        attendance.db_set("custom_penalty_minutes", 60, update_modified=False)
+
+        # Act
+        retry_attendance_permission(attendance.name)
+        retry_attendance_permission(attendance.name)
+
+        # Assert: only ONE permission exists
+        atps = frappe.get_all("Attendance Permissions", filters={"attendance": attendance.name})
+        self.assertEqual(len(atps), 1, "Expected exactly one Attendance Permission")
+
 
 def make_employee_with_attendance(shift_type, email, date="2026-06-25"):
     """Create a test employee and a matching Attendance record.
@@ -549,7 +598,7 @@ class TestAttendancePermissions(FrappeTestCase):
         settings.save(ignore_permissions=True)
 
         employee, attendance = make_employee_with_attendance(
-            self.shift_type, "_test_auto_created0@email.com", date="2026-07-01"
+            self.shift_type, "_test_atp_manual@email.com", date="2026-07-01"
         )
         p = create_attendance_permission(self, employee, 100, auto_created=0, attendance=attendance)
 
@@ -574,7 +623,7 @@ class TestAttendancePermissions(FrappeTestCase):
         settings.save(ignore_permissions=True)
 
         employee, attendance = make_employee_with_attendance(
-            self.shift_type, "_test_penalize_manual@email.com", date="2026-07-01"
+            self.shift_type, "_test_penalize_manual@email.com", date="2026-07-02"
         )
         p = create_attendance_permission(self, employee, 100, auto_created=0, attendance=attendance)
 
@@ -638,12 +687,12 @@ class TestAttendancePermissions(FrappeTestCase):
         settings.save(ignore_permissions=True)
 
         employee, attendance = make_employee_with_attendance(
-            self.shift_type, "unique_test_duplicate_attendance_permission@status.st", "2026-06-25"
+            self.shift_type, "unique_test_duplicate_atp@status.st", "2026-06-26"
         )
-        create_attendance_permissions(employee, attendance, 200, self.shift_type, date="2026-06-25")
-        create_attendance_permissions(employee, attendance, 200, self.shift_type, date="2026-06-25")
+        create_attendance_permissions(employee, attendance, 200, self.shift_type.name, date="2026-06-26")
+        create_attendance_permissions(employee, attendance, 200, self.shift_type.name, date="2026-06-26")
 
-        atp = frappe.get_all("Attendance Permissions", filters={"employee": employee, "date": "2026-06-25"})
+        atp = frappe.get_all("Attendance Permissions", filters={"employee": employee, "date": "2026-06-26"})
 
         self.assertEqual(len(atp), 1, "ATP duplicated")
 
@@ -656,9 +705,9 @@ class TestAttendancePermissions(FrappeTestCase):
         settings.save(ignore_permissions=True)
 
         employee, attendance = make_employee_with_attendance(
-            self.shift_type, "test_duplicate_discipline_penalty@status.st", "2026-06-25"
+            self.shift_type, "test_duplicate_dp@status.st", "2026-06-27"
         )
-        attendance2 = make_attendance(employee, self.shift_type, date="2026-06-26")
+        attendance2 = make_attendance(employee, self.shift_type, date="2026-06-28")
         attendance2.custom_penalty_minutes = 120
         ctx = _context_from_attendance(attendance2)
         ledger = _create_grace_ledger(ctx)
@@ -669,3 +718,101 @@ class TestAttendancePermissions(FrappeTestCase):
         atp = frappe.get_all("Discipline Penalty", filters={"attendance": attendance2.name})
 
         self.assertEqual(len(atp), 1, "Discipline Penalty is duplicated")
+
+    def test_discipline_penalty_retry_happy_path(self):
+        """Retry creates a discipline penalty clears the stale error_log."""
+        # Arrange
+        employee, attendance = make_employee_with_attendance(
+            self.shift_type, email="test_dp_retry_happy@happy.path", date="2026-11-01"
+        )
+        settings = cast(DisciplineHRSettings, frappe.get_single("Discipline HR Settings"))
+        settings.penalize_manual_attendance_permissions = 1
+        settings.save()
+
+        attendance.db_set("custom_penalty_minutes", 90, update_modified=False)
+        ctx = _context_from_attendance(attendance)
+        ledger = _create_grace_ledger(ctx)
+        ledger.db_set("error_log", "some old error", update_modified=False)
+
+        # Act
+        retry_discipline_penalty(ledger)
+
+        # Assert: a Discipline Penalty was created
+        dp_name = frappe.get_value("Discipline Penalty", {"employee_grace_ledger": ledger.name}, "name")
+        self.assertIsNotNone(dp_name, "Expected a Discipline Penalty to be created")
+
+        # Assert: the stale error was cleared, and nothing set a non-None error
+        ledger.reload()
+        self.assertIsNone(ledger.error_log, "Expected error_log to be cleared after successful retry")
+
+    @patch("discipline_hr.services.attendance_permission._log")
+    def test_discipline_penalty_retry_duplicate_guard(self, mock_logger):
+        """If a Discipline Penalty already exists, retry logs the duplicate and skips creation."""
+        # Arrange
+        employee, attendance = make_employee_with_attendance(
+            self.shift_type, email="test_dp_retry_duplicate@duplicate.path", date="2026-11-02"
+        )
+        settings = cast(DisciplineHRSettings, frappe.get_single("Discipline HR Settings"))
+        settings.penalize_manual_attendance_permissions = 1
+        settings.save()
+
+        attendance.db_set("custom_penalty_minutes", 90, update_modified=False)
+        ctx = _context_from_attendance(attendance)
+        ledger = _create_grace_ledger(ctx)
+
+        # Act
+        retry_discipline_penalty(ledger)
+        retry_discipline_penalty(ledger)
+
+        # Assert
+        mock_logger.assert_called_with(
+            "info",
+            "duplicate_discipline_penalty",
+            employee=ctx.employee,
+            date=ctx.date,
+            attendance=ctx.attendance,
+        )
+
+    def test_attendance_permission_retry_happy_path(self):
+        """Retry creates a grace ledger and clears the stale error_log."""
+        # Arrange
+        employee, attendance = make_employee_with_attendance(
+            self.shift_type, email="test_atp_retry_happy@happy.path", date="2026-12-01"
+        )
+        permission = create_attendance_permission(self, employee=employee, attendance=attendance, minutes=60)
+        permission.db_set("error_log", "some old error", update_modified=False)
+
+        # Act
+        permission.retry()
+
+        # Assert: a Grace Ledger exists
+        ledger_name = frappe.get_value(
+            "Employee Grace Ledger", {"attendance_permission": permission.name}, "name"
+        )
+        self.assertIsNotNone(ledger_name, "Expected an Employee Grace Ledger to be created")
+
+        # Assert: the stale error was cleared
+        permission.reload()
+        self.assertIsNone(permission.error_log, "Expected error_log to be cleared after successful retry")
+
+    def test_attendance_permission_retry_duplicate_guard(self):
+        """If a Grace Ledger already exists, retry clears the error and skips creation."""
+        # Arrange
+        employee, attendance = make_employee_with_attendance(
+            self.shift_type, email="test_atp_retry_duplicate@duplicate.path", date="2026-12-02"
+        )
+        permission = create_attendance_permission(self, employee=employee, attendance=attendance, minutes=60)
+        # First call creates the ledger
+        permission.retry()
+        permission.db_set("error_log", "some old error", update_modified=False)
+
+        # Act - Second retry
+        permission.retry()
+
+        # Assert: only ONE ledger exists
+        ledgers = frappe.get_all("Employee Grace Ledger", filters={"attendance_permission": permission.name})
+        self.assertEqual(len(ledgers), 1, "Expected exactly one Grace Ledger to exist")
+
+        # Assert: error_log cleared
+        permission.reload()
+        self.assertIsNone(permission.error_log, "Expected error_log to be cleared even if duplicate")

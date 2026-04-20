@@ -15,3 +15,14 @@ frappe.listview_settings["Discipline Penalty"] = {
         },
     },
 };
+frappe.ui.form.on("Discipline Penalty", {
+    refresh(frm) {
+        if (frm.doc.error) {
+            frm.add_custom_button(__("Retry"), () => {
+                frm.call("retry").then(() => {
+                    frm.reload_doc();
+                });
+            });
+        }
+    },
+});

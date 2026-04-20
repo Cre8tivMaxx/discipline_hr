@@ -99,6 +99,10 @@ class DisciplinePenalty(Document):
         if not self.salary_component:
             _log("warning", "additional_salary_skipped_no_component", penalty=str(self.name))
             return
+        if frappe.db.exists("Additional Salary", {"custom_discipline_penalty": self.name}):
+            self.db_set("error", None)
+            _log("info", "additional_salary_exists", penalty=self.name)
+            return
         try:
             config = self._get_discipline_hr_settings()
             additional_salary = frappe.get_doc(
@@ -125,9 +129,17 @@ class DisciplinePenalty(Document):
             if config.auto_submit_additional_salary == 1:
                 additional_salary.submit()
 
+            self.db_set("error", None)
+
         except Exception as e:
             _log("exception", "additional_salary_creation_failed", penalty=self.name, employee=self.employee)
             self.error = str(e)
+            self.db_set("error", self.error)
+
+    @frappe.whitelist()
+    def retry(self):
+        """Retry creating the additional salary if it previously failed."""
+        self.create_additional_salary()
 
     def _get_employee_daily_rate(self):
         """Get employee daily rate from Salary Structure Assignment.
