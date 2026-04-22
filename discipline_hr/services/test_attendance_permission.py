@@ -21,6 +21,7 @@ from discipline_hr.services.attendance_permission import (
     _create_grace_ledger,
     retry_discipline_penalty,
 )
+from discipline_hr.tests.fixtures import delete_fiscal_year, ensure_fiscal_year
 
 
 class TestCascadeCancelAttendance(TestCase):
@@ -204,6 +205,7 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._created_fy_2026 = ensure_fiscal_year(2026)
         # Employee
         cls.employee = make_employee("_test_employee_@test.com")
 
@@ -268,6 +270,12 @@ class TestAttendancePenaltyWiring(FrappeTestCase):
                 "out_time": "2026-06-15 16:50:00",
             }
         ).insert(ignore_permissions=True, ignore_if_duplicate=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        if getattr(cls, "_created_fy_2026", False):
+            delete_fiscal_year(2026)
+        super().tearDownClass()
 
     def test_auto_processed_permission_creates_ledger_and_penalty(self):
         """
@@ -538,6 +546,7 @@ class TestAttendancePermissions(FrappeTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._created_fy_2026 = ensure_fiscal_year(2026)
 
         if not frappe.db.exists("Attendance Penalty Policy", {"penalty_type": "Fixed Per Hour"}):
             cls.policy = frappe.get_doc(
@@ -590,6 +599,12 @@ class TestAttendancePermissions(FrappeTestCase):
             ).insert(ignore_permissions=True)
         else:
             cls.shift_type = frappe.get_doc("Shift Type", "_Test Manual ATP Shift")
+
+    @classmethod
+    def tearDownClass(cls):
+        if getattr(cls, "_created_fy_2026", False):
+            delete_fiscal_year(2026)
+        super().tearDownClass()
 
     def test_manual_created_attendance_permission_create_gl_without_penalty(self):
         """Manual Created Attendance Permission, should create EGL and not a penalty"""
