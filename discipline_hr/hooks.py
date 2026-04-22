@@ -150,6 +150,18 @@ doc_events = {
         "on_cancel": "discipline_hr.events.attendance.cascade_cancel_attendance",
         "on_trash": "discipline_hr.events.attendance.cascade_cancel_attendance",
     },
+    "Salary Slip": {
+        "validate": [
+            "discipline_hr.events.salary_slip.guard_errored_discipline_penalties",
+            "discipline_hr.events.salary_slip.guard_errored_attendance_permissions",
+            "discipline_hr.events.salary_slip.guard_errored_attendances",
+        ],
+        "before_submit": [
+            "discipline_hr.events.salary_slip.guard_errored_discipline_penalties",
+            "discipline_hr.events.salary_slip.guard_errored_attendance_permissions",
+            "discipline_hr.events.salary_slip.guard_errored_attendances",
+        ],
+    },
 }
 # Scheduled Tasks
 # ---------------
