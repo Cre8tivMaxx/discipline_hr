@@ -383,7 +383,7 @@ class TestDisciplinePenalty(TestCase):
         self.penalty.penalty_amount = 100
         self.penalty.salary_component = "Basic"
         self.penalty.violation_date = "2026-01-01"
-        self.penalty.error = "some old error"
+        self.penalty.error_log = "some old error"
         mock_exists.return_value = None  # no AS exists → proceed to create
         mock_settings.return_value.auto_submit_additional_salary = 0
 
@@ -400,9 +400,9 @@ class TestDisciplinePenalty(TestCase):
         self.assertIn("Additional Salary", created_doctypes, "Expected an Additional Salary to be created")
 
         # Assert: the stale error was cleared, and nothing set a non-None error
-        mock_db_set.assert_any_call("error", None)
+        mock_db_set.assert_any_call("error_log", None)
         for call_args, _ in mock_db_set.call_args_list:
-            if call_args[0] == "error" and call_args[1] is not None:
+            if call_args[0] == "error_log" and call_args[1] is not None:
                 self.fail(f"db_set called with non-None error during retry: {call_args}")
 
     @patch(f"{MODULE}._log")
@@ -413,7 +413,7 @@ class TestDisciplinePenalty(TestCase):
         self.penalty.name = "DP-0001"
         self.penalty.penalty_amount = 100
         self.penalty.salary_component = "Basic"
-        self.penalty.error = "some old error"
+        self.penalty.error_log = "some old error"
         mock_exists.return_value = "AS-0001"  # duplicate guard trips
 
         # Act
@@ -421,5 +421,5 @@ class TestDisciplinePenalty(TestCase):
             self.penalty.retry()
 
         # Assert
-        mock_db_set.assert_any_call("error", None)
+        mock_db_set.assert_any_call("error_log", None)
         mock_logger.assert_called_with("info", "additional_salary_exists", penalty=self.penalty.name)

@@ -39,11 +39,11 @@ class DisciplinePenalty(Document):
         employee_grace_ledger: DF.Link | None
         employee_name: DF.Data | None
         end_period: DF.Date | None
-        error: DF.SmallText | None
+        error_log: DF.SmallText | None
         grace_consumed: DF.Int
         penalty_amount: DF.Currency
         penalty_minutes: DF.Int
-        penalty_status: DF.Literal["", "Present", "Absent"] | None
+        penalty_status: DF.Literal["", "Present", "Absent"]
         salary_component: DF.Link | None
         start_period: DF.Date | None
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
@@ -100,7 +100,7 @@ class DisciplinePenalty(Document):
             _log("warning", "additional_salary_skipped_no_component", penalty=str(self.name))
             return
         if frappe.db.exists("Additional Salary", {"custom_discipline_penalty": self.name}):
-            self.db_set("error", None)
+            self.db_set("error_log", None)
             _log("info", "additional_salary_exists", penalty=self.name)
             return
         try:
@@ -129,12 +129,12 @@ class DisciplinePenalty(Document):
             if config.auto_submit_additional_salary == 1:
                 additional_salary.submit()
 
-            self.db_set("error", None)
+            self.db_set("error_log", None)
 
         except Exception as e:
             _log("exception", "additional_salary_creation_failed", penalty=self.name, employee=self.employee)
-            self.error = str(e)
-            self.db_set("error", self.error)
+            self.error_log = str(e)
+            self.db_set("error_log", self.error_log)
 
     @frappe.whitelist()
     def retry(self):

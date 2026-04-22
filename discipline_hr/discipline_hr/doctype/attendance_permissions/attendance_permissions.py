@@ -20,6 +20,8 @@ class AttendancePermissions(Document):
         auto_created: DF.Check
         date: DF.Date
         employee: DF.Link
+        employee_name: DF.Data | None
+        error_log: DF.SmallText | None
         minutes: DF.Int
         reason: DF.SmallText | None
         shift_type: DF.Link | None

@@ -30,7 +30,7 @@
   "description",
   "auto_create_salary",
   "section_break_error",
-  "error",
+  "error_log",
   "section_break_refs",
   "employee_grace_ledger",
   "connection_tab"
@@ -197,16 +197,10 @@
   },
   {
    "collapsible": 1,
-   "depends_on": "eval:doc.error",
+   "depends_on": "eval:doc.error_log",
    "fieldname": "section_break_error",
    "fieldtype": "Section Break",
    "label": "Error Log"
-  },
-  {
-   "fieldname": "error",
-   "fieldtype": "Small Text",
-   "label": "Error",
-   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -225,6 +219,12 @@
    "fieldname": "connection_tab",
    "fieldtype": "Tab Break",
    "label": "Connections"
+  },
+  {
+   "fieldname": "error_log",
+   "fieldtype": "Small Text",
+   "label": "Error",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -240,7 +240,7 @@
    "link_fieldname": "custom_discipline_penalty"
   }
  ],
- "modified": "2026-03-25 13:23:25.243748",
+ "modified": "2026-04-22 11:30:13.103866",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline Penalty",
