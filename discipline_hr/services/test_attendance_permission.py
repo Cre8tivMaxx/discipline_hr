@@ -187,19 +187,6 @@ class TestCascadeCancelAttendance(TestCase):
             mock_frappe.delete_doc.call_args_list,
         )
 
-    @patch("discipline_hr.events.attendance.frappe")
-    def test_cascade_cancel_disabled_skips_deletion(self, mock_frappe):
-        """When cascade_cancel_attendance is disabled in settings, nothing is deleted."""
-        config = MagicMock()
-        config.cascade_cancel_attendance = 0
-        mock_frappe.get_cached_doc.return_value = config
-        doc = self._make_attendance_doc()
-
-        cascade_cancel_attendance(doc)
-
-        mock_frappe.get_all.assert_not_called()
-        mock_frappe.delete_doc.assert_not_called()
-
 
 class TestAttendancePenaltyWiring(FrappeTestCase):
     @classmethod

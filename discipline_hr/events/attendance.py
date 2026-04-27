@@ -279,11 +279,6 @@ def cascade_cancel_attendance(doc, method=None):
         doc: The ``Attendance`` document being cancelled.
         method: Unused; required by Frappe hook signature.
     """
-    config = frappe.get_cached_doc("Discipline HR Settings")
-    if not cint(config.cascade_cancel_attendance):
-        _log("info", "cascade_cancel_skipped", attendance=doc.name)
-        return
-
     attendance_name = doc.name
 
     # Step 1: Collect penalties linked to this attendance
