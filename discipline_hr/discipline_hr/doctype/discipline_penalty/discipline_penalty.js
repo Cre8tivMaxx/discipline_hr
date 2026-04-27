@@ -24,5 +24,24 @@ frappe.ui.form.on("Discipline Penalty", {
                 });
             });
         }
+        if (frm.doc.employee && frm.doc.attendance_permission) {
+            frm.add_custom_button(__("View Ledger"), () => {
+                frappe.db
+                    .get_value(
+                        "Attendance Permissions",
+                        frm.doc.attendance_permission,
+                        "shift_type"
+                    )
+                    .then((r) => {
+                        const shift = (r.message || {}).shift_type;
+                        const route = {
+                            employee: frm.doc.employee,
+                            discipline_penalty: frm.doc.name,
+                        };
+                        if (shift) route.shift = shift;
+                        frappe.set_route("query-report", "Employee Grace Ledger", route);
+                    });
+            });
+        }
     },
 });

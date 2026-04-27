@@ -87,7 +87,6 @@ class DisciplinePenalty(Document):
         self.penalty_amount = self.get_penalty_amount()
 
     def create_additional_salary(self):
-        # TODO If salary structure raise just log the error inside the attendance penalty
         if not flt(self.penalty_amount):
             _log(
                 "info",

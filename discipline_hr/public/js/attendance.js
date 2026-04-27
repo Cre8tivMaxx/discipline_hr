@@ -15,5 +15,14 @@ frappe.ui.form.on("Attendance", {
                 });
             });
         }
+        if (frm.doc.employee && frm.doc.shift) {
+            frm.add_custom_button(__("View Ledger"), () => {
+                frappe.set_route("query-report", "Employee Grace Ledger", {
+                    employee: frm.doc.employee,
+                    shift: frm.doc.shift,
+                    attendance: frm.doc.name,
+                });
+            });
+        }
     },
 });
