@@ -148,7 +148,6 @@ doc_events = {
             "discipline_hr.events.attendance.create_absence_penalty",
         ],
         "on_cancel": "discipline_hr.events.attendance.cascade_cancel_attendance",
-        "on_trash": "discipline_hr.events.attendance.cascade_cancel_attendance",
     },
     "Salary Slip": {
         "validate": [
