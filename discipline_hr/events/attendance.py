@@ -269,6 +269,12 @@ def _should_create_absence_penalty(shift_doc, config):
 def cascade_cancel_attendance(doc, method=None):
     """Hard-delete all downstream discipline_hr docs when an Attendance is cancelled.
 
+    Wired to ``on_cancel`` only (not ``on_trash``). Cancellation is the user-visible
+    action that signals "remove the consequences of this Attendance" — running the
+    cascade here means HR sees penalties disappear at cancel time without needing a
+    follow-up delete. By the time ``on_trash`` would fire, every downstream record is
+    already gone and the cascade would be a no-op duplicate.
+
     Deletion order (leaf-first to respect link references):
       1. Additional Salary  (cancel if submitted, then delete)
       2. Discipline Penalty
