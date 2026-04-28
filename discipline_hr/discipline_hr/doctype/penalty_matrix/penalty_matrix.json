@@ -12,6 +12,7 @@
  ],
  "fields": [
   {
+   "description": "Escalation tier &mdash; 1 = first violation in period, 2 = second, etc.",
    "fieldname": "violation_number",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -21,12 +22,13 @@
   },
   {
    "default": "0",
+   "description": "Decimal share of the daily rate to deduct. <code>1.0</code> = full day, <code>0.5</code> = half day.",
    "fieldname": "percentage",
    "fieldtype": "Float",
    "in_list_view": 1,
    "in_preview": 1,
    "label": "% of Daily Rate",
-   "placeholder": "0.25, 0.5, 1, 1.5",
+   "placeholder": "e.g., 0.5 = 50% of daily rate, 1.0 = 100%",
    "reqd": 1
   },
   {

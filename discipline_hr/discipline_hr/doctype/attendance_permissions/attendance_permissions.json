@@ -44,6 +44,8 @@
   {
    "fieldname": "date",
    "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Date",
    "read_only_depends_on": "eval:doc.status !== 'Pending'",
    "reqd": 1
@@ -72,6 +74,7 @@
    "read_only_depends_on": "eval:doc.status !== 'Pending'"
   },
   {
+   "description": "Late or early minutes after subtracting the shift grace period. Negative values are clamped to zero.",
    "fieldname": "minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -92,6 +95,7 @@
   },
   {
    "default": "0",
+   "description": "Set automatically when this permission was created by the attendance pipeline rather than by a user.",
    "fieldname": "auto_created",
    "fieldtype": "Check",
    "hidden": 1,
@@ -99,6 +103,7 @@
    "read_only": 1
   },
   {
+   "bold": 1,
    "default": "Pending",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -114,6 +119,7 @@
    "label": "Error Log"
   },
   {
+   "description": "Populated when the auto-processing pipeline failed. Click **Retry** on the form to re-run.",
    "fieldname": "error_log",
    "fieldtype": "Small Text",
    "label": "Error Log",

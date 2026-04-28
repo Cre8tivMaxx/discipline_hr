@@ -30,6 +30,7 @@
  ],
  "fields": [
   {
+   "bold": 1,
    "fieldname": "employee",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -68,6 +69,12 @@
    "fieldtype": "Column Break"
   },
   {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "read_only": 1
+  },
+  {
    "fieldname": "period_start",
    "fieldtype": "Date",
    "label": "Period Start",
@@ -80,6 +87,7 @@
    "read_only": 1
   },
   {
+   "description": "Total grace minutes allotted to this employee for the period (from Shift Type).",
    "fieldname": "allowed_minutes",
    "fieldtype": "Int",
    "label": "Allowed Minutes",
@@ -91,6 +99,7 @@
    "label": "Grace Consumption"
   },
   {
+   "description": "Grace remaining at the moment this attendance event was processed.",
    "fieldname": "remaining_minutes_before_consume",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -98,6 +107,7 @@
    "read_only": 1
   },
   {
+   "description": "Grace minutes consumed by this specific event.",
    "fieldname": "consumed_minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -109,6 +119,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Grace remaining after consuming this event. When this hits 0, further late/early minutes generate a penalty.",
    "fieldname": "remaining_minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -121,6 +132,7 @@
    "label": "Penalty"
   },
   {
+   "description": "Minutes that exceeded the available grace and were forwarded to a Discipline Penalty.",
    "fieldname": "penalty_minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -155,12 +167,6 @@
    "fieldname": "error_log",
    "fieldtype": "Small Text",
    "label": "Error Log",
-   "read_only": 1
-  },
-  {
-   "fieldname": "date",
-   "fieldtype": "Date",
-   "label": "Date",
    "read_only": 1
   }
  ],

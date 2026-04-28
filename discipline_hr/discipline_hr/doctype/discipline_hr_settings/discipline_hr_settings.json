@@ -8,9 +8,10 @@
   "section_break_policies",
   "attendance_penalty_policy",
   "absence_penalty_policy",
-  "salary_basis",
   "column_break_policies",
   "salary_component",
+  "section_break_salary_calc",
+  "salary_basis",
   "month_days",
   "section_break_automation",
   "auto_process_attendance_permission",
@@ -56,11 +57,17 @@
   },
   {
    "default": "30",
-   "description": "Number of days in a month used to compute the employee daily rate (base / month days). Default is 30.",
+   "description": "Working days per month used to derive the daily rate from base salary (<code>daily_rate = base / month_days</code>). Common values: 22 (working days), 26 (six-day week), 30 (calendar days). Default is 30.",
    "fieldname": "month_days",
    "fieldtype": "Int",
    "label": "Month Days",
    "non_negative": 1
+  },
+  {
+   "description": "Inputs for converting penalty minutes into a deduction amount. Used by the Factor penalty type and the daily-rate basis for the Penalty Matrix.",
+   "fieldname": "section_break_salary_calc",
+   "fieldtype": "Section Break",
+   "label": "Salary Calculation"
   },
   {
    "fieldname": "section_break_automation",
@@ -113,7 +120,7 @@
   },
   {
    "default": "0",
-   "description": "If checked, penalties are processed directly from Attendance without creating an Attendance Permissions record.",
+   "description": "<b>Unchecked</b>: every late/early event creates an Attendance Permission first; HR reviews and accepts before a penalty is generated.<br><b>Checked</b>: penalties are processed directly from Attendance, skipping the HR review step. Use this when you trust the pipeline and want immediate enforcement.",
    "fieldname": "split_permissions_and_penalties",
    "fieldtype": "Check",
    "label": "Split Permissions and Penalties"

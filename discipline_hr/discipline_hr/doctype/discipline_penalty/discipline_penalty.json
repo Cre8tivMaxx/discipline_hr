@@ -95,8 +95,10 @@
    "reqd": 1
   },
   {
+   "bold": 1,
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_standard_filter": 1,
    "label": "Status",
    "options": "\nAuto Processed\nPending\nProcessed\nRejected",
    "read_only": 1
@@ -107,6 +109,7 @@
    "label": "Violation Details"
   },
   {
+   "description": "1-based count of prior penalties for this employee inside the current period.",
    "fieldname": "violation_number",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -143,6 +146,7 @@
    "read_only": 1
   },
   {
+   "description": "Computed by the resolved Attendance Penalty Policy. Read-only.",
    "fieldname": "section_break_penalty",
    "fieldtype": "Section Break",
    "label": "Penalty Calculation"
@@ -170,6 +174,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Resolved from policy or shift configuration. Used to create the deduction Additional Salary entry.",
    "fieldname": "salary_component",
    "fieldtype": "Link",
    "label": "Salary Component",
@@ -190,6 +195,7 @@
   },
   {
    "default": "0",
+   "description": "When checked, an Additional Salary deduction is created automatically on submit.",
    "fieldname": "auto_create_salary",
    "fieldtype": "Check",
    "label": "Auto Create Salary",
@@ -221,6 +227,7 @@
    "label": "Connections"
   },
   {
+   "description": "Populated when a previous processing attempt failed. Use the **Retry** button to re-run the pipeline.",
    "fieldname": "error_log",
    "fieldtype": "Small Text",
    "label": "Error",
