@@ -184,7 +184,10 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
         )
         return
 
-    if frappe.db.exists("Discipline Penalty", {"attendance": ctx.attendance}):
+    if frappe.db.exists(
+        "Discipline Penalty",
+        {"attendance": ctx.attendance, "docstatus": ("!=", 2)},
+    ):
         _log(
             "info",
             "duplicate_discipline_penalty",

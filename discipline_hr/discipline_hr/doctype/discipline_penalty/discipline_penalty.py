@@ -98,9 +98,27 @@ class DisciplinePenalty(Document):
         if not self.salary_component:
             _log("warning", "additional_salary_skipped_no_component", penalty=str(self.name))
             return
-        if frappe.db.exists("Additional Salary", {"custom_discipline_penalty": self.name}):
-            self.db_set("error_log", None)
-            _log("info", "additional_salary_exists", penalty=self.name)
+        existing = frappe.db.get_value(
+            "Additional Salary",
+            {"custom_discipline_penalty": self.name, "docstatus": ("!=", 2)},
+            ["name", "docstatus"],
+        )
+        if existing:
+            existing_name, existing_docstatus = existing
+            try:
+                config = self._get_discipline_hr_settings()
+                if existing_docstatus == 0 and config.auto_submit_additional_salary == 1:
+                    frappe.get_doc("Additional Salary", existing_name).submit()
+                self.db_set("error_log", None)
+                _log("info", "additional_salary_exists", penalty=self.name, additional_salary=existing_name)
+            except Exception as e:
+                _log(
+                    "exception",
+                    "additional_salary_retry_submit_failed",
+                    penalty=self.name,
+                    additional_salary=existing_name,
+                )
+                self.db_set("error_log", str(e))
             return
         try:
             config = self._get_discipline_hr_settings()
@@ -143,12 +161,20 @@ class DisciplinePenalty(Document):
     def _get_employee_daily_rate(self):
         """Get employee daily rate from Salary Structure Assignment.
 
+        Filters by ``from_date <= violation_date`` and picks the latest such
+        assignment, so retroactive raises do not silently rewrite the amount of
+        a historical penalty.
+
         Uses `salary_basis` setting to determine whether the rate
         is computed from base salary only or total (base + variable).
         """
         assignment = frappe.db.get_value(
             "Salary Structure Assignment",
-            {"employee": self.employee, "docstatus": 1},
+            {
+                "employee": self.employee,
+                "docstatus": 1,
+                "from_date": ("<=", self.violation_date or today()),
+            },
             ["base", "variable"],
             order_by="from_date desc",
         )

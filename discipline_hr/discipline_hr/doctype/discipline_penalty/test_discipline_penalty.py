@@ -375,8 +375,8 @@ class TestDisciplinePenalty(TestCase):
 
     @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
     @patch(f"{MODULE}.frappe.get_doc")
-    @patch(f"{MODULE}.frappe.db.exists")
-    def test_discipline_penalty_retry_happy_path(self, mock_exists, mock_get_doc, mock_settings):
+    @patch(f"{MODULE}.frappe.db.get_value")
+    def test_discipline_penalty_retry_happy_path(self, mock_get_value, mock_get_doc, mock_settings):
         """Retry creates an Additional Salary and clears the stale error."""
         # Arrange
         self.penalty.name = "DP-0001"
@@ -384,7 +384,7 @@ class TestDisciplinePenalty(TestCase):
         self.penalty.salary_component = "Basic"
         self.penalty.violation_date = "2026-01-01"
         self.penalty.error_log = "some old error"
-        mock_exists.return_value = None  # no AS exists → proceed to create
+        mock_get_value.return_value = None  # no non-cancelled AS exists → proceed to create
         mock_settings.return_value.auto_submit_additional_salary = 0
 
         # Act
@@ -405,16 +405,18 @@ class TestDisciplinePenalty(TestCase):
             if call_args[0] == "error_log" and call_args[1] is not None:
                 self.fail(f"db_set called with non-None error during retry: {call_args}")
 
+    @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
     @patch(f"{MODULE}._log")
-    @patch(f"{MODULE}.frappe.db.exists")
-    def test_retry_duplicate_guard(self, mock_exists, mock_logger):
-        """If an Additional Salary already exists, retry clears the error and skips creation."""
+    @patch(f"{MODULE}.frappe.db.get_value")
+    def test_retry_duplicate_guard_submitted_as(self, mock_get_value, mock_logger, mock_settings):
+        """A submitted Additional Salary trips the guard, error cleared, no new doc created."""
         # Arrange
         self.penalty.name = "DP-0001"
         self.penalty.penalty_amount = 100
         self.penalty.salary_component = "Basic"
         self.penalty.error_log = "some old error"
-        mock_exists.return_value = "AS-0001"  # duplicate guard trips
+        mock_get_value.return_value = ("AS-0001", 1)  # submitted AS exists
+        mock_settings.return_value.auto_submit_additional_salary = 1
 
         # Act
         with patch.object(self.penalty, "db_set") as mock_db_set:
@@ -422,4 +424,53 @@ class TestDisciplinePenalty(TestCase):
 
         # Assert
         mock_db_set.assert_any_call("error_log", None)
-        mock_logger.assert_called_with("info", "additional_salary_exists", penalty=self.penalty.name)
+        mock_logger.assert_called_with(
+            "info",
+            "additional_salary_exists",
+            penalty=self.penalty.name,
+            additional_salary="AS-0001",
+        )
+
+    @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
+    @patch(f"{MODULE}.frappe.get_doc")
+    @patch(f"{MODULE}.frappe.db.get_value")
+    def test_retry_submits_stuck_draft_additional_salary(self, mock_get_value, mock_get_doc, mock_settings):
+        """A draft AS from a failed submit gets submitted on retry, not silently skipped."""
+        # Arrange
+        self.penalty.name = "DP-0001"
+        self.penalty.penalty_amount = 100
+        self.penalty.salary_component = "Basic"
+        self.penalty.error_log = "submit failed earlier"
+        mock_get_value.return_value = ("AS-0001", 0)  # draft AS exists
+        mock_settings.return_value.auto_submit_additional_salary = 1
+        draft_doc = MagicMock()
+        mock_get_doc.return_value = draft_doc
+
+        # Act
+        with patch.object(self.penalty, "db_set"):
+            self.penalty.retry()
+
+        # Assert: existing draft was fetched and submit() was called on it
+        mock_get_doc.assert_called_with("Additional Salary", "AS-0001")
+        draft_doc.submit.assert_called_once()
+
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    @patch(f"{MODULE}.frappe.db.get_value")
+    def test_get_employee_daily_rate_filters_by_violation_date(self, mock_db_get_value, mock_get_cached_doc):
+        """SSA lookup must filter by from_date <= violation_date so retro-raises don't change history."""
+        # Arrange
+        self.penalty.violation_date = "2026-01-15"
+        mock_db_get_value.return_value = (3000, 0)
+        mock_config = MagicMock()
+        mock_config.month_days = 30
+        mock_config.salary_basis = "Base"
+        mock_get_cached_doc.return_value = mock_config
+
+        # Act
+        self.penalty._get_employee_daily_rate()
+
+        # Assert: filter must include from_date <= violation_date
+        filters = mock_db_get_value.call_args.args[1]
+        self.assertEqual(
+            filters["from_date"], ("<=", "2026-01-15"), "SSA query must filter by from_date <= violation_date"
+        )
