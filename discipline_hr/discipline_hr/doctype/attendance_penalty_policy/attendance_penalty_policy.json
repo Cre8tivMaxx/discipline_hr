@@ -12,17 +12,18 @@
  ],
  "fields": [
   {
+   "description": "Choose how penalties are calculated.<br><b>Factor</b>: <code>deducted_minutes_factor &times; minute_rate &times; penalty_minutes</code> (e.g. 2.0 doubles each penalty minute against the employee's per-minute salary).<br><b>Fixed Per Hour</b>: flat <code>rate_per_hour / 60 &times; penalty_minutes</code> (e.g. 50 currency/hour regardless of salary).<br><b>Penalty Matrix</b>: escalating % of the daily rate per violation count in the period (e.g. 1st = 50% of a day, 2nd = 100%, 3rd = 150%).",
    "fieldname": "penalty_type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "description": "Factor: multiply penalty minutes by a factor and minute rate. Fixed Per Hour: flat rate per hour of penalty. Penalty Matrix: escalating % of daily rate per violation count.",
+   "in_standard_filter": 1,
    "label": "Penalty Type",
    "options": "\nFactor\nFixed Per Hour\nPenalty Matrix",
    "reqd": 1
   },
   {
    "depends_on": "eval:doc.penalty_type === \"Factor\"",
-   "description": "In minutes",
+   "description": "Multiplier applied to each penalty minute. Formula: <code>factor &times; minute_rate &times; penalty_minutes</code>, where <code>minute_rate = base_salary / month_days / working_minutes_per_day</code>. Use 1.0 for a straight per-minute deduction; values above 1.0 amplify the penalty.",
    "fieldname": "deducted_minutes_factor",
    "fieldtype": "Float",
    "label": "Deducted Factor",
@@ -38,6 +39,7 @@
   },
   {
    "depends_on": "eval:doc.penalty_type === \"Fixed Per Hour\"",
+   "description": "Hourly deduction amount (currency). Internally divided by 60 to get a per-minute rate: <code>rate_per_hour / 60 &times; penalty_minutes</code>. Independent of employee salary.",
    "fieldname": "rate_per_hour",
    "fieldtype": "Currency",
    "label": "Rate Per Hour",
