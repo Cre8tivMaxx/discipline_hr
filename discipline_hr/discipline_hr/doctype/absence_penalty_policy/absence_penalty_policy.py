@@ -25,7 +25,14 @@ class AbsencePenaltyPolicy(Document):
     # end: auto-generated types
 
     def autoname(self):
-        self.name = make_autoname("ABP-.####")
+        """Build the document name from the penalty type, matching Attendance Penalty Policy.
+
+        Examples:
+            ``Penalty Matrix-01``
+            ``Special Days-01``
+            ``Matrix & Special Days-01``
+        """
+        self.name = make_autoname(f"{self.penalty_type}-.##")
 
     def validate(self):
         seen = set()

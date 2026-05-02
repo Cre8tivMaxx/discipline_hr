@@ -9,7 +9,7 @@
   "employee",
   "employee_name",
   "attendance",
-  "attendance_permission",
+  "attendance_pre_authorization",
   "column_break_diql",
   "penalty_status",
   "violation_date",
@@ -65,10 +65,11 @@
    "read_only": 1
   },
   {
-   "fieldname": "attendance_permission",
+   "description": "Set when this penalty represents surplus minutes beyond an Approved Attendance Pre-Authorization.",
+   "fieldname": "attendance_pre_authorization",
    "fieldtype": "Link",
-   "label": "Attendance Permission",
-   "options": "Attendance Permissions",
+   "label": "Attendance Pre-Authorization",
+   "options": "Attendance Pre-Authorization",
    "read_only": 1
   },
   {
@@ -247,7 +248,7 @@
    "link_fieldname": "custom_discipline_penalty"
   }
  ],
- "modified": "2026-04-22 11:30:13.103866",
+ "modified": "2026-04-28 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline Penalty",

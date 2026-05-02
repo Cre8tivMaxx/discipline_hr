@@ -16,7 +16,6 @@ class EmployeeGraceLedger(Document):
 
         allowed_minutes: DF.Int
         attendance: DF.Link | None
-        attendance_permission: DF.Link | None
         consumed_minutes: DF.Int
         date: DF.Date | None
         discipline_penalty: DF.Link | None
@@ -33,6 +32,6 @@ class EmployeeGraceLedger(Document):
 
     @frappe.whitelist()
     def retry(self):
-        from discipline_hr.services.attendance_permission import retry_discipline_penalty
+        from discipline_hr.services.pre_authorization import retry_discipline_penalty
 
         retry_discipline_penalty(self)

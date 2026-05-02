@@ -101,9 +101,9 @@ def _columns() -> list[dict]:
         },
         {
             "label": _("Permission"),
-            "fieldname": "attendance_permission",
+            "fieldname": "attendance_pre_authorization",
             "fieldtype": "Link",
-            "options": "Attendance Permissions",
+            "options": "Attendance Pre-Authorization",
             "width": 150,
         },
         {
@@ -134,7 +134,7 @@ def _fetch_rows(filters: dict) -> list[dict]:
         conditions.append("emp.department = %(department)s")
         params["department"] = filters["department"]
     if filters.get("shift"):
-        conditions.append("ap.shift_type = %(shift)s")
+        conditions.append("att.shift = %(shift)s")
         params["shift"] = filters["shift"]
     if filters.get("salary_component"):
         conditions.append("dp.salary_component = %(salary_component)s")
@@ -164,7 +164,7 @@ def _fetch_rows(filters: dict) -> list[dict]:
             dp.violation_number,
             dp.start_period,
             dp.end_period,
-            ap.shift_type,
+            att.shift AS shift_type,
             dp.grace_consumed,
             dp.penalty_minutes,
             dp.penalty_amount,
@@ -173,13 +173,13 @@ def _fetch_rows(filters: dict) -> list[dict]:
             dp.attendance_penalty_policy,
             dp.absence_penalty_policy,
             dp.attendance,
-            dp.attendance_permission,
+            dp.attendance_pre_authorization,
             dp.employee_grace_ledger,
             dp.error_log,
             dp.creation
         FROM `tabDiscipline Penalty` dp
         LEFT JOIN `tabEmployee` emp ON emp.name = dp.employee
-        LEFT JOIN `tabAttendance Permissions` ap ON ap.name = dp.attendance_permission
+        LEFT JOIN `tabAttendance` att ON att.name = dp.attendance
         WHERE {where}
         ORDER BY dp.violation_date DESC, dp.creation DESC
     """

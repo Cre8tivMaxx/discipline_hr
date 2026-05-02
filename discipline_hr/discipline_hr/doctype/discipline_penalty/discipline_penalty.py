@@ -32,7 +32,7 @@ class DisciplinePenalty(Document):
         absence_penalty_policy: DF.Link | None
         attendance: DF.Link | None
         attendance_penalty_policy: DF.Link | None
-        attendance_permission: DF.Link | None
+        attendance_pre_authorization: DF.Link | None
         auto_create_salary: DF.Check
         description: DF.SmallText | None
         employee: DF.Link

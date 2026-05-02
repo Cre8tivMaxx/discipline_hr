@@ -10,14 +10,14 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": null,
- "modified": "2026-04-27 12:30:00.000000",
+ "modified": "2026-04-28 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
- "name": "Attendance Permissions Pipeline",
+ "name": "Attendance Pre-Authorization Pipeline",
  "owner": "Administrator",
  "prepared_report": 0,
- "ref_doctype": "Attendance Permissions",
- "report_name": "Attendance Permissions Pipeline",
+ "ref_doctype": "Attendance Pre-Authorization",
+ "report_name": "Attendance Pre-Authorization Pipeline",
  "report_type": "Script Report",
  "roles": [
   {

@@ -57,19 +57,6 @@ def guard_errored_discipline_penalties(doc, method=None):
         _emit_guard_message(method, "Discipline Penalty", names, doc.start_date, doc.end_date)
 
 
-def guard_errored_attendance_permissions(doc, method=None):
-    names = _find_errored(
-        "Attendance Permissions",
-        "date",
-        "error_log",
-        doc.employee,
-        doc.start_date,
-        doc.end_date,
-    )
-    if names:
-        _emit_guard_message(method, "Attendance Permissions", names, doc.start_date, doc.end_date)
-
-
 def guard_errored_attendances(doc, method=None):
     names = _find_errored(
         "Attendance",

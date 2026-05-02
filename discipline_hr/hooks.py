@@ -142,22 +142,20 @@ after_install = "discipline_hr.install.after_install"
 
 doc_events = {
     "Attendance": {
-        "before_submit": "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
-        "on_submit": [
-            "discipline_hr.events.attendance.trigger_create_attendance_permission",
-            "discipline_hr.events.attendance.create_absence_penalty",
+        "before_submit": [
+            "discipline_hr.events.attendance.calculate_attendance_penalty_minutes",
+            "discipline_hr.events.attendance.apply_pre_authorization_and_penalty",
         ],
+        "on_submit": "discipline_hr.events.attendance.create_absence_penalty",
         "on_cancel": "discipline_hr.events.attendance.cascade_cancel_attendance",
     },
     "Salary Slip": {
         "validate": [
             "discipline_hr.events.salary_slip.guard_errored_discipline_penalties",
-            "discipline_hr.events.salary_slip.guard_errored_attendance_permissions",
             "discipline_hr.events.salary_slip.guard_errored_attendances",
         ],
         "before_submit": [
             "discipline_hr.events.salary_slip.guard_errored_discipline_penalties",
-            "discipline_hr.events.salary_slip.guard_errored_attendance_permissions",
             "discipline_hr.events.salary_slip.guard_errored_attendances",
         ],
     },
@@ -168,6 +166,7 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "discipline_hr.services.shift_type.rollover_grace_periods",
+        "discipline_hr.events.pre_authorization.expire_stale_pre_authorizations",
     ],
 }
 
@@ -243,16 +242,8 @@ before_request = ["discipline_hr.services.utils.configure_log_level"]
 
 # Automatically update python controller files with type annotations for this app.
 fixtures = [
-    {
-        "dt": "Notification",
-        "filters": [["name", "=", "Attendance Permission Pending Review"]],
-    },
-    {
-        "dt": "Notification",
-        "filters": [["name", "=", "Discipline Penalty Pending Review"]],
-    },
     {"dt": "Workflow State"},
-    {"dt": "Workflow", "filters": [["name", "in", ["Attendance Permission", "Discipline Penalty"]]]},
+    {"dt": "Workflow", "filters": [["name", "in", ["Discipline Penalty"]]]},
 ]
 
 export_python_type_annotations = True

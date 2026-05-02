@@ -9,8 +9,6 @@ from typing import Any
 import frappe
 from frappe import _
 
-VOUCHER_TYPE = "Attendance Permissions"
-
 
 def execute(filters: dict | None = None) -> tuple[list[dict], list[dict], None, dict, list[dict]]:
     filters = filters or {}
@@ -28,7 +26,7 @@ def execute(filters: dict | None = None) -> tuple[list[dict], list[dict], None, 
 def _validate_filters(filters: dict) -> None:
     # Drill-down filters narrow to a single voucher; the period/shift become
     # unnecessary because the EGL row carries that context already.
-    has_voucher = any(filters.get(k) for k in ("voucher_no", "attendance", "discipline_penalty"))
+    has_voucher = any(filters.get(k) for k in ("attendance", "discipline_penalty"))
     if has_voucher:
         return
 
@@ -78,14 +76,6 @@ def _columns() -> list[dict]:
         },
         {"label": _("Period Start"), "fieldname": "period_start", "fieldtype": "Date", "width": 100},
         {"label": _("Period End"), "fieldname": "period_end", "fieldtype": "Date", "width": 100},
-        {"label": _("Voucher Type"), "fieldname": "voucher_type", "fieldtype": "Data", "width": 150},
-        {
-            "label": _("Voucher No"),
-            "fieldname": "voucher_no",
-            "fieldtype": "Link",
-            "options": "Attendance Permissions",
-            "width": 140,
-        },
         {
             "label": _("Attendance"),
             "fieldname": "attendance",
@@ -107,35 +97,33 @@ def _fetch_rows(filters: dict) -> list[dict]:
     conditions: list[str] = []
     params: dict[str, Any] = {}
 
-    if filters.get("period_start") and filters.get("period_end"):
-        conditions += ["egl.period_start = %(period_start)s", "egl.period_end = %(period_end)s"]
-        params["period_start"] = filters["period_start"]
-        params["period_end"] = filters["period_end"]
-    if filters.get("shift"):
-        conditions.append("ap.shift_type = %(shift)s")
-        params["shift"] = filters["shift"]
-    if filters.get("company"):
-        conditions.append("emp.company = %(company)s")
-        params["company"] = filters["company"]
+    drill_down = any(filters.get(k) for k in ("attendance", "discipline_penalty"))
 
-    if filters.get("employee"):
-        conditions.append("egl.employee = %(employee)s")
-        params["employee"] = filters["employee"]
-    if filters.get("department"):
-        conditions.append("emp.department = %(department)s")
-        params["department"] = filters["department"]
-    if filters.get("status"):
-        conditions.append("ap.status = %(status)s")
-        params["status"] = filters["status"]
-    if filters.get("voucher_no"):
-        conditions.append("egl.attendance_permission = %(voucher_no)s")
-        params["voucher_no"] = filters["voucher_no"]
     if filters.get("attendance"):
         conditions.append("egl.attendance = %(attendance)s")
         params["attendance"] = filters["attendance"]
     if filters.get("discipline_penalty"):
         conditions.append("egl.discipline_penalty = %(discipline_penalty)s")
         params["discipline_penalty"] = filters["discipline_penalty"]
+
+    if filters.get("employee"):
+        conditions.append("egl.employee = %(employee)s")
+        params["employee"] = filters["employee"]
+
+    if not drill_down:
+        if filters.get("period_start") and filters.get("period_end"):
+            conditions += ["egl.period_start = %(period_start)s", "egl.period_end = %(period_end)s"]
+            params["period_start"] = filters["period_start"]
+            params["period_end"] = filters["period_end"]
+        if filters.get("shift"):
+            conditions.append("att.shift = %(shift)s")
+            params["shift"] = filters["shift"]
+        if filters.get("company"):
+            conditions.append("emp.company = %(company)s")
+            params["company"] = filters["company"]
+        if filters.get("department"):
+            conditions.append("emp.department = %(department)s")
+            params["department"] = filters["department"]
 
     if not conditions:
         return []
@@ -149,9 +137,8 @@ def _fetch_rows(filters: dict) -> list[dict]:
 			egl.employee                          AS employee,
 			egl.employee_name                     AS employee_name,
 			emp.department                        AS department,
-			egl.attendance_permission             AS voucher_no,
 			egl.attendance                        AS attendance,
-			ap.shift_type                         AS shift,
+			att.shift                             AS shift,
 			egl.period_start                      AS period_start,
 			egl.period_end                        AS period_end,
 			egl.allowed_minutes                   AS allowed,
@@ -161,9 +148,9 @@ def _fetch_rows(filters: dict) -> list[dict]:
 			egl.penalty_minutes                   AS penalty_minutes,
 			dp.penalty_amount                     AS penalty_amount,
 			egl.discipline_penalty                AS discipline_penalty,
-			ap.status                             AS status
+			dp.status                             AS status
 		FROM `tabEmployee Grace Ledger` egl
-		LEFT JOIN `tabAttendance Permissions` ap ON ap.name = egl.attendance_permission
+		LEFT JOIN `tabAttendance` att            ON att.name = egl.attendance
 		LEFT JOIN `tabEmployee` emp              ON emp.name = egl.employee
 		LEFT JOIN `tabDiscipline Penalty` dp     ON dp.name = egl.discipline_penalty
 		WHERE {where}
@@ -173,12 +160,7 @@ def _fetch_rows(filters: dict) -> list[dict]:
 
 
 def _build_grouped_rows(rows: list[dict], filters: dict) -> list[dict]:
-    """Insert opening/closing bold rows around each employee's movement rows.
-
-    GL/SL pattern: opening row shows period pool, movement rows show each consumption,
-    closing row shows totals + final remaining. Bold styling is via `_bold` (Frappe
-    row-level convention). Color rules apply only to movement rows.
-    """
+    """Insert opening/closing bold rows around each employee's movement rows."""
     output: list[dict] = []
     by_employee: dict[str, list[dict]] = defaultdict(list)
     for r in rows:
@@ -188,7 +170,11 @@ def _build_grouped_rows(rows: list[dict], filters: dict) -> list[dict]:
         first = employee_rows[0]
         allowed = first.get("allowed") or 0
 
-        opening = _opening_row(first, allowed, filters)
+        period_start = filters.get("period_start") or first.get("period_start")
+        period_end = filters.get("period_end") or first.get("period_end")
+        shift = filters.get("shift") or first.get("shift")
+
+        opening = _opening_row(first, allowed, period_start, period_end, shift)
         output.append(opening)
 
         total_consumed = 0
@@ -197,7 +183,6 @@ def _build_grouped_rows(rows: list[dict], filters: dict) -> list[dict]:
         final_remaining = allowed
 
         for r in employee_rows:
-            r["voucher_type"] = VOUCHER_TYPE
             _apply_row_style(r, allowed)
             output.append(r)
             total_consumed += r.get("consumed") or 0
@@ -215,27 +200,25 @@ def _build_grouped_rows(rows: list[dict], filters: dict) -> list[dict]:
                 total_penalty_minutes=total_penalty_minutes,
                 total_penalty_amount=total_penalty_amount,
                 final_remaining=final_remaining,
-                period_start=filters["period_start"],
-                period_end=filters["period_end"],
-                shift=filters["shift"],
+                period_start=period_start,
+                period_end=period_end,
+                shift=shift,
             )
         )
 
     return output
 
 
-def _opening_row(first: dict, allowed: int, filters: dict) -> dict:
+def _opening_row(first: dict, allowed: int, period_start: Any, period_end: Any, shift: str | None) -> dict:
     return {
-        "posting_date": filters["period_start"],
+        "posting_date": period_start,
         "employee": first.get("employee"),
         "employee_name": first.get("employee_name"),
         "department": first.get("department"),
-        "voucher_type": "",
-        "voucher_no": "",
         "attendance": "",
-        "shift": filters["shift"],
-        "period_start": filters["period_start"],
-        "period_end": filters["period_end"],
+        "shift": shift,
+        "period_start": period_start,
+        "period_end": period_end,
         "allowed": allowed,
         "before": allowed,
         "consumed": 0,
@@ -260,15 +243,13 @@ def _closing_row(
     final_remaining: int,
     period_start: Any,
     period_end: Any,
-    shift: str,
+    shift: str | None,
 ) -> dict:
     return {
         "posting_date": period_end,
         "employee": employee,
         "employee_name": employee_name,
         "department": department,
-        "voucher_type": "",
-        "voucher_no": "",
         "attendance": "",
         "shift": shift,
         "period_start": period_start,
@@ -286,11 +267,6 @@ def _closing_row(
 
 
 def _apply_row_style(row: dict, allowed: int) -> None:
-    """Color rules — applied via `_style` per the app-wide convention.
-
-    Remaining: green ≥ 50%, orange < 50%, red == 0.
-    Penalty Amount: red when > 0.
-    """
     remaining = row.get("remaining") or 0
     if allowed > 0:
         ratio = remaining / allowed
@@ -309,8 +285,6 @@ def _report_summary(rows: list[dict]) -> list[dict]:
     if not rows:
         return []
 
-    # Allowed is per (employee, period). Summing raw allowed across rows would
-    # multiply by row count; sum unique pools instead.
     allowed_by_employee = {r["employee"]: (r.get("allowed") or 0) for r in rows}
     total_allowed = sum(allowed_by_employee.values())
     total_consumed = sum((r.get("consumed") or 0) for r in rows)

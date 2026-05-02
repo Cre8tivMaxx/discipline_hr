@@ -1,7 +1,7 @@
 // Copyright (c) 2026, Abdelrahman Elsayed and contributors
 // For license information, please see license.txt
 
-frappe.query_reports["Attendance Permissions Pipeline"] = {
+frappe.query_reports["Attendance Pre-Authorization Pipeline"] = {
     filters: [
         {
             fieldname: "company",
@@ -29,7 +29,21 @@ frappe.query_reports["Attendance Permissions Pipeline"] = {
             fieldname: "status",
             label: __("Status"),
             fieldtype: "Select",
-            options: ["", "Auto Processed", "Processed", "Pending", "Rejected"].join("\n"),
+            options: [
+                "",
+                "Draft",
+                "Pending Approval",
+                "Approved",
+                "Consumed",
+                "Rejected",
+                "Expired",
+            ].join("\n"),
+        },
+        {
+            fieldname: "kind",
+            label: __("Kind"),
+            fieldtype: "Select",
+            options: ["", "Late", "Early", "Both"].join("\n"),
         },
         {
             fieldname: "department",
@@ -48,16 +62,6 @@ frappe.query_reports["Attendance Permissions Pipeline"] = {
             label: __("Employee"),
             fieldtype: "Link",
             options: "Employee",
-        },
-        {
-            fieldname: "auto_created",
-            label: __("Auto Created Only"),
-            fieldtype: "Check",
-        },
-        {
-            fieldname: "has_error",
-            label: __("Has Error Only"),
-            fieldtype: "Check",
         },
         {
             fieldname: "stuck_days",

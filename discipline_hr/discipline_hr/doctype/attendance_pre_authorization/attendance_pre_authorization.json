@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "ATT-PERM-.###",
+ "autoname": "ATT-PREAUTH-.###",
  "creation": "2026-02-15 15:03:14.174059",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -8,16 +8,14 @@
   "employee",
   "employee_name",
   "date",
+  "kind",
   "column_break_dtde",
-  "attendance",
   "shift_type",
   "minutes",
+  "attendance",
   "section_break_ajdf",
   "reason",
-  "auto_created",
-  "status",
-  "section_break_error_log",
-  "error_log"
+  "status"
  ],
  "fields": [
   {
@@ -29,7 +27,7 @@
    "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee",
-   "read_only_depends_on": "eval:doc.status !== 'Pending'",
+   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
    "reqd": 1
   },
   {
@@ -42,25 +40,30 @@
    "read_only": 1
   },
   {
+   "description": "The date the pre-authorization covers. Must be set before the attendance is submitted.",
    "fieldname": "date",
    "fieldtype": "Date",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Date",
-   "read_only_depends_on": "eval:doc.status !== 'Pending'",
+   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
+   "reqd": 1
+  },
+  {
+   "default": "Late",
+   "description": "Which side of the day this pre-authorization excuses. <b>Late</b> covers late entry minutes; <b>Early</b> covers early exit minutes; <b>Both</b> covers either.",
+   "fieldname": "kind",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Kind",
+   "options": "Late\nEarly\nBoth",
+   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
    "reqd": 1
   },
   {
    "fieldname": "column_break_dtde",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "attendance",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Attendance",
-   "options": "Attendance",
-   "read_only_depends_on": "eval:doc.status !== 'Pending'"
   },
   {
    "fieldname": "shift_type",
@@ -71,16 +74,25 @@
    "in_standard_filter": 1,
    "label": "Shift Type",
    "options": "Shift Type",
-   "read_only_depends_on": "eval:doc.status !== 'Pending'"
+   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)"
   },
   {
-   "description": "Late or early minutes after subtracting the shift grace period. Negative values are clamped to zero.",
+   "description": "Late or early minutes covered by this pre-authorization. Floored to the shift's minimum grace.",
    "fieldname": "minutes",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Late/Early Minutes",
-   "read_only_depends_on": "eval:doc.status !== 'Pending'",
+   "label": "Pre-Authorized Minutes",
+   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
    "reqd": 1
+  },
+  {
+   "description": "Set by the system when an Attendance consumes this pre-authorization.",
+   "fieldname": "attendance",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Attendance",
+   "options": "Attendance",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_ajdf",
@@ -88,41 +100,22 @@
    "label": "Details"
   },
   {
+   "description": "Why this pre-authorization is being granted. Required when submitting for HR approval.",
    "fieldname": "reason",
    "fieldtype": "Small Text",
    "label": "Reason",
-   "read_only_depends_on": "eval:doc.status !== 'Pending'"
-  },
-  {
-   "default": "0",
-   "description": "Set automatically when this permission was created by the attendance pipeline rather than by a user.",
-   "fieldname": "auto_created",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Auto Created",
-   "read_only": 1
+   "mandatory_depends_on": "eval:doc.status === 'Pending Approval'",
+   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)"
   },
   {
    "bold": 1,
-   "default": "Pending",
+   "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Status",
-   "options": "\nAuto Processed\nProcessed\nPending\nRejected",
-   "read_only": 1
-  },
-  {
-   "collapsible": 1,
-   "depends_on": "eval:doc.error_log",
-   "fieldname": "section_break_error_log",
-   "fieldtype": "Section Break",
-   "label": "Error Log"
-  },
-  {
-   "description": "Populated when the auto-processing pipeline failed. Click **Retry** on the form to re-run.",
-   "fieldname": "error_log",
-   "fieldtype": "Small Text",
-   "label": "Error Log",
+   "options": "\nDraft\nPending Approval\nApproved\nConsumed\nRejected\nExpired",
    "read_only": 1
   }
  ],
@@ -131,19 +124,14 @@
  "links": [
   {
    "group": "Discipline Hr",
-   "link_doctype": "Employee Grace Ledger",
-   "link_fieldname": "attendance_permission"
-  },
-  {
-   "group": "Discipline Hr",
    "link_doctype": "Discipline Penalty",
-   "link_fieldname": "attendance_permission"
+   "link_fieldname": "attendance_pre_authorization"
   }
  ],
- "modified": "2026-04-21 09:46:49.386560",
+ "modified": "2026-04-28 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
- "name": "Attendance Permissions",
+ "name": "Attendance Pre-Authorization",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
@@ -197,20 +185,28 @@
  "sort_order": "DESC",
  "states": [
   {
-   "color": "Green",
-   "title": "Auto Processed"
-  },
-  {
-   "color": "Green",
-   "title": "Processed"
+   "color": "Gray",
+   "title": "Draft"
   },
   {
    "color": "Yellow",
-   "title": "Pending"
+   "title": "Pending Approval"
+  },
+  {
+   "color": "Blue",
+   "title": "Approved"
+  },
+  {
+   "color": "Green",
+   "title": "Consumed"
   },
   {
    "color": "Red",
    "title": "Rejected"
+  },
+  {
+   "color": "Gray",
+   "title": "Expired"
   }
  ],
  "track_changes": 1

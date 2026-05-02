@@ -6,7 +6,7 @@
   {
    "custom": 1,
    "group": "Discipline Hr",
-   "link_doctype": "Attendance Permissions",
+   "link_doctype": "Attendance Pre-Authorization",
    "link_fieldname": "employee",
    "parent": "Employee",
    "parentfield": "links",

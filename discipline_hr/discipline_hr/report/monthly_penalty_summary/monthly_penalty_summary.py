@@ -116,7 +116,7 @@ def _fetch_rows(filters: dict) -> list[dict]:
         conditions.append("emp.department = %(department)s")
         params["department"] = filters["department"]
     if filters.get("shift"):
-        conditions.append("ap.shift_type = %(shift)s")
+        conditions.append("att.shift = %(shift)s")
         params["shift"] = filters["shift"]
     if filters.get("salary_component"):
         conditions.append("dp.salary_component = %(salary_component)s")
@@ -128,7 +128,7 @@ def _fetch_rows(filters: dict) -> list[dict]:
             dp.employee,
             dp.employee_name,
             emp.department,
-            ap.shift_type,
+            att.shift AS shift_type,
             dp.start_period AS period_start,
             dp.end_period   AS period_end,
             dp.salary_component,
@@ -147,10 +147,10 @@ def _fetch_rows(filters: dict) -> list[dict]:
                 LIMIT 1
             ) AS salary_slip
         FROM `tabDiscipline Penalty` dp
-        LEFT JOIN `tabEmployee` emp              ON emp.name = dp.employee
-        LEFT JOIN `tabAttendance Permissions` ap ON ap.name = dp.attendance_permission
+        LEFT JOIN `tabEmployee` emp ON emp.name = dp.employee
+        LEFT JOIN `tabAttendance` att ON att.name = dp.attendance
         WHERE {where}
-        GROUP BY dp.employee, dp.start_period, dp.end_period, dp.salary_component
+        GROUP BY dp.employee, dp.start_period, dp.end_period, dp.salary_component, att.shift
         ORDER BY total_penalty_amount DESC, dp.employee
     """
     rows = frappe.db.sql(query, params, as_dict=True)

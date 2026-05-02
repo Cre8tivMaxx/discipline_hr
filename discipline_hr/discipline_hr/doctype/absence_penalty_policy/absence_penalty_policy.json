@@ -6,28 +6,50 @@
  "engine": "InnoDB",
  "field_order": [
   "penalty_type",
+  "penalty_matrix_section",
   "penalty_matrix",
+  "special_days_section",
   "special_days"
  ],
  "fields": [
   {
+   "description": "Choose how absence penalties are calculated.<br><b>Penalty Matrix</b>: escalating % of the daily rate per consecutive absence (e.g. 1st = 100%, 2nd = 150%, 3rd = 200%).<br><b>Special Days</b>: per-weekday % of the daily rate (e.g. Friday absence = 200%).<br><b>Matrix &amp; Special Days</b>: applies the matrix on regular days and the special-day rate when the absence falls on a configured weekday.",
    "fieldname": "penalty_type",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Penalty Type",
-   "options": "\nPenalty Matrix\nSpecial Days\nMatrix & Special Days"
+   "options": "\nPenalty Matrix\nSpecial Days\nMatrix & Special Days",
+   "reqd": 1
   },
   {
    "depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Penalty Matrix\"",
+   "fieldname": "penalty_matrix_section",
+   "fieldtype": "Section Break",
+   "label": "Penalty Matrix"
+  },
+  {
+   "depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Penalty Matrix\"",
+   "description": "Escalating deduction per consecutive absence in the period. Each row defines the % of the daily rate for the Nth violation.",
    "fieldname": "penalty_matrix",
    "fieldtype": "Table",
    "label": "Penalty Matrix",
+   "mandatory_depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Penalty Matrix\"",
    "options": "Penalty Matrix"
   },
   {
    "depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Special Days\"",
+   "fieldname": "special_days_section",
+   "fieldtype": "Section Break",
+   "label": "Special Days"
+  },
+  {
+   "depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Special Days\"",
+   "description": "Per-weekday override for absence penalties. If an absence falls on a listed weekday, this % of the daily rate is applied instead of (or alongside) the matrix.",
    "fieldname": "special_days",
    "fieldtype": "Table",
    "label": "Special Days",
+   "mandatory_depends_on": "eval:doc.penalty_type == \"Matrix & Special Days\" || doc.penalty_type == \"Special Days\"",
    "options": "Special Days"
   }
  ],
@@ -40,7 +62,7 @@
    "link_fieldname": "absence_penalty_policy"
   }
  ],
- "modified": "2026-03-15 13:21:11.471760",
+ "modified": "2026-04-28 12:55:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Absence Penalty Policy",
@@ -56,6 +78,30 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
    "share": 1,
    "write": 1
   }

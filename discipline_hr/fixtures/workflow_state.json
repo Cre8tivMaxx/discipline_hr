@@ -43,5 +43,41 @@
   "name": "Pending",
   "style": "Warning",
   "workflow_state_name": "Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "edit",
+  "modified": "2026-04-28 14:30:00.000000",
+  "name": "Draft",
+  "style": "Inverse",
+  "workflow_state_name": "Draft"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "time",
+  "modified": "2026-04-28 14:30:00.000000",
+  "name": "Pending Approval",
+  "style": "Warning",
+  "workflow_state_name": "Pending Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2026-04-28 14:30:00.000000",
+  "name": "Consumed",
+  "style": "Success",
+  "workflow_state_name": "Consumed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2026-04-28 14:30:00.000000",
+  "name": "Expired",
+  "style": "Inverse",
+  "workflow_state_name": "Expired"
  }
 ]

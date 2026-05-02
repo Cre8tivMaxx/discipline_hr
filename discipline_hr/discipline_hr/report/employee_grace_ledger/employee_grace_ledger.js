@@ -63,18 +63,6 @@ frappe.query_reports["Employee Grace Ledger"] = {
             options: "Department",
         },
         {
-            fieldname: "status",
-            label: __("Status"),
-            fieldtype: "Select",
-            options: ["", "Auto Processed", "Processed", "Pending", "Rejected"].join("\n"),
-        },
-        {
-            fieldname: "voucher_no",
-            label: __("Attendance Permission"),
-            fieldtype: "Link",
-            options: "Attendance Permissions",
-        },
-        {
             fieldname: "attendance",
             label: __("Attendance"),
             fieldtype: "Link",
