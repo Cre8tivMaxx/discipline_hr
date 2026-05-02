@@ -57,33 +57,56 @@ Ruff line length is 110; `ruff-format` uses double quotes and spaces.
 
 ### Data Flow (Happy Path)
 
+The pipeline runs synchronously inside `Attendance.before_submit`. Two branches:
+
+**Flow A — No matching pre-authorization**
+
 ```
-Attendance (before_submit)
-  → calculate_attendance_penalty_minutes()   [events/attendance.py]
+Attendance.before_submit
+  → calculate_attendance_penalty_minutes()      [events/attendance.py]
       Computes raw late/early minutes, subtracts shift grace period
       Sets custom fields on Attendance doc:
         custom_late_entry_minutes, custom_early_exist_minutes
         custom_late_after_grace_minutes, custom_early_after_grace_minutes
         custom_penalty_minutes
-      If penalty_minutes > 0 → enqueues create_attendance_permissions()
 
-  → Attendance Permissions (created via queue, after_insert)
-      status = "Auto Processed"  (if Discipline HR Settings.auto_process_attendance_permission == 1)
-      status = "Pending"         (if auto_process_attendance_permission == 0, requires HR approval)
-
-  → process_submitted_attendance_permission()  [services/attendance_permission.py]
-      Runs on after_insert of AttendancePermissions when status ∈ {Auto Processed, Accepted}
-      Creates Employee Grace Ledger entry:
-        Reads total consumed minutes for the period
-        Computes remaining_minutes_before_consume, remaining_minutes, penalty_minutes
-
-  → Discipline Penalty (created if penalty_minutes > 0)
-      Reads Attendance Penalty Policy (from Shift Type or global config)
-      Calculates penalty_amount via one of three strategies:
-        - Fixed Per Hour: rate_per_hour / 60 × penalty_minutes
-        - Factor: deducted_minutes_factor × minute_rate × penalty_minutes
-        - Penalty Matrix: escalating daily-rate % per violation number in the period
+  → apply_pre_authorization_and_penalty()       [services/pre_authorization.py]
+      No Approved pre-auth found for (employee, date, slice)
+      → _create_grace_ledger(ctx_from_attendance)
+          Inserts Employee Grace Ledger:
+            Reads total consumed minutes for the period
+            Computes remaining_minutes_before_consume, remaining_minutes, penalty_minutes
+          If penalty_minutes > 0 → _create_attendance_penalty()
+              Creates Discipline Penalty using main attendance_penalty_policy
 ```
+
+**Flow B — Approved pre-authorization exists**
+
+```
+Attendance.before_submit
+  → calculate_attendance_penalty_minutes()
+  → apply_pre_authorization_and_penalty()
+      Looks up Attendance Pre-Authorization where
+        employee=X, date=Y, status="Approved"
+        kind ∈ {Late, Both} for late_after_grace_minutes
+        kind ∈ {Early, Both} for early_after_grace_minutes
+      Atomic UPDATE: Approved → Consumed (guards against amend races)
+      Sets custom_attendance_pre_authorization on Attendance
+      If consumed minutes >= penalty minutes → done (no ledger, no penalty)
+      If surplus > 0 → _create_surplus_penalty()
+          Uses config.pre_authorization_surplus_policy (NOT the main policy)
+          Skips the grace ledger entirely
+```
+
+**Penalty amount calculation** (Discipline Penalty controller):
+- Fixed Per Hour: `rate_per_hour / 60 × penalty_minutes`
+- Factor: `deducted_minutes_factor × minute_rate × penalty_minutes`
+- Penalty Matrix: escalating daily-rate % per violation number in the period
+
+**Cancellation**: `Attendance.on_cancel → cascade_cancel_attendance` reverts
+Consumed pre-auths back to Approved (so an amended re-submit can re-consume),
+deletes downstream Discipline Penalty, Employee Grace Ledger, Additional Salary,
+and dev seeders.
 
 ### Custom Fields on Shift Type
 
@@ -93,7 +116,7 @@ The app extends `Shift Type` with custom fields (prefix `custom_`):
 |---|---|
 | `custom_period_start_date` / `custom_period_end_date` | Grace period window; penalties only apply inside this range |
 | `custom_total_allowed_grace_minutes` | Pool of grace minutes per employee per period |
-| `custom_minimum_grace_minutes` | Floor applied to `AttendancePermissions.minutes` |
+| `custom_minimum_grace_minutes` | Floor applied to recorded penalty minutes |
 | `custom_salary_component` | Override deduction salary component (under Penalties and Deductions section) |
 | `custom_attendance_penalty_policy` | Overrides global policy from `Discipline HR Settings` |
 
@@ -101,27 +124,28 @@ The app extends `Shift Type` with custom fields (prefix `custom_`):
 
 | DocType | Purpose |
 |---|---|
-| `Attendance Permissions` | Bridge between submitted Attendance and penalty processing; holds status workflow |
+| `Attendance Pre-Authorization` | HR-managed excuse for a known late entry / early exit on a specific date. Statuses: Draft → Pending Approval → Approved → Consumed (or Rejected / Expired). |
 | `Employee Grace Ledger` | Ledger entry per attendance event; tracks allowed vs consumed minutes |
 | `Discipline Penalty` | Final penalty record with computed `penalty_amount` |
 | `Attendance Penalty Policy` | Defines calculation method (Factor / Fixed Per Hour / Penalty Matrix) |
 | `Penalty Matrix` | Child table of Policy; defines % of daily rate per violation number |
-| `Discipline HR Settings` | Global singleton: default policy, salary component, duplicate-guard toggle |
+| `Discipline HR Settings` | Global singleton: main policy, surplus policy, salary component, auto-approve / auto-process toggles |
 
 ### Services Layer (`discipline_hr/services/`)
 
 - `grace.py` – pure helpers to extract grace minutes from a shift doc and calculate consumed grace
-- `attendance_permission.py` – orchestrates ledger creation and penalty creation after a permission is processed
+- `pre_authorization.py` – orchestrates pre-auth resolution, grace ledger insertion, and penalty creation
 - `utils.py` – shared `logger` instance (`frappe.logger("discipline_hr")`)
 
 ### Events (`discipline_hr/events/`)
 
-- `attendance.py` – single hook `calculate_attendance_penalty_minutes` wired to `Attendance.before_submit`
+- `attendance.py` – `calculate_attendance_penalty_minutes` and `apply_pre_authorization_and_penalty` chained on `Attendance.before_submit`; `cascade_cancel_attendance` on `on_cancel`
+- `pre_authorization.py` – daily `expire_stale_pre_authorizations` scheduler entry
 
 ### DocType Controllers (`discipline_hr/discipline_hr/doctype/`)
 
 Business logic lives in the service layer; controllers are thin:
-- `AttendancePermissions.after_insert` → calls `process_submitted_attendance_permission`
+- `AttendancePreAuthorization.validate` → enforces status transitions, no-overlap, and minimum-grace floor; `before_save` auto-approves Drafts when the global flag is on
 - `DisciplinePenalty.validate` → calls `get_penalty_amount()` to populate `penalty_amount`
 
 ## Skills to Load
@@ -136,7 +160,7 @@ At the start of each session, load these skills using the Skill tool:
 ### Important Conventions
 
 - Use `frappe.get_cached_doc()` for frequently read master data (Shift Type, Attendance, etc.).
-- Background jobs are enqueued on the `"short"` queue for attendance permission creation.
+- The pre-authorization pipeline runs synchronously in `Attendance.before_submit` — no background queue.
 - `ignore_if_duplicate=True` and `ignore_permissions=True` are used on auto-inserted docs.
 - The `# begin: auto-generated types` / `# end: auto-generated types` block in each DocType controller is managed automatically by Frappe; do not edit it manually.
 - DocType JSON files are the source of truth for schema; always run `bench migrate` after editing them.

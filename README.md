@@ -55,9 +55,10 @@ Submit an Attendance for an employee on this shift, with a late entry larger tha
 
 You will see:
 
-- An **Attendance Permission** is created.
 - An **Employee Grace Ledger** entry shows the minutes used.
 - A **Discipline Penalty** is created with the deduction amount.
+
+If you wanted to excuse the lateness ahead of time, you would have created an **Attendance Pre-Authorization** for that employee and date before submitting the attendance — the app would have consumed it instead of (or in addition to) charging the grace pool.
 
 That's it, keep exploring different policies.
 
@@ -65,17 +66,27 @@ That's it, keep exploring different policies.
 
 ## How it works
 
-When an employee submits an Attendance, the app:
+When an employee submits an Attendance, the app runs two flows depending on whether HR has pre-authorized the late entry / early exit.
+
+**No pre-authorization on file** (the default flow):
 
 1. Reads the shift's grace pool and the minutes already used in this period.
 2. Saves the late and early minutes on the Attendance.
-3. Creates an **Attendance Permission**. If auto-process is on, it goes straight through. If not, HR must approve it.
-4. Adds a row to the **Employee Grace Ledger** to track minutes used.
-5. Creates a **Discipline Penalty** with the amount to deduct from salary.
+3. Adds a row to the **Employee Grace Ledger** to track minutes used.
+4. Creates a **Discipline Penalty** with the amount to deduct from salary, when the grace pool is exhausted.
+
+**Approved pre-authorization on file** for the same employee and date:
+
+1. Saves the late and early minutes on the Attendance.
+2. Atomically marks the **Attendance Pre-Authorization** as `Consumed`.
+3. If the actual minutes are within the pre-authorized minutes, no penalty and no grace ledger entry are created — the pre-auth is the contract.
+4. If the actual minutes exceed the pre-authorized minutes, a **Discipline Penalty** is created for the surplus minutes using the dedicated **Pre-Authorization Surplus Policy** in Discipline HR Settings. The grace pool is **not** touched.
 
 ![How permitted graces work](imgs/permitted_graces.png)
 
-If any step fails, the Attendance, Permission, or Penalty shows the reason in its **Error Log** field, and a **Retry** button appears on the document so HR can run that step again. While an Attendance has an unresolved error or a pending Permission or Penalty in the payroll period, the app blocks the Salary Slip from submitting — so a broken step never silently turns into a wrong paycheck.
+If any step fails, the Attendance shows the traceback in its **Error Log** field, and a **Retry** button appears on the document so HR can run the pipeline again. While an Attendance has an unresolved error or a pending Penalty in the payroll period, the app blocks the Salary Slip from submitting — so a broken step never silently turns into a wrong paycheck.
+
+When an Attendance is **cancelled**, the app cascades: the Discipline Penalty and Additional Salary are removed, the Grace Ledger entry is deleted, and any Consumed pre-authorization is reverted to `Approved` so an amended re-submit can re-consume it (one consumption per submit cycle).
 
 ---
 
@@ -89,10 +100,9 @@ If any step fails, the Attendance, Permission, or Penalty shows the reason in it
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Period Start / End Date     | The date range when penalties apply. The app rolls these forward when the period ends.                            |
 | Total Allowed Grace Minutes | The grace pool shared across the whole period.                                                                    |
-| Minimum Grace Minutes       | The smallest minutes saved per permission. If an employee is 20 minutes late but the minimum is 60, they get 60.  |
+| Minimum Grace Minutes       | The smallest charge per attendance event. If an employee is 20 minutes late but the minimum is 60, the ledger records 60. |
 | Grace Reset Interval        | How often the pool resets: Weekly, Monthly, or Yearly.                                                            |
 | Reset After (Intervals)     | How many intervals before reset. For example, reset every 2 months.                                               |
-| Enable Permissions          | If on, HR must approve the permission before a penalty is created.                                                |
 | Attendance Penalty Policy   | Replaces the default attendance policy for this shift.                                                            |
 | Absence Penalty Policy      | Replaces the default absence policy for this shift.                                                               |
 | Salary Component            | Replaces the default salary component for this shift.                                                             |
@@ -112,12 +122,14 @@ If any step fails, the Attendance, Permission, or Penalty shows the reason in it
 
 ### Discipline HR Settings
 
-- **Default Policies** — used when a Shift Type does not set its own.
+- **Attendance Penalty Policy** — main policy for grace-pool exhaustion penalties.
+- **Pre-Authorization Surplus Policy** — policy used when an Attendance exceeds an Approved Pre-Authorization. Only `Factor` and `Fixed Per Hour` policies are valid here.
+- **Absence Penalty Policy** — used when an employee is marked Absent.
 - **Salary Component** — the component for the Additional Salary deduction.
 - **Salary Basis** — use `Base` salary or `Total` salary for the daily rate.
 - **Month Days** — days in a month for the daily rate (default `30`).
-- **Automation** — turn auto-process on or off for Permissions, Penalties, and Additional Salary.
-- **Split Permissions & Penalties** — if on, extra minutes past an existing permission are penalized on their own.
+- **Auto Approve Pre-Authorization** — if on, newly created Drafts jump straight to `Approved`. If off, HR must approve manually.
+- **Auto Process Attendance Penalty** — if on, Discipline Penalties are created in `Auto Processed` state; if off, they wait in `Pending`.
 
 ---
 
@@ -147,14 +159,25 @@ Pick one:
 
 ## Workflow statuses
 
-Both **Attendance Permissions** and **Discipline Penalty** share these statuses:
+**Attendance Pre-Authorization** statuses:
+
+| Status            | Meaning                                                                  |
+| ----------------- | ------------------------------------------------------------------------ |
+| Draft             | Being prepared — not yet submitted for HR action.                        |
+| Pending Approval  | Waiting for HR approval.                                                 |
+| Approved          | Active and ready to be consumed by a matching Attendance submit.         |
+| Consumed          | Used by an Attendance submit. Reverts to Approved if the Attendance is cancelled. |
+| Rejected          | Refused by HR — never consumed.                                          |
+| Expired           | Daily scheduler marks unconsumed records older than 7 days as expired.   |
+
+**Discipline Penalty** statuses:
 
 | Status         | Meaning                                |
 | -------------- | -------------------------------------- |
-| Auto Processed | Processed without HR approval.         |
+| Auto Processed | Created without manual HR action.      |
 | Pending        | Waiting for HR or manager action.      |
-| Accepted       | Approved — the penalty is created.     |
-| Rejected       | Waived — no penalty is created.        |
+| Accepted       | Approved — flows into the Salary Slip. |
+| Rejected       | Waived — no salary deduction.          |
 
 ---
 
@@ -162,19 +185,29 @@ Both **Attendance Permissions** and **Discipline Penalty** share these statuses:
 
 The app ships four script reports under the **Discipline HR** workspace:
 
-| Report                          | Purpose                                                                                                                |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Employee Grace Ledger Report    | Drill-down of every grace-pool movement for one employee in a shift period — investigate how the pool was consumed.    |
-| Monthly Penalty Summary         | Payroll roll-up: one row per (employee, period, salary component) with total minutes and amount. Run before payroll.   |
-| Discipline Penalty Register     | Line-level audit log of every penalty (Draft, Submitted, Cancelled), filterable by department, policy, error state.    |
-| Attendance Permissions Pipeline | Operational triage view — Pending vs Auto Processed, oldest-first, with error and stuck-item flags.                    |
+| Report                                | Purpose                                                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Employee Grace Ledger Report          | Drill-down of every grace-pool movement for one employee in a shift period — investigate how the pool was consumed.  |
+| Monthly Penalty Summary               | Payroll roll-up: one row per (employee, period, salary component) with total minutes and amount. Run before payroll. |
+| Discipline Penalty Register           | Line-level audit log of every penalty (Draft, Submitted, Cancelled), filterable by department, policy, error state.  |
+| Attendance Pre-Authorization Pipeline | Operational triage view of Pre-Authorizations — Pending Approval vs Approved vs Consumed, oldest-first.              |
 
 ---
 
 ## Scheduled jobs and guards
 
 - **Daily Grace Rollover** — a daily scheduled job moves the **Period Start** and **Period End** dates on Shift Types when the current period ends.
+- **Daily Pre-Authorization Expiry** — Drafts, Pending, and Approved Pre-Authorizations whose date is older than 7 days are marked `Expired` so they can no longer be consumed.
 - **Salary Slip Guard** — the app blocks Salary Slip submission if the employee has Attendances with errors or penalties that are still pending in the payroll period.
+
+---
+
+## Future work
+
+- **Employee self-service requests** — let employees raise a Pre-Authorization in `Pending Approval` themselves; HR reviews and approves before the attendance date.
+- **Configurable expiry window** — make the 7-day expiry per-shift instead of a global constant, and lift it to Discipline HR Settings.
+- **More attendance penalty policies** — beyond `Factor`, `Fixed Per Hour`, and `Penalty Matrix`: tiered hourly rates, time-of-day surcharges (e.g. higher rate for the first 15 minutes), capped daily/monthly maximums, and policies that escalate by recent violation streak rather than period total.
+- **More absence penalty policies** — beyond `Penalty Matrix`, `Special Days`, and `Matrix & Special Days`: consecutive-absence escalation (each next day costs more), per-department or per-grade rules, and pre-approved-leave-aware policies that downgrade the deduction when leave was filed late.
 
 ---
 
