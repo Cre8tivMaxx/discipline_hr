@@ -8,22 +8,18 @@
   "section_break_policies",
   "attendance_penalty_policy",
   "absence_penalty_policy",
+  "pre_authorization_surplus_policy",
   "column_break_policies",
   "salary_component",
   "section_break_salary_calc",
   "salary_basis",
   "month_days",
   "section_break_automation",
-  "auto_process_attendance_permission",
+  "auto_approve_pre_authorization",
   "auto_process_attendance_penalty",
   "auto_submit_additional_salary",
-  "column_break_automation",
-  "split_permissions_and_penalties",
-  "extra_minutes_penalty_policy",
-  "penalize_manual_attendance_permissions",
-  "section_break_notifications",
-  "default_pending_notification",
-  "default_penalty_notification"
+  "pre_authorization_expiry_days",
+  "column_break_automation"
  ],
  "fields": [
   {
@@ -33,16 +29,26 @@
    "label": "Default Policies"
   },
   {
+   "description": "Default policy used when an employee exceeds their grace pool. Override per Shift Type.",
    "fieldname": "attendance_penalty_policy",
    "fieldtype": "Link",
    "label": "Attendance Penalty Policy",
    "options": "Attendance Penalty Policy"
   },
   {
+   "description": "Default policy used for unpermitted absences. Override per Shift Type.",
    "fieldname": "absence_penalty_policy",
    "fieldtype": "Link",
    "label": "Absence Penalty Policy",
    "options": "Absence Penalty Policy"
+  },
+  {
+   "description": "Policy used to penalize the minutes that exceed an employee's Approved Attendance Pre-Authorization. Only Factor and Fixed Per Hour policies are valid.",
+   "fieldname": "pre_authorization_surplus_policy",
+   "fieldtype": "Link",
+   "label": "Pre-Authorization Surplus Policy",
+   "link_filters": "[[\"Attendance Penalty Policy\",\"penalty_type\",\"in\",[\"Factor\",\"Fixed Per Hour\"]]]",
+   "options": "Attendance Penalty Policy"
   },
   {
    "fieldname": "column_break_policies",
@@ -75,11 +81,11 @@
    "label": "Automation"
   },
   {
-   "default": "1",
-   "description": "If checked Attendance Permissions will be created as auto processed, else will be pending.",
-   "fieldname": "auto_process_attendance_permission",
+   "default": "0",
+   "description": "When checked, newly created Attendance Pre-Authorizations skip HR review and are immediately Approved. Use this when HR is the only role creating pre-authorizations and review is unnecessary.",
+   "fieldname": "auto_approve_pre_authorization",
    "fieldtype": "Check",
-   "label": "Auto Process Attendance Permission"
+   "label": "Auto Approve Pre-Authorization"
   },
   {
    "default": "0",
@@ -90,57 +96,22 @@
   },
   {
    "default": "1",
-   "description": "The Additional Salary\nwill be created as Draft if this field not checked.",
+   "description": "The Additional Salary will be created as Draft if this field is not checked.",
    "fieldname": "auto_submit_additional_salary",
    "fieldtype": "Check",
    "label": "Auto Submit Additional Salary"
   },
   {
+   "default": "7",
+   "description": "Number of days after a pre-authorization's date before unconsumed records (Draft / Pending Approval / Approved) are auto-marked Expired by the daily scheduler. An Approved pre-auth is expired only if it was never consumed by a submitted Attendance — this prevents stale approvals from being absorbed by a late-arriving attendance amendment. Default is 7.",
+   "fieldname": "pre_authorization_expiry_days",
+   "fieldtype": "Int",
+   "label": "Pre-Authorization Expiry (Days)",
+   "non_negative": 1
+  },
+  {
    "fieldname": "column_break_automation",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_notifications",
-   "fieldtype": "Section Break",
-   "label": "Notifications"
-  },
-  {
-   "description": "Notification sent to HR when an Attendance Permission is created with status Pending.",
-   "fieldname": "default_pending_notification",
-   "fieldtype": "Link",
-   "label": "Attendance Permission Pending",
-   "options": "Notification"
-  },
-  {
-   "description": "Notification sent to HR when a Discipline Penalty is created with status Pending.",
-   "fieldname": "default_penalty_notification",
-   "fieldtype": "Link",
-   "label": "Discipline Penalty Pending",
-   "options": "Notification"
-  },
-  {
-   "default": "0",
-   "description": "<b>Unchecked</b>: every late/early event creates an Attendance Permission first; HR reviews and accepts before a penalty is generated.<br><b>Checked</b>: penalties are processed directly from Attendance, skipping the HR review step. Use this when you trust the pipeline and want immediate enforcement.",
-   "fieldname": "split_permissions_and_penalties",
-   "fieldtype": "Check",
-   "label": "Split Permissions and Penalties"
-  },
-  {
-   "depends_on": "eval:doc.split_permissions_and_penalties == 1",
-   "description": "Policy for penalizing minutes beyond an existing Attendance Permission (Factor or Fixed Per Hour only).",
-   "fieldname": "extra_minutes_penalty_policy",
-   "fieldtype": "Link",
-   "label": "Extra Minutes Penalty Policy",
-   "link_filters": "[[\"Attendance Penalty Policy\",\"penalty_type\",\"in\",[\"Factor\",\"Fixed Per Hour\"]]]",
-   "mandatory_depends_on": "eval:doc.split_permissions_and_penalties == 1",
-   "options": "Attendance Penalty Policy"
-  },
-  {
-   "default": "0",
-   "description": "If checked, manually created Attendance Permissions will also generate a Discipline Penalty. When unchecked, only auto-created permissions trigger penalties.",
-   "fieldname": "penalize_manual_attendance_permissions",
-   "fieldtype": "Check",
-   "label": "Penalize Manual Attendance Permissions"
   },
   {
    "default": "Base",
@@ -155,7 +126,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-22 14:05:30.082208",
+ "modified": "2026-04-28 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",
