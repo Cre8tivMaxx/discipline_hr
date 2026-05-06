@@ -90,10 +90,6 @@ def retry_attendance_pipeline(attendance_name: str) -> None:
     apply_pre_authorization_and_penalty(doc)
 
 
-# Legacy alias retained so existing client scripts and bookmarks keep working.
-retry_attendance_permission = retry_attendance_pipeline
-
-
 def create_absence_penalty(doc, method=None):
     """Create a Discipline Penalty for an absent employee on Attendance submit."""
     if doc.status != "Absent":

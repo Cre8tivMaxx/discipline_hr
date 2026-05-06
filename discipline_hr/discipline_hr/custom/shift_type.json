@@ -462,7 +462,7 @@
    "creation": "2026-02-22 16:57:52.499702",
    "default": "0",
    "depends_on": null,
-   "description": "The minimum time of permissions. Example: if the minimum is 60, and the employee came 30 minutes late, he will be considered late 60 minutes (In attendance permission).",
+   "description": "The minimum time of pre-authorizations. Example: if the minimum is 60, and the employee came 30 minutes late, he will be considered late 60 minutes (in Attendance Pre-Authorization).",
    "docstatus": 0,
    "dt": "Shift Type",
    "fetch_from": null,

@@ -3,7 +3,7 @@ frappe.ui.form.on("Attendance", {
         if (frm.doc.custom_error_log) {
             frm.add_custom_button(__("Retry"), () => {
                 frappe.call({
-                    method: "discipline_hr.events.attendance.retry_attendance_permission",
+                    method: "discipline_hr.events.attendance.retry_attendance_pipeline",
                     args: {
                         attendance_name: frm.doc.name,
                     },
@@ -26,7 +26,11 @@ frappe.ui.form.on("Attendance", {
         }
         if (frm.doc.name && !frm.is_new()) {
             frappe.db
-                .get_value("Discipline Penalty", { attendance: frm.doc.name, docstatus: ["!=", 2] }, "name")
+                .get_value(
+                    "Discipline Penalty",
+                    { attendance: frm.doc.name, docstatus: ["!=", 2] },
+                    "name"
+                )
                 .then((r) => {
                     const penalty = (r.message || {}).name;
                     if (penalty) {
