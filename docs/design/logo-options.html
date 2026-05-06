@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Discipline HR — Logo options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(98% 0.005 85);
+    --ink: oklch(22% 0.01 80);
+    --ink-soft: oklch(50% 0.008 80);
+    --line: oklch(88% 0.006 80);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+  body { padding: 56px; }
+
+  header { margin-bottom: 36px; max-width: 880px; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 6px;
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1100px;
+  }
+
+  .card {
+    background: oklch(100% 0 0);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .icon-frame {
+    width: 256px;
+    height: 256px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .icon-sm {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex: none;
+  }
+  .icon-sm svg { width: 100%; height: 100%; display: block; }
+
+  .meta { text-align: center; }
+  .name { font-weight: 600; font-size: 14px; letter-spacing: -0.005em; }
+  .desc { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
+
+  .icon-frame svg { width: 256px; height: 256px; display: block; border-radius: 56px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Discipline HR · App icon</div>
+    <h1>Six logo directions</h1>
+    <p class="sub">Following Frappe's app-icon convention — a single bold glyph on a soft tinted square, rendered at 256px with a 56px corner radius. Each card also shows the icon at favicon scale.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- ======================== 01 — Clock with check tick ======================== -->
+    <div class="card">
+      <div class="icon-frame">
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+          <rect width="256" height="256" rx="56" fill="oklch(94% 0.05 250)"/>
+          <!-- clock face -->
+          <circle cx="128" cy="128" r="62" fill="none" stroke="oklch(45% 0.16 255)" stroke-width="14" stroke-linecap="round"/>
+          <!-- hour hand pointing up -->
+          <line x1="128" y1="128" x2="128" y2="84" stroke="oklch(45% 0.16 255)" stroke-width="12" stroke-linecap="round"/>
+          <!-- minute hand pointing to 2 o'clock -->
+          <line x1="128" y1="128" x2="160" y2="112" stroke="oklch(45% 0.16 255)" stroke-width="12" stroke-linecap="round"/>
+          <!-- center dot -->
+          <circle cx="128" cy="128" r="6" fill="oklch(45% 0.16 255)"/>
+        </svg>
+      </div>
+      <div class="icon-row">
+        <div class="icon-sm">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.05 250)"/>
+            <circle cx="128" cy="128" r="62" fill="none" stroke="oklch(45% 0.16 255)" stroke-width="14" stroke-linecap="round"/>
+            <line x1="128" y1="128" x2="128" y2="84" stroke="oklch(45% 0.16 255)" stroke-width="12" stroke-linecap="round"/>
+            <line x1="128" y1="128" x2="160" y2="112" stroke="oklch(45% 0.16 255)" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="128" cy="128" r="6" fill="oklch(45% 0.16 255)"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name">01 · Clock</div>
+          <div class="desc">Punctuality, time tracking</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== 02 — Hourglass (grace running out) ======================== -->
+    <div class="card">
+      <div class="icon-frame">
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+          <rect width="256" height="256" rx="56" fill="oklch(95% 0.04 70)"/>
+          <!-- hourglass outline -->
+          <g stroke="oklch(48% 0.16 50)" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" fill="none">
+            <!-- top rail -->
+            <line x1="80" y1="68" x2="176" y2="68"/>
+            <!-- bottom rail -->
+            <line x1="80" y1="188" x2="176" y2="188"/>
+            <!-- left side: top to pinch to bottom -->
+            <path d="M 88 68 L 88 88 L 128 128 L 88 168 L 88 188"/>
+            <!-- right side -->
+            <path d="M 168 68 L 168 88 L 128 128 L 168 168 L 168 188"/>
+          </g>
+          <!-- sand top (less, has fallen) -->
+          <path d="M 96 78 L 160 78 L 138 110 L 118 110 Z" fill="oklch(48% 0.16 50)"/>
+          <!-- falling grain -->
+          <rect x="125" y="118" width="6" height="14" fill="oklch(48% 0.16 50)"/>
+          <!-- sand bottom (more) -->
+          <path d="M 92 178 L 164 178 L 156 158 Q 128 138 100 158 Z" fill="oklch(48% 0.16 50)"/>
+        </svg>
+      </div>
+      <div class="icon-row">
+        <div class="icon-sm">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="56" fill="oklch(95% 0.04 70)"/>
+            <g stroke="oklch(48% 0.16 50)" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" fill="none">
+              <line x1="80" y1="68" x2="176" y2="68"/>
+              <line x1="80" y1="188" x2="176" y2="188"/>
+              <path d="M 88 68 L 88 88 L 128 128 L 88 168 L 88 188"/>
+              <path d="M 168 68 L 168 88 L 128 128 L 168 168 L 168 188"/>
+            </g>
+            <path d="M 96 78 L 160 78 L 138 110 L 118 110 Z" fill="oklch(48% 0.16 50)"/>
+            <rect x="125" y="118" width="6" height="14" fill="oklch(48% 0.16 50)"/>
+            <path d="M 92 178 L 164 178 L 156 158 Q 128 138 100 158 Z" fill="oklch(48% 0.16 50)"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name">02 · Hourglass</div>
+          <div class="desc">Grace pool, time-bound</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== 03 — Shield with clock ======================== -->
+    <div class="card">
+      <div class="icon-frame">
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+          <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+          <!-- shield -->
+          <path d="M 128 56 L 192 80 L 192 136 Q 192 184 128 208 Q 64 184 64 136 L 64 80 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+          <!-- inner clock -->
+          <circle cx="128" cy="132" r="32" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="10"/>
+          <line x1="128" y1="132" x2="128" y2="112" stroke="oklch(48% 0.13 165)" stroke-width="9" stroke-linecap="round"/>
+          <line x1="128" y1="132" x2="146" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="9" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="icon-row">
+        <div class="icon-sm">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 56 L 192 80 L 192 136 Q 192 184 128 208 Q 64 184 64 136 L 64 80 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="32" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="10"/>
+            <line x1="128" y1="132" x2="128" y2="112" stroke="oklch(48% 0.13 165)" stroke-width="9" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="146" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="9" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name">03 · Shield + Clock</div>
+          <div class="desc">Compliance, protection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== 04 — Stopwatch ======================== -->
+    <div class="card">
+      <div class="icon-frame">
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+          <rect width="256" height="256" rx="56" fill="oklch(95% 0.04 25)"/>
+          <g stroke="oklch(50% 0.18 28)" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <!-- crown -->
+            <line x1="112" y1="58" x2="144" y2="58"/>
+            <line x1="128" y1="58" x2="128" y2="74"/>
+            <!-- side button -->
+            <line x1="184" y1="78" x2="196" y2="66"/>
+          </g>
+          <!-- watch body -->
+          <circle cx="128" cy="142" r="58" fill="none" stroke="oklch(50% 0.18 28)" stroke-width="14"/>
+          <!-- single bold tick at 2 o'clock -->
+          <line x1="128" y1="142" x2="128" y2="100" stroke="oklch(50% 0.18 28)" stroke-width="11" stroke-linecap="round"/>
+          <line x1="128" y1="142" x2="156" y2="156" stroke="oklch(50% 0.18 28)" stroke-width="11" stroke-linecap="round"/>
+          <circle cx="128" cy="142" r="6" fill="oklch(50% 0.18 28)"/>
+        </svg>
+      </div>
+      <div class="icon-row">
+        <div class="icon-sm">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="56" fill="oklch(95% 0.04 25)"/>
+            <g stroke="oklch(50% 0.18 28)" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="112" y1="58" x2="144" y2="58"/>
+              <line x1="128" y1="58" x2="128" y2="74"/>
+              <line x1="184" y1="78" x2="196" y2="66"/>
+            </g>
+            <circle cx="128" cy="142" r="58" fill="none" stroke="oklch(50% 0.18 28)" stroke-width="14"/>
+            <line x1="128" y1="142" x2="128" y2="100" stroke="oklch(50% 0.18 28)" stroke-width="11" stroke-linecap="round"/>
+            <line x1="128" y1="142" x2="156" y2="156" stroke="oklch(50% 0.18 28)" stroke-width="11" stroke-linecap="round"/>
+            <circle cx="128" cy="142" r="6" fill="oklch(50% 0.18 28)"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name">04 · Stopwatch</div>
+          <div class="desc">Active monitoring</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== 05 — Monogram dH ======================== -->
+    <div class="card">
+      <div class="icon-frame">
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+          <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 290)"/>
+          <text x="128" y="172" text-anchor="middle"
+                font-family="Inter, sans-serif"
+                font-weight="800"
+                font-size="138"
+                letter-spacing="-6"
+                fill="oklch(42% 0.18 295)">dH</text>
+        </svg>
+      </div>
+      <div class="icon-row">
+        <div class="icon-sm">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 290)"/>
+            <text x="128" y="172" text-anchor="middle"
+                  font-family="Inter, sans-serif"
+                  font-weight="800"
+                  font-size="138"
+                  letter-spacing="-6"
+                  fill="oklch(42% 0.18 295)">dH</text>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name">05 · Monogram dH</div>
+          <div class="desc">Typographic, minimal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== 06 — Clock with bite (grace consumed wedge) ======================== -->
+    <div class="card">
+      <div class="icon-frame">
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+          <rect width="256" height="256" rx="56" fill="oklch(95% 0.035 145)"/>
+          <!-- pie chart: 75% remaining (deep green), 25% consumed (light) -->
+          <!-- full circle background (consumed area shows through) -->
+          <circle cx="128" cy="128" r="64" fill="oklch(85% 0.06 145)"/>
+          <!-- 75% wedge: starts at top, sweeps clockwise 270deg -->
+          <path d="M 128 128 L 128 64 A 64 64 0 1 1 64 128 Z" fill="oklch(48% 0.14 150)"/>
+          <!-- center hole to make it a ring/clock -->
+          <circle cx="128" cy="128" r="14" fill="oklch(95% 0.035 145)"/>
+        </svg>
+      </div>
+      <div class="icon-row">
+        <div class="icon-sm">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" rx="56" fill="oklch(95% 0.035 145)"/>
+            <circle cx="128" cy="128" r="64" fill="oklch(85% 0.06 145)"/>
+            <path d="M 128 128 L 128 64 A 64 64 0 1 1 64 128 Z" fill="oklch(48% 0.14 150)"/>
+            <circle cx="128" cy="128" r="14" fill="oklch(95% 0.035 145)"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name">06 · Grace ring</div>
+          <div class="desc">Consumed vs remaining</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

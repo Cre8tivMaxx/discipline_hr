@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="discipline_hr/public/images/discipline_hr_logo.png" alt="Discipline HR logo" width="200">
+</p>
+
 # Discipline HR
 
 Smart time tracking, grace minutes, and salary penalties for ERPNext HR.
@@ -208,6 +212,7 @@ The app ships four script reports under the **Discipline HR** workspace:
 - **Configurable expiry window** — make the 7-day expiry per-shift instead of a global constant, and lift it to Discipline HR Settings.
 - **More attendance penalty policies** — beyond `Factor`, `Fixed Per Hour`, and `Penalty Matrix`: tiered hourly rates, time-of-day surcharges (e.g. higher rate for the first 15 minutes), capped daily/monthly maximums, and policies that escalate by recent violation streak rather than period total.
 - **More absence penalty policies** — beyond `Penalty Matrix`, `Special Days`, and `Matrix & Special Days`: consecutive-absence escalation (each next day costs more), per-department or per-grade rules, and pre-approved-leave-aware policies that downgrade the deduction when leave was filed late.
+- **Manual attendance entry** — support businesses without biometric integration by allowing HR to record manual attendance and manual late entries / early exits, while still feeding into the same grace-ledger and penalty pipeline.
 
 ---
 

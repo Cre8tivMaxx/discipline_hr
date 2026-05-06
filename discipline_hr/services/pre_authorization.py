@@ -165,7 +165,12 @@ def _consume_pre_authorization(name: str, attendance: str) -> bool:
 def _create_surplus_penalty(attendance_doc, surplus_minutes: int, pre_authorization: str) -> None:
     """Penalize minutes beyond the consumed pre-authorization. Skips the grace ledger."""
     config = frappe.get_cached_doc("Discipline HR Settings")
-    if not config.pre_authorization_surplus_policy:
+    shift_doc = frappe.get_cached_doc("Shift Type", attendance_doc.shift)
+    surplus_policy = (
+        shift_doc.get("custom_pre_authorization_surplus_policy")
+        or config.pre_authorization_surplus_policy
+    )
+    if not surplus_policy:
         _log(
             "warning",
             "no_surplus_policy_configured",
@@ -181,8 +186,6 @@ def _create_surplus_penalty(attendance_doc, surplus_minutes: int, pre_authorizat
         _log("info", "duplicate_surplus_penalty_skipped", attendance=attendance_doc.name)
         return
 
-    shift_doc = frappe.get_cached_doc("Shift Type", attendance_doc.shift)
-
     penalty = frappe.new_doc("Discipline Penalty")
     penalty.employee = attendance_doc.employee
     penalty.attendance = attendance_doc.name
@@ -197,7 +200,7 @@ def _create_surplus_penalty(attendance_doc, surplus_minutes: int, pre_authorizat
         shift_doc.custom_period_end_date,
         attendance_doc.status,
     )
-    penalty.attendance_penalty_policy = config.pre_authorization_surplus_policy
+    penalty.attendance_penalty_policy = surplus_policy
     penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
     penalty.penalty_minutes = surplus_minutes
     penalty.grace_consumed = 0
@@ -269,40 +272,52 @@ def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
 
 
 def _create_grace_ledger(ctx: _AttendanceContext):
-    """Insert an Employee Grace Ledger entry and trigger penalty creation if needed."""
+    """Insert an Employee Grace Ledger entry and trigger penalty creation if needed.
+
+    Penalty math (delta-of-cumulative-overflow):
+        prior_total    = SUM(consumed_minutes from prior rows in this period)
+        prior_overflow = max(0, prior_total - allowed)
+        new_total      = prior_total + this.consumed_minutes
+        new_overflow   = max(0, new_total - allowed)
+        penalty_minutes = new_overflow - prior_overflow
+
+    This bills each attendance only for the minutes it pushes the employee
+    further past the period's grace pool — no compensating ledger rows needed.
+    """
     if _ignore_grace_ledger_duplicates(ctx):
         return
 
     shift = frappe.get_cached_doc("Shift Type", ctx.shift_type)
-    ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
-    _log("debug", "creating_grace_ledger", employee=ctx.employee, minutes=ctx.minutes)
-    ledger.employee = ctx.employee
-    ledger.attendance = ctx.attendance
-    ledger.period_start = shift.custom_period_start_date
-    ledger.period_end = shift.custom_period_end_date
-    ledger.allowed_minutes = shift.custom_total_allowed_grace_minutes
-    ledger.consumed_minutes = ctx.minutes
-    ledger.remarks = "Auto-created from Attendance"
-    ledger.date = ctx.date
-
-    consumed_so_far = (
+    allowed = cint(shift.custom_total_allowed_grace_minutes)
+    prior_total = cint(
         frappe.db.get_value(
             "Employee Grace Ledger",
             filters={
                 "employee": ctx.employee,
                 "period_start": shift.custom_period_start_date,
                 "period_end": shift.custom_period_end_date,
-                "discipline_penalty": ("is", "not set"),
             },
             fieldname="sum(consumed_minutes)",
         )
         or 0
     )
-    ledger.remaining_minutes_before_consume = ledger.allowed_minutes - consumed_so_far
-    ledger.remaining_minutes = max(0, ledger.remaining_minutes_before_consume - ledger.consumed_minutes)
+    prior_overflow = max(0, prior_total - allowed)
+    new_total = prior_total + ctx.minutes
+    new_overflow = max(0, new_total - allowed)
 
-    overflow = ledger.remaining_minutes_before_consume - ledger.consumed_minutes
-    ledger.penalty_minutes = abs(overflow) if overflow < 0 else 0
+    ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
+    _log("debug", "creating_grace_ledger", employee=ctx.employee, minutes=ctx.minutes)
+    ledger.employee = ctx.employee
+    ledger.attendance = ctx.attendance
+    ledger.period_start = shift.custom_period_start_date
+    ledger.period_end = shift.custom_period_end_date
+    ledger.allowed_minutes = allowed
+    ledger.consumed_minutes = ctx.minutes
+    ledger.remaining_minutes_before_consume = max(0, allowed - prior_total)
+    ledger.remaining_minutes = max(0, allowed - new_total)
+    ledger.penalty_minutes = new_overflow - prior_overflow
+    ledger.remarks = "Auto-created from Attendance"
+    ledger.date = ctx.date
 
     try:
         ledger.insert(ignore_permissions=True)
@@ -352,7 +367,15 @@ def _ignore_grace_ledger_duplicates(ctx: _AttendanceContext) -> bool:
 def insert_attendance_penalty(doc: EmployeeGraceLedger, ctx: _AttendanceContext) -> None:
     try:
         config = frappe.get_cached_doc("Discipline HR Settings")
-        _create_attendance_penalty(ctx, doc, config)
+        penalty = _create_attendance_penalty(ctx, doc, config)
+        if penalty is not None:
+            frappe.db.set_value(
+                "Employee Grace Ledger",
+                doc.name,
+                "discipline_penalty",
+                penalty.name,
+                update_modified=False,
+            )
         frappe.db.set_value("Employee Grace Ledger", doc.name, "error_log", None, update_modified=False)
     except Exception:
         _log(

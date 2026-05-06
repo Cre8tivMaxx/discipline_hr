@@ -14,9 +14,6 @@ from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_pe
 from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_settings import (
     DisciplineHRSettings,
 )
-from discipline_hr.discipline_hr.doctype.employee_grace_ledger.employee_grace_ledger import (
-    EmployeeGraceLedger,
-)
 from discipline_hr.services.utils import _log
 
 
@@ -33,7 +30,6 @@ class DisciplinePenalty(Document):
         attendance: DF.Link | None
         attendance_penalty_policy: DF.Link | None
         attendance_pre_authorization: DF.Link | None
-        auto_create_salary: DF.Check
         description: DF.SmallText | None
         employee: DF.Link
         employee_grace_ledger: DF.Link | None
@@ -49,11 +45,9 @@ class DisciplinePenalty(Document):
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
         violation_date: DF.Date
         violation_number: DF.Int
-
     # end: auto-generated types
     def after_insert(self):
         if self.status == "Auto Processed":
-            self.create_grace_ledger_entry()
             self.create_additional_salary()
 
     def on_update(self):
@@ -62,24 +56,7 @@ class DisciplinePenalty(Document):
             return
 
         if self.status == "Processed":
-            self.create_grace_ledger_entry()
             self.create_additional_salary()
-
-    def create_grace_ledger_entry(self):
-        if frappe.db.exists("Employee Grace Ledger", {"discipline_penalty": self.name}):
-            return
-        ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
-        ledger.employee = self.employee
-        ledger.attendance = self.attendance
-        ledger.period_start = self.start_period
-        ledger.period_end = self.end_period
-        ledger.allowed_minutes = 0
-        ledger.consumed_minutes = -self.penalty_minutes
-        ledger.penalty_minutes = 0
-        ledger.discipline_penalty = self.name
-        ledger.date = self.violation_date
-        ledger.remarks = f"Penalty marker: {self.name}"
-        ledger.insert(ignore_permissions=True)
 
     def validate(self):
         """Calculate and store the penalty amount before saving."""

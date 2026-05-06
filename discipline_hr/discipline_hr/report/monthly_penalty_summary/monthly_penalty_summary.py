@@ -93,8 +93,8 @@ def _columns() -> list[dict]:
 
 def _fetch_rows(filters: dict) -> list[dict]:
     conditions = [
-        "dp.start_period = %(period_start)s",
-        "dp.end_period = %(period_end)s",
+        "dp.start_period <= %(period_end)s",
+        "dp.end_period >= %(period_start)s",
         "emp.company = %(company)s",
     ]
     params: dict[str, Any] = {

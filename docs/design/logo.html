@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Discipline HR — Logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(98% 0.005 85);
+    --ink: oklch(22% 0.01 80);
+    --ink-soft: oklch(50% 0.008 80);
+    --line: oklch(88% 0.006 80);
+    --teal: oklch(48% 0.13 165);
+    --teal-soft: oklch(94% 0.04 160);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+  body { padding: 56px; }
+
+  header { margin-bottom: 36px; max-width: 880px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; font-weight: 600; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.015em; margin: 0 0 6px; }
+  .sub { color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    max-width: 1100px;
+  }
+
+  .card {
+    background: oklch(100% 0 0);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px;
+  }
+  .card h3 {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+    font-weight: 600;
+  }
+
+  .hero { display: flex; align-items: center; justify-content: center; padding: 24px 0; }
+  .hero svg { width: 320px; height: 320px; display: block; border-radius: 70px; }
+
+  .scales {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    justify-content: center;
+    padding: 16px 0;
+  }
+  .scale-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .scale-item svg { display: block; }
+  .scale-item .lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+
+  .ctx {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .ctx-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    background: oklch(96% 0.005 85);
+  }
+  .ctx-row.dark { background: oklch(20% 0.01 260); color: oklch(95% 0 0); }
+  .ctx-row .name { font-weight: 600; font-size: 14px; }
+  .ctx-row .meta { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .ctx-row.dark .meta { color: oklch(70% 0.01 260); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .swatch {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .swatch .chip { height: 56px; }
+  .swatch .lbl {
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Discipline HR · Logo</div>
+    <h1>Shield + Clock — refined</h1>
+    <p class="sub">Compliance + time, drawn as a single confident mark. Teal palette aligns with Frappe HR's family of pastel-tinted icons while staying distinct.</p>
+  </header>
+
+  <div class="layout">
+
+    <div class="card">
+      <h3>Hero — 320 px</h3>
+      <div class="hero">
+        <!-- Hero -->
+        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" id="hero-logo">
+          <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+          <!-- shield, slightly narrower top, deeper point -->
+          <path d="M 128 52
+                   L 196 76
+                   L 196 138
+                   Q 196 188 128 212
+                   Q 60 188 60 138
+                   L 60 76 Z"
+                fill="none"
+                stroke="oklch(48% 0.13 165)"
+                stroke-width="14"
+                stroke-linejoin="round"/>
+          <!-- clock face -->
+          <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+          <!-- hour hand (up) -->
+          <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          <!-- minute hand (right) -->
+          <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Scales</h3>
+      <div class="scales">
+        <div class="scale-item">
+          <svg viewBox="0 0 256 256" width="128" height="128" style="border-radius:28px;">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 52 L 196 76 L 196 138 Q 196 188 128 212 Q 60 188 60 138 L 60 76 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+            <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">128</span>
+        </div>
+        <div class="scale-item">
+          <svg viewBox="0 0 256 256" width="64" height="64" style="border-radius:14px;">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 52 L 196 76 L 196 138 Q 196 188 128 212 Q 60 188 60 138 L 60 76 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+            <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">64</span>
+        </div>
+        <div class="scale-item">
+          <svg viewBox="0 0 256 256" width="32" height="32" style="border-radius:7px;">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 52 L 196 76 L 196 138 Q 196 188 128 212 Q 60 188 60 138 L 60 76 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+            <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">32</span>
+        </div>
+        <div class="scale-item">
+          <svg viewBox="0 0 256 256" width="16" height="16" style="border-radius:3.5px;">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 52 L 196 76 L 196 138 Q 196 188 128 212 Q 60 188 60 138 L 60 76 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+            <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">16</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>In context</h3>
+      <div class="ctx">
+        <div class="ctx-row">
+          <svg viewBox="0 0 256 256" width="48" height="48" style="border-radius:11px;">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 52 L 196 76 L 196 138 Q 196 188 128 212 Q 60 188 60 138 L 60 76 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+            <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div class="name">Discipline HR</div>
+            <div class="meta">Smart time compliance for ERPNext</div>
+          </div>
+        </div>
+        <div class="ctx-row dark">
+          <svg viewBox="0 0 256 256" width="48" height="48" style="border-radius:11px;">
+            <rect width="256" height="256" rx="56" fill="oklch(94% 0.04 160)"/>
+            <path d="M 128 52 L 196 76 L 196 138 Q 196 188 128 212 Q 60 188 60 138 L 60 76 Z" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="14" stroke-linejoin="round"/>
+            <circle cx="128" cy="132" r="34" fill="none" stroke="oklch(48% 0.13 165)" stroke-width="11"/>
+            <line x1="128" y1="132" x2="128" y2="110" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+            <line x1="128" y1="132" x2="148" y2="132" stroke="oklch(48% 0.13 165)" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div class="name">Discipline HR</div>
+            <div class="meta">On a dark dashboard</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Palette</h3>
+      <div class="grid-2">
+        <div class="swatch">
+          <div class="chip" style="background: oklch(48% 0.13 165);"></div>
+          <div class="lbl">Mark · oklch(48% .13 165)</div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: oklch(94% 0.04 160);"></div>
+          <div class="lbl">Tile · oklch(94% .04 160)</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

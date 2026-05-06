@@ -27,7 +27,7 @@
    "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee",
-   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
+   "read_only_depends_on": "eval:['Consumed','Rejected','Expired'].includes(doc.status)",
    "reqd": 1
   },
   {
@@ -46,11 +46,11 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Date",
-   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
+   "read_only_depends_on": "eval:['Consumed','Rejected','Expired'].includes(doc.status)",
    "reqd": 1
   },
   {
-   "default": "Late",
+   "default": "Both",
    "description": "Which side of the day this pre-authorization excuses. <b>Late</b> covers late entry minutes; <b>Early</b> covers early exit minutes; <b>Both</b> covers either.",
    "fieldname": "kind",
    "fieldtype": "Select",
@@ -58,7 +58,7 @@
    "in_standard_filter": 1,
    "label": "Kind",
    "options": "Late\nEarly\nBoth",
-   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
+   "read_only_depends_on": "eval:['Consumed','Rejected','Expired'].includes(doc.status)",
    "reqd": 1
   },
   {
@@ -74,7 +74,7 @@
    "in_standard_filter": 1,
    "label": "Shift Type",
    "options": "Shift Type",
-   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)"
+   "read_only_depends_on": "eval:['Consumed','Rejected','Expired'].includes(doc.status)"
   },
   {
    "description": "Late or early minutes covered by this pre-authorization. Floored to the shift's minimum grace.",
@@ -82,7 +82,7 @@
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Pre-Authorized Minutes",
-   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)",
+   "read_only_depends_on": "eval:['Consumed','Rejected','Expired'].includes(doc.status)",
    "reqd": 1
   },
   {
@@ -105,18 +105,17 @@
    "fieldtype": "Small Text",
    "label": "Reason",
    "mandatory_depends_on": "eval:doc.status === 'Pending Approval'",
-   "read_only_depends_on": "eval:!['Draft','Pending Approval'].includes(doc.status)"
+   "read_only_depends_on": "eval:['Consumed','Rejected','Expired'].includes(doc.status)"
   },
   {
    "bold": 1,
-   "default": "Draft",
+   "default": "Approved",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "\nDraft\nPending Approval\nApproved\nConsumed\nRejected\nExpired",
-   "read_only": 1
+   "options": "\nDraft\nPending Approval\nApproved\nConsumed\nRejected\nExpired"
   }
  ],
  "grid_page_length": 50,
@@ -128,7 +127,7 @@
    "link_fieldname": "attendance_pre_authorization"
   }
  ],
- "modified": "2026-04-28 14:30:00.000000",
+ "modified": "2026-05-04 12:38:17.756320",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Attendance Pre-Authorization",

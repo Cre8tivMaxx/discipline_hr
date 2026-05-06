@@ -4,6 +4,7 @@ app_publisher = "Abdelrahman Elsayed"
 app_description = "Smart time compliance, grace tracking and automated deductions for ERPNext HR."
 app_email = "notabdelrahmanelsayed@gmail.com"
 app_license = "mit"
+app_logo_url = "/assets/discipline_hr/images/discipline_hr_logo.svg"
 
 # Apps
 # ------------------

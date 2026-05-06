@@ -17,5 +17,10 @@ frappe.ui.form.on("Employee Grace Ledger", {
                 });
             });
         }
+        if (frm.doc.discipline_penalty) {
+            frm.add_custom_button(__("View Penalty"), () => {
+                frappe.set_route("Form", "Discipline Penalty", frm.doc.discipline_penalty);
+            });
+        }
     },
 });

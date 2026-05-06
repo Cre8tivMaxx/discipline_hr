@@ -77,7 +77,6 @@ def _columns() -> list[dict]:
             "options": "Salary Component",
             "width": 150,
         },
-        {"label": _("Auto Salary"), "fieldname": "auto_create_salary", "fieldtype": "Check", "width": 90},
         {
             "label": _("Attendance Policy"),
             "fieldname": "attendance_penalty_policy",
@@ -169,7 +168,6 @@ def _fetch_rows(filters: dict) -> list[dict]:
             dp.penalty_minutes,
             dp.penalty_amount,
             dp.salary_component,
-            dp.auto_create_salary,
             dp.attendance_penalty_policy,
             dp.absence_penalty_policy,
             dp.attendance,

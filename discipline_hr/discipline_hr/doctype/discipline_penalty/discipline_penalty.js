@@ -24,16 +24,12 @@ frappe.ui.form.on("Discipline Penalty", {
                 });
             });
         }
-        if (frm.doc.employee && frm.doc.attendance_pre_authorization) {
+        if (frm.doc.employee && frm.doc.attendance) {
             frm.add_custom_button(__("View Ledger"), () => {
                 frappe.db
-                    .get_value(
-                        "Attendance Pre-Authorization",
-                        frm.doc.attendance_pre_authorization,
-                        "shift_type"
-                    )
+                    .get_value("Attendance", frm.doc.attendance, "shift")
                     .then((r) => {
-                        const shift = (r.message || {}).shift_type;
+                        const shift = (r.message || {}).shift;
                         const route = {
                             employee: frm.doc.employee,
                             discipline_penalty: frm.doc.name,

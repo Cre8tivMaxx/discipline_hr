@@ -25,5 +25,21 @@ frappe.ui.form.on("Attendance Pre-Authorization", {
                 });
             });
         }
+        if (frm.doc.name && !frm.is_new()) {
+            frappe.db
+                .get_value(
+                    "Discipline Penalty",
+                    { attendance_pre_authorization: frm.doc.name, docstatus: ["!=", 2] },
+                    "name"
+                )
+                .then((r) => {
+                    const penalty = (r.message || {}).name;
+                    if (penalty) {
+                        frm.add_custom_button(__("View Penalty"), () => {
+                            frappe.set_route("Form", "Discipline Penalty", penalty);
+                        });
+                    }
+                });
+        }
     },
 });
