@@ -26,17 +26,15 @@ frappe.ui.form.on("Discipline Penalty", {
         }
         if (frm.doc.employee && frm.doc.attendance) {
             frm.add_custom_button(__("View Ledger"), () => {
-                frappe.db
-                    .get_value("Attendance", frm.doc.attendance, "shift")
-                    .then((r) => {
-                        const shift = (r.message || {}).shift;
-                        const route = {
-                            employee: frm.doc.employee,
-                            discipline_penalty: frm.doc.name,
-                        };
-                        if (shift) route.shift = shift;
-                        frappe.set_route("query-report", "Employee Grace Ledger", route);
-                    });
+                frappe.db.get_value("Attendance", frm.doc.attendance, "shift").then((r) => {
+                    const shift = (r.message || {}).shift;
+                    const route = {
+                        employee: frm.doc.employee,
+                        discipline_penalty: frm.doc.name,
+                    };
+                    if (shift) route.shift = shift;
+                    frappe.set_route("query-report", "Employee Grace Ledger", route);
+                });
             });
         }
     },

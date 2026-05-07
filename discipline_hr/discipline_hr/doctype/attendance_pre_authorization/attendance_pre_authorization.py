@@ -108,13 +108,10 @@ class AttendancePreAuthorization(Document):
             )
 
     def validate_status_transitions(self) -> None:
-        if self.is_new():
+        if self.is_new() or not self.has_value_changed("status"):
             return
-        previous = self.get_doc_before_save()
-        if not previous or previous.status == self.status:
-            return
-        allowed = ALLOWED_TRANSITIONS.get(previous.status, set())
-        if self.status not in allowed:
+        previous_status = (self.get_doc_before_save() or {}).get("status")
+        if self.status not in ALLOWED_TRANSITIONS.get(previous_status, set()):
             frappe.throw(
-                _("Cannot move Pre-Authorization from {0} to {1}.").format(previous.status, self.status)
+                _("Cannot move Pre-Authorization from {0} to {1}.").format(previous_status, self.status)
             )

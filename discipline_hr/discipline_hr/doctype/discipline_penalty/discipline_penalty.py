@@ -1,19 +1,9 @@
 from calendar import day_name
-from typing import cast
 
 import frappe
 from frappe.model.document import Document
 from frappe.utils import cint, flt, getdate, today
 
-from discipline_hr.discipline_hr.doctype.absence_penalty_policy.absence_penalty_policy import (
-    AbsencePenaltyPolicy,
-)
-from discipline_hr.discipline_hr.doctype.attendance_penalty_policy.attendance_penalty_policy import (
-    AttendancePenaltyPolicy,
-)
-from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_settings import (
-    DisciplineHRSettings,
-)
 from discipline_hr.services.utils import _log
 
 
@@ -45,6 +35,7 @@ class DisciplinePenalty(Document):
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
         violation_date: DF.Date
         violation_number: DF.Int
+
     # end: auto-generated types
     def after_insert(self):
         if self.status == "Auto Processed":
@@ -65,12 +56,6 @@ class DisciplinePenalty(Document):
 
     def create_additional_salary(self):
         if not flt(self.penalty_amount):
-            _log(
-                "info",
-                "additional_salary_skipped_zero_amount",
-                penalty=self.name,
-                penalty_amount=self.penalty_amount,
-            )
             return
         if not self.salary_component:
             _log("warning", "additional_salary_skipped_no_component", penalty=str(self.name))
@@ -83,11 +68,10 @@ class DisciplinePenalty(Document):
         if existing:
             existing_name, existing_docstatus = existing
             try:
-                config = self._get_discipline_hr_settings()
+                config = frappe.get_cached_doc("Discipline HR Settings")
                 if existing_docstatus == 0 and config.auto_submit_additional_salary == 1:
                     frappe.get_doc("Additional Salary", existing_name).submit()
                 self.db_set("error_log", None)
-                _log("info", "additional_salary_exists", penalty=self.name, additional_salary=existing_name)
             except Exception as e:
                 _log(
                     "exception",
@@ -98,7 +82,7 @@ class DisciplinePenalty(Document):
                 self.db_set("error_log", str(e))
             return
         try:
-            config = self._get_discipline_hr_settings()
+            config = frappe.get_cached_doc("Discipline HR Settings")
             additional_salary = frappe.get_doc(
                 {
                     "doctype": "Additional Salary",
@@ -112,13 +96,6 @@ class DisciplinePenalty(Document):
                     "overwrite_salary_structure_amount": 0,
                 }
             )
-            _log(
-                "debug",
-                "additional_salary_created",
-                additional_salary=str(additional_salary),
-                penalty=self.name,
-            )
-
             additional_salary.insert()
             if config.auto_submit_additional_salary == 1:
                 additional_salary.submit()
@@ -155,7 +132,6 @@ class DisciplinePenalty(Document):
             ["base", "variable"],
             order_by="from_date desc",
         )
-        _log("debug", "salary_structure_assignment_found", employee=self.employee, assignment=str(assignment))
         if assignment:
             config = frappe.get_cached_doc("Discipline HR Settings")
             base, variable = assignment
@@ -163,17 +139,8 @@ class DisciplinePenalty(Document):
             deduction_type = frappe.scrub(config.salary_basis)
 
             if deduction_type == "total":
-                daily_rate = (base + variable) / month_days
-            else:
-                daily_rate = base / month_days
-            _log(
-                "debug",
-                "daily_rate_fetched",
-                employee=self.employee,
-                base=str(assignment),
-                daily_rate=daily_rate,
-            )
-            return daily_rate
+                return (base + variable) / month_days
+            return base / month_days
         frappe.throw(
             f"No active Salary Structure Assignment found for {self.employee}. Cannot calculate penalty."
         )
@@ -189,13 +156,6 @@ class DisciplinePenalty(Document):
                 "Attendance Penalty Policy", self.attendance_penalty_policy, "penalty_type"
             )
             penalty_type = f"Attendance {penalty_type}"
-
-            _log(
-                "debug",
-                "penalty_type_found",
-                policy=self.attendance_penalty_policy,
-                penalty_type=penalty_type,
-            )
         elif self.penalty_status == "Absent":
             if not self.absence_penalty_policy:
                 _log("warning", "absence_penalty_policy_not_set", penalty=self.name)
@@ -205,8 +165,6 @@ class DisciplinePenalty(Document):
                 "Absence Penalty Policy", self.absence_penalty_policy, "penalty_type"
             )
             penalty_type = f"Absence {penalty_type}"
-
-            _log("debug", "penalty_type_found", policy=self.absence_penalty_policy, penalty_type=penalty_type)
         else:
             _log("warning", "penalty_policy_not_set", penalty=self.name)
             return 0.0
@@ -228,18 +186,11 @@ class DisciplinePenalty(Document):
 
         return handler()
 
-    def _matrix_deduction_from_policy(self, policy_doc: Document, label: str) -> float:
+    def _matrix_deduction_from_policy(self, policy_doc: Document) -> float:
         """Calculate penalty using a violation-number lookup table.
 
         Finds the matrix row matching ``violation_number``; uses the last row
         if no exact match exists. Returns ``daily_rate * percentage``.
-
-        Args:
-            policy_doc: The penalty policy document containing ``penalty_matrix``.
-            label: Human-readable label for log messages (e.g. "Discipline Penalty").
-
-        Returns:
-            Penalty amount as a float.
         """
         matrix = policy_doc.penalty_matrix or []
         row = next(
@@ -256,47 +207,20 @@ class DisciplinePenalty(Document):
 
         self.description = row.description or ""
         percentage = flt(row.percentage)
-
-        _log(
-            "debug",
-            "matrix_percentage_fetched",
-            label=label,
-            penalty=self.name,
-            policy=policy_doc.name,
-            percentage=percentage,
-        )
-
         return flt(self._get_employee_daily_rate() * percentage)
 
     def _special_day_deduction(self):
-        """Calculate penalty as ``daily_rate * percentage_of_daily_rate`` for the violation weekday.
-
-        Looks up the violation date's weekday in the policy's ``special_days``
-        table. Returns 0 if the weekday has no entry.
-
-        Returns:
-            Penalty amount as a float.
-        """
-        policy_doc = self._get_absence_penalty_policy_doc()
+        """Calculate penalty as ``daily_rate * percentage_of_daily_rate`` for the violation weekday."""
+        policy_doc = frappe.get_cached_doc("Absence Penalty Policy", self.absence_penalty_policy)
         violation_day = day_name[getdate(self.violation_date).weekday()]
         special_days = policy_doc.special_days or []
         row = next((r for r in special_days if r.week_day == violation_day), None)
 
         if not row:
-            _log("info", "no_special_day_entry", day=violation_day, policy=policy_doc.name)
             return 0
 
         self.description = row.description or ""
         percentage = flt(row.percentage_of_daily_rate)
-
-        _log(
-            "debug",
-            "special_day_percentage_fetched",
-            day=violation_day,
-            penalty=self.name,
-            policy=policy_doc.name,
-            percentage=percentage,
-        )
         return flt(self._get_employee_daily_rate() * percentage)
 
     def _matrix_and_special_days(self):
@@ -309,49 +233,21 @@ class DisciplinePenalty(Document):
 
     def _penalty_matrix_deduction(self):
         return self._matrix_deduction_from_policy(
-            self._get_attendance_penalty_policy_doc(), "Discipline Penalty"
+            frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy)
         )
 
     def _absence_penalty_matrix(self) -> float:
-        return self._matrix_deduction_from_policy(self._get_absence_penalty_policy_doc(), "Absence Penalty")
+        return self._matrix_deduction_from_policy(
+            frappe.get_cached_doc("Absence Penalty Policy", self.absence_penalty_policy)
+        )
 
     def _fixed_per_hour_deduction(self):
-        """Calculate penalty as ``penalty_minutes * (rate_per_hour / 60)``.
-
-        Returns:
-            Penalty amount as a float.
-        """
-        at_pp = self._get_attendance_penalty_policy_doc()
-
-        # Calculate rate per minute
-        rate_per_minute = at_pp.rate_per_hour / 60
-        _log(
-            "info",
-            "fixed_per_hour_rate",
-            employee=self.employee,
-            policy=at_pp.name,
-            rate_per_hour=at_pp.rate_per_hour,
-            rate_per_minute=rate_per_minute,
-        )
-
-        return self.penalty_minutes * rate_per_minute
-
-    def _get_absence_penalty_policy_doc(self):
-        """Fetch and return the linked ``AbsencePenaltyPolicy`` document."""
-        return cast(
-            AbsencePenaltyPolicy,
-            frappe.get_cached_doc("Absence Penalty Policy", self.absence_penalty_policy),
-        )
-
-    def _get_attendance_penalty_policy_doc(self):
-        """Fetch and return the linked ``AttendancePenaltyPolicy`` document."""
-        return cast(
-            AttendancePenaltyPolicy,
-            frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy),
-        )
+        """Calculate penalty as ``penalty_minutes * (rate_per_hour / 60)``."""
+        at_pp = frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy)
+        return self.penalty_minutes * (at_pp.rate_per_hour / 60)
 
     def _factor_deduction(self) -> float:
-        at_pp = self._get_attendance_penalty_policy_doc()
+        at_pp = frappe.get_cached_doc("Attendance Penalty Policy", self.attendance_penalty_policy)
         factor = flt(at_pp.deducted_minutes_factor)
 
         if not factor:
@@ -367,17 +263,7 @@ class DisciplinePenalty(Document):
         if not minute_rate:
             return 0.0
 
-        deduction = self.penalty_minutes * factor * minute_rate
-        _log(
-            "debug",
-            "factor_deduction_calculated",
-            employee=self.employee,
-            penalty_minutes=self.penalty_minutes,
-            factor=factor,
-            minute_rate=minute_rate,
-            deduction=deduction,
-        )
-        return flt(deduction)
+        return flt(self.penalty_minutes * factor * minute_rate)
 
     def _get_minute_rate(self) -> float:
         """Daily rate divided by shift hours divided by 60"""
@@ -398,11 +284,3 @@ class DisciplinePenalty(Document):
 
         daily_rate = self._get_employee_daily_rate()
         return flt(daily_rate / shift_hours / 60)
-
-    def _get_discipline_hr_settings(self) -> Document:
-        try:
-            settings_doctype = "Discipline HR Settings"
-            config = frappe.get_cached_doc(settings_doctype)
-            return cast(DisciplineHRSettings, config)
-        except Exception:
-            _log("exception", "discipline_hr_settings_fetch_failed", doctype=settings_doctype)
