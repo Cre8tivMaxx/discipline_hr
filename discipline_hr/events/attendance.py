@@ -140,6 +140,13 @@ def _should_create_absence_penalty(shift_doc, config) -> bool:
     return True
 
 
+def _cascade_delete(doctype: str, names: list[str], attendance_name: str) -> None:
+    """Force-delete each named row of ``doctype`` and log one entry per delete."""
+    for row_name in names:
+        frappe.delete_doc(doctype, row_name, force=True, ignore_permissions=True)
+        _log("info", "cascade_deleted", doctype=doctype, name=row_name, attendance=attendance_name)
+
+
 def cascade_cancel_attendance(doc, method=None):
     """Hard-delete all downstream discipline_hr docs when an Attendance is cancelled.
 
@@ -157,9 +164,7 @@ def cascade_cancel_attendance(doc, method=None):
     attendance_name = doc.name
 
     penalty_names = frappe.get_all(
-        "Discipline Penalty",
-        filters={"attendance": attendance_name},
-        pluck="name",
+        "Discipline Penalty", filters={"attendance": attendance_name}, pluck="name"
     )
 
     if penalty_names:
@@ -170,28 +175,15 @@ def cascade_cancel_attendance(doc, method=None):
         )
         for sal in additional_salaries:
             if sal.docstatus == 1:
-                sal_doc = frappe.get_doc("Additional Salary", sal.name)
-                sal_doc.cancel()
-            frappe.delete_doc("Additional Salary", sal.name, force=True, ignore_permissions=True)
-            _log(
-                "info",
-                "cascade_deleted_additional_salary",
-                additional_salary=sal.name,
-                attendance=attendance_name,
-            )
+                frappe.get_doc("Additional Salary", sal.name).cancel()
+        _cascade_delete("Additional Salary", [s.name for s in additional_salaries], attendance_name)
 
-    for penalty_name in penalty_names:
-        frappe.delete_doc("Discipline Penalty", penalty_name, force=True, ignore_permissions=True)
-        _log("info", "cascade_deleted_discipline_penalty", penalty=penalty_name, attendance=attendance_name)
+    _cascade_delete("Discipline Penalty", penalty_names, attendance_name)
 
     ledger_names = frappe.get_all(
-        "Employee Grace Ledger",
-        filters={"attendance": attendance_name},
-        pluck="name",
+        "Employee Grace Ledger", filters={"attendance": attendance_name}, pluck="name"
     )
-    for ledger_name in ledger_names:
-        frappe.delete_doc("Employee Grace Ledger", ledger_name, force=True, ignore_permissions=True)
-        _log("info", "cascade_deleted_grace_ledger", ledger=ledger_name, attendance=attendance_name)
+    _cascade_delete("Employee Grace Ledger", ledger_names, attendance_name)
 
     consumed_preauths = frappe.get_all(
         "Attendance Pre-Authorization",
@@ -223,14 +215,7 @@ def cascade_cancel_attendance(doc, method=None):
             filters={"created_attendance": attendance_name},
             pluck="name",
         )
-        for seeder_name in seeder_names:
-            frappe.delete_doc("Dev Attendance Seeder", seeder_name, force=True, ignore_permissions=True)
-            _log(
-                "info",
-                "cascade_deleted_dev_seeder",
-                seeder=seeder_name,
-                attendance=attendance_name,
-            )
+        _cascade_delete("Dev Attendance Seeder", seeder_names, attendance_name)
 
     total = len(penalty_names) + len(ledger_names) + len(consumed_preauths) + len(seeder_names)
     if total:

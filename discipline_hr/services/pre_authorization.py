@@ -12,7 +12,6 @@ The flow is now driven entirely from a submitted Attendance:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 import frappe
 from frappe.utils import cint, today
@@ -105,31 +104,19 @@ def _apply_preauth_and_compute_remainder(
             consumed.append(both)
             return (late_minutes - late_covered, early_minutes - early_covered, consumed)
 
-    surplus_late = late_minutes
-    if late_minutes > 0:
-        late_preauth = _find_active_pre_authorization(
-            attendance_doc.employee, attendance_doc.attendance_date, "Late"
+    surplus = {"Late": late_minutes, "Early": early_minutes}
+    for kind in ("Late", "Early"):
+        if surplus[kind] <= 0:
+            continue
+        preauth = _find_active_pre_authorization(
+            attendance_doc.employee, attendance_doc.attendance_date, kind
         )
-        if late_preauth and _consume_pre_authorization(late_preauth, attendance_doc.name):
-            preauth_minutes = cint(
-                frappe.db.get_value("Attendance Pre-Authorization", late_preauth, "minutes")
-            )
-            surplus_late = max(0, late_minutes - preauth_minutes)
-            consumed.append(late_preauth)
+        if preauth and _consume_pre_authorization(preauth, attendance_doc.name):
+            preauth_minutes = cint(frappe.db.get_value("Attendance Pre-Authorization", preauth, "minutes"))
+            surplus[kind] = max(0, surplus[kind] - preauth_minutes)
+            consumed.append(preauth)
 
-    surplus_early = early_minutes
-    if early_minutes > 0:
-        early_preauth = _find_active_pre_authorization(
-            attendance_doc.employee, attendance_doc.attendance_date, "Early"
-        )
-        if early_preauth and _consume_pre_authorization(early_preauth, attendance_doc.name):
-            preauth_minutes = cint(
-                frappe.db.get_value("Attendance Pre-Authorization", early_preauth, "minutes")
-            )
-            surplus_early = max(0, early_minutes - preauth_minutes)
-            consumed.append(early_preauth)
-
-    return surplus_late, surplus_early, consumed
+    return surplus["Late"], surplus["Early"], consumed
 
 
 def _find_active_pre_authorization(employee: str, date, kind: str) -> str | None:
@@ -162,13 +149,58 @@ def _consume_pre_authorization(name: str, attendance: str) -> bool:
     return bool(affected)
 
 
+def _build_penalty(
+    *,
+    employee: str,
+    attendance: str,
+    violation_date: str,
+    penalty_status: str,
+    shift_doc,
+    config,
+    policy: str,
+    penalty_minutes: int,
+    grace_consumed: int = 0,
+    extra: dict | None = None,
+) -> object | None:
+    """Insert a Discipline Penalty row, or return ``None`` if a duplicate exists.
+
+    Centralises the field assignment shared by grace-ledger and pre-auth-surplus
+    flows: violation period, violation number, salary component, status, and the
+    auto-process flag from settings.
+    """
+    if frappe.db.exists("Discipline Penalty", {"attendance": attendance, "docstatus": ("!=", 2)}):
+        _log("info", "duplicate_discipline_penalty", attendance=attendance, employee=employee)
+        return None
+
+    penalty = frappe.new_doc("Discipline Penalty")
+    penalty.employee = employee
+    penalty.attendance = attendance
+    penalty.violation_date = violation_date
+    penalty.start_period = shift_doc.custom_period_start_date
+    penalty.end_period = shift_doc.custom_period_end_date
+    penalty.penalty_status = penalty_status
+    penalty.violation_number = 1 + count_prior_violations(
+        employee, shift_doc.custom_period_start_date, shift_doc.custom_period_end_date, penalty_status
+    )
+    penalty.attendance_penalty_policy = policy
+    penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
+    penalty.penalty_minutes = penalty_minutes
+    penalty.grace_consumed = grace_consumed
+    penalty.status = "Auto Processed" if cint(config.auto_process_attendance_penalty) else "Pending"
+
+    for field, value in (extra or {}).items():
+        setattr(penalty, field, value)
+
+    penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
+    return penalty
+
+
 def _create_surplus_penalty(attendance_doc, surplus_minutes: int, pre_authorization: str) -> None:
     """Penalize minutes beyond the consumed pre-authorization. Skips the grace ledger."""
     config = frappe.get_cached_doc("Discipline HR Settings")
     shift_doc = frappe.get_cached_doc("Shift Type", attendance_doc.shift)
     surplus_policy = (
-        shift_doc.get("custom_pre_authorization_surplus_policy")
-        or config.pre_authorization_surplus_policy
+        shift_doc.get("custom_pre_authorization_surplus_policy") or config.pre_authorization_surplus_policy
     )
     if not surplus_policy:
         _log(
@@ -179,96 +211,47 @@ def _create_surplus_penalty(attendance_doc, surplus_minutes: int, pre_authorizat
         )
         return
 
-    if frappe.db.exists(
-        "Discipline Penalty",
-        {"attendance": attendance_doc.name, "docstatus": ("!=", 2)},
-    ):
-        _log("info", "duplicate_surplus_penalty_skipped", attendance=attendance_doc.name)
-        return
-
-    penalty = frappe.new_doc("Discipline Penalty")
-    penalty.employee = attendance_doc.employee
-    penalty.attendance = attendance_doc.name
-    penalty.attendance_pre_authorization = pre_authorization
-    penalty.violation_date = str(attendance_doc.attendance_date)
-    penalty.start_period = shift_doc.custom_period_start_date
-    penalty.end_period = shift_doc.custom_period_end_date
-    penalty.penalty_status = attendance_doc.status
-    penalty.violation_number = 1 + count_prior_violations(
-        attendance_doc.employee,
-        shift_doc.custom_period_start_date,
-        shift_doc.custom_period_end_date,
-        attendance_doc.status,
-    )
-    penalty.attendance_penalty_policy = surplus_policy
-    penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
-    penalty.penalty_minutes = surplus_minutes
-    penalty.grace_consumed = 0
-    penalty.status = "Auto Processed" if cint(config.auto_process_attendance_penalty) else "Pending"
-    penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
-    _log(
-        "info",
-        "surplus_penalty_created",
+    penalty = _build_penalty(
         employee=attendance_doc.employee,
-        surplus_minutes=surplus_minutes,
-        pre_authorization=pre_authorization,
+        attendance=attendance_doc.name,
+        violation_date=str(attendance_doc.attendance_date),
+        penalty_status=attendance_doc.status,
+        shift_doc=shift_doc,
+        config=config,
+        policy=surplus_policy,
+        penalty_minutes=surplus_minutes,
+        extra={"attendance_pre_authorization": pre_authorization},
     )
+    if penalty:
+        _log(
+            "info",
+            "surplus_penalty_created",
+            employee=attendance_doc.employee,
+            surplus_minutes=surplus_minutes,
+            pre_authorization=pre_authorization,
+        )
 
 
 def _create_attendance_penalty(ctx: _AttendanceContext, ledger, config):
     """Create a Discipline Penalty from a grace ledger entry, when grace is exhausted."""
     if ledger.penalty_minutes <= 0:
-        _log(
-            "info",
-            "no_penalty_within_grace",
-            employee=ctx.employee,
-            remaining_grace_before_consume=ledger.remaining_minutes_before_consume,
-            penalty_minutes=ledger.penalty_minutes,
-        )
-        return
-
-    if frappe.db.exists(
-        "Discipline Penalty",
-        {"attendance": ctx.attendance, "docstatus": ("!=", 2)},
-    ):
-        _log(
-            "info",
-            "duplicate_discipline_penalty",
-            employee=ctx.employee,
-            date=ctx.date,
-            attendance=ctx.attendance,
-        )
-        return
+        return None
 
     shift_doc = frappe.get_cached_doc("Shift Type", ctx.shift_type)
     attendance = frappe.get_cached_doc("Attendance", ctx.attendance) if ctx.attendance else None
 
-    penalty = frappe.new_doc("Discipline Penalty")
-    penalty.employee = ctx.employee
-    penalty.violation_date = ctx.date or str(today())
-    penalty.start_period = ledger.period_start
-    penalty.end_period = ledger.period_end
-
-    if attendance:
-        penalty.attendance = attendance.name
-    penalty.penalty_status = attendance.status if attendance else "Present"
-    penalty.violation_number = 1 + count_prior_violations(
-        ctx.employee,
-        ledger.period_start,
-        ledger.period_end,
-        penalty.penalty_status,
+    return _build_penalty(
+        employee=ctx.employee,
+        attendance=ctx.attendance,
+        violation_date=ctx.date or str(today()),
+        penalty_status=attendance.status if attendance else "Present",
+        shift_doc=shift_doc,
+        config=config,
+        policy=shift_doc.custom_attendance_penalty_policy or config.attendance_penalty_policy,
+        penalty_minutes=ledger.penalty_minutes,
+        grace_consumed=ledger.consumed_minutes,
+        extra={"employee_grace_ledger": ledger.name},
     )
-
-    penalty.attendance_penalty_policy = (
-        shift_doc.custom_attendance_penalty_policy or config.attendance_penalty_policy
-    )
-    penalty.salary_component = shift_doc.custom_salary_component or config.salary_component or ""
-    penalty.employee_grace_ledger = ledger.name
-    penalty.grace_consumed = ledger.consumed_minutes
-    penalty.penalty_minutes = ledger.penalty_minutes
-    penalty.status = "Auto Processed" if cint(config.auto_process_attendance_penalty) else "Pending"
-    penalty.insert(ignore_if_duplicate=True, ignore_permissions=True)
-    return penalty
 
 
 def _create_grace_ledger(ctx: _AttendanceContext):
@@ -289,24 +272,21 @@ def _create_grace_ledger(ctx: _AttendanceContext):
 
     shift = frappe.get_cached_doc("Shift Type", ctx.shift_type)
     allowed = cint(shift.custom_total_allowed_grace_minutes)
-    prior_total = cint(
-        frappe.db.get_value(
-            "Employee Grace Ledger",
-            filters={
-                "employee": ctx.employee,
-                "period_start": shift.custom_period_start_date,
-                "period_end": shift.custom_period_end_date,
-            },
-            fieldname="sum(consumed_minutes)",
-        )
-        or 0
+    _grace_rows = frappe.db.get_all(
+        "Employee Grace Ledger",
+        filters={
+            "employee": ctx.employee,
+            "period_start": shift.custom_period_start_date,
+            "period_end": shift.custom_period_end_date,
+        },
+        fields=[{"SUM": "consumed_minutes", "as": "total_consumed"}],
     )
+    prior_total = cint((_grace_rows[0].get("total_consumed") if _grace_rows else 0) or 0)
     prior_overflow = max(0, prior_total - allowed)
     new_total = prior_total + ctx.minutes
     new_overflow = max(0, new_total - allowed)
 
-    ledger = cast(EmployeeGraceLedger, frappe.new_doc("Employee Grace Ledger"))
-    _log("debug", "creating_grace_ledger", employee=ctx.employee, minutes=ctx.minutes)
+    ledger: EmployeeGraceLedger = frappe.new_doc("Employee Grace Ledger")
     ledger.employee = ctx.employee
     ledger.attendance = ctx.attendance
     ledger.period_start = shift.custom_period_start_date
@@ -321,7 +301,6 @@ def _create_grace_ledger(ctx: _AttendanceContext):
 
     try:
         ledger.insert(ignore_permissions=True)
-        _log("info", "ledger_inserted", employee=ctx.employee, ledger=ledger.name)
     except Exception:
         _log(
             "exception",
@@ -349,19 +328,12 @@ def _ignore_grace_ledger_duplicates(ctx: _AttendanceContext) -> bool:
     """Skip ledger creation when an entry for this attendance already exists."""
     if not ctx.attendance:
         return False
-    existing = frappe.db.exists(
-        "Employee Grace Ledger",
-        {"employee": ctx.employee, "attendance": ctx.attendance},
-    )
-    if existing:
-        _log(
-            "info",
-            "grace_ledger_already_exists",
-            employee=ctx.employee,
-            attendance=ctx.attendance,
+    return bool(
+        frappe.db.exists(
+            "Employee Grace Ledger",
+            {"employee": ctx.employee, "attendance": ctx.attendance},
         )
-        return True
-    return False
+    )
 
 
 def insert_attendance_penalty(doc: EmployeeGraceLedger, ctx: _AttendanceContext) -> None:

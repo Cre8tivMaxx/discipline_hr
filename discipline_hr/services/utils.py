@@ -3,21 +3,6 @@ import json
 import frappe
 
 
-class _LazyLogger:
-    """Proxy that delegates to frappe.logger() on every attribute access.
-
-    This ensures the logger is always fetched after frappe.log_level is set,
-    so configure_log_level() takes effect even though the logger was created
-    before the level was configured.
-    """
-
-    def __getattr__(self, name):
-        return getattr(frappe.logger("discipline_hr", allow_site=True), name)
-
-
-logger = _LazyLogger()
-
-
 def count_prior_violations(employee: str, start_period: str, end_period: str, penalty_status: str) -> int:
     """Count non-rejected penalties in a period for violation number calculation."""
     return frappe.db.count(
@@ -56,11 +41,5 @@ def configure_log_level():
 
 def _log(level, event, **fields):
     log = {"event": event, **fields}
-    levels = {
-        "info": logger.info,
-        "debug": logger.debug,
-        "warning": logger.warning,
-        "error": logger.error,
-        "exception": logger.exception,
-    }
-    return levels[level.lower()](json.dumps(log, default=str))
+    logger = frappe.logger("discipline_hr", allow_site=True)
+    getattr(logger, level.lower())(json.dumps(log, default=str))
