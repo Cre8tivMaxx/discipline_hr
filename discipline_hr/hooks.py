@@ -15,10 +15,9 @@ required_apps = ["hrms"]
 # add_to_apps_screen = [
 #     {
 #         "name": "discipline_hr",
-#         "logo": "/assets/discipline_hr/logo.png",
+#         "logo": "/assets/discipline_hr/images/discipline_hr_logo.svg",
 #         "title": "Discipline Hr",
-#         "route": "/discipline_hr",
-#         "has_permission": "discipline_hr.api.permission.has_app_permission"
+#         "route": "/app/discipline-hr",
 #     }
 # ]
 
@@ -154,10 +153,12 @@ doc_events = {
         "validate": [
             "discipline_hr.events.salary_slip.guard_errored_discipline_penalties",
             "discipline_hr.events.salary_slip.guard_errored_attendances",
+            "discipline_hr.events.salary_slip.guard_errored_grace_ledgers",
         ],
         "before_submit": [
             "discipline_hr.events.salary_slip.guard_errored_discipline_penalties",
             "discipline_hr.events.salary_slip.guard_errored_attendances",
+            "discipline_hr.events.salary_slip.guard_errored_grace_ledgers",
         ],
     },
 }
@@ -174,7 +175,7 @@ scheduler_events = {
 # Testing
 # -------
 
-# before_tests = "discipline_hr.install.before_tests"
+before_tests = "discipline_hr.tests.fixtures.prepare_test_environment"
 
 # Overriding Methods
 # ------------------------------
@@ -245,6 +246,7 @@ before_request = ["discipline_hr.services.utils.configure_log_level"]
 fixtures = [
     {"dt": "Workflow State"},
     {"dt": "Workflow", "filters": [["name", "in", ["Discipline Penalty"]]]},
+    {"dt": "Desktop Icon", "filters": [["name", "in", ["Discipline Hr"]]]},
 ]
 
 export_python_type_annotations = True

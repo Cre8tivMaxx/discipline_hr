@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import cast
 
 import frappe
-from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
 from discipline_hr.discipline_hr.doctype.discipline_hr_settings.discipline_hr_settings import (
@@ -18,7 +17,7 @@ from discipline_hr.services.pre_authorization import (
     _consume_pre_authorization,
     _find_active_pre_authorization,
 )
-from discipline_hr.tests.fixtures import delete_fiscal_year, ensure_fiscal_year
+from discipline_hr.tests.fixtures import delete_fiscal_year, ensure_fiscal_year, make_employee
 
 SHIFT_NAME = "_Test PreAuth Shift"
 MAIN_POLICY_RATE = 60
@@ -122,7 +121,7 @@ class TestPreAuthorizationFlow(FrappeTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._created_fy_2026 = ensure_fiscal_year(2026)
+        cls._created_fy_name = ensure_fiscal_year(2026)
         cls.salary_component = _ensure_salary_component()
         cls.main_policy = _ensure_policy(MAIN_POLICY_RATE)
         cls.surplus_policy = _ensure_policy(SURPLUS_POLICY_RATE)
@@ -140,8 +139,7 @@ class TestPreAuthorizationFlow(FrappeTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if getattr(cls, "_created_fy_2026", False):
-            delete_fiscal_year(2026)
+        delete_fiscal_year(getattr(cls, "_created_fy_name", None))
         super().tearDownClass()
 
     def setUp(self):

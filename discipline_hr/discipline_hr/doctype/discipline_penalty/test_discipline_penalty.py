@@ -18,6 +18,27 @@ from discipline_hr.services.utils import count_prior_violations
 MODULE = "discipline_hr.discipline_hr.doctype.discipline_penalty.discipline_penalty"
 
 
+def _cached_doc_dispatcher(*, policy=None, settings=None, attendance=None, shift=None):
+    """Build a ``frappe.get_cached_doc`` ``side_effect`` that returns whichever
+    mock the caller wants for each known DocType. Centralises the dispatch
+    because, after the controller refactor, every policy/settings lookup goes
+    through ``frappe.get_cached_doc`` directly instead of dedicated accessor
+    methods."""
+
+    def _dispatch(doctype, name=None):
+        if doctype in ("Attendance Penalty Policy", "Absence Penalty Policy"):
+            return policy
+        if doctype == "Discipline HR Settings":
+            return settings
+        if doctype == "Attendance":
+            return attendance
+        if doctype == "Shift Type":
+            return shift
+        return MagicMock()
+
+    return _dispatch
+
+
 class TestDisciplinePenalty(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -41,41 +62,48 @@ class TestDisciplinePenalty(TestCase):
     def setUp(self):
         self.penalty = DisciplinePenalty({"doctype": "Discipline Penalty", "attendance": "Fake Att"})
 
-    def test_fixed_per_hour_penalty(self):
+    # ------------------------------------------------------------------
+    # _fixed_per_hour_deduction
+    # ------------------------------------------------------------------
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_fixed_per_hour_penalty(self, mock_get_cached_doc):
         """Test fixed per hour deduction normal case (30min, rate=60 → 30.0)"""
         # Arrange
         self.penalty.penalty_minutes = 30
-        mock_policy = MagicMock()
-        mock_policy.rate_per_hour = 60
+        policy = MagicMock(rate_per_hour=60)
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=policy)
 
         # Act
-        with patch.object(self.penalty, "_get_attendance_penalty_policy_doc", return_value=mock_policy):
-            result = self.penalty._fixed_per_hour_deduction()
+        result = self.penalty._fixed_per_hour_deduction()
 
         # Assert
         self.assertEqual(result, 30.0, "Fixed per hour should result 30.0")
 
-    def test_fixed_per_hour_zero_minutes(self):
-        """Test fixed per hour deduction zero penalty_minutes (30min, rate=0 → 0.0)"""
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_fixed_per_hour_zero_minutes(self, mock_get_cached_doc):
+        """Test fixed per hour deduction zero penalty_minutes (0min, rate=100 → 0.0)"""
         # Arrange
         self.penalty.penalty_minutes = 0
-        mock_policy = MagicMock()
-        mock_policy.rate_per_hour = 100
+        policy = MagicMock(rate_per_hour=100)
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=policy)
 
         # Act
-        with patch.object(self.penalty, "_get_attendance_penalty_policy_doc", return_value=mock_policy):
-            result = self.penalty._fixed_per_hour_deduction()
+        result = self.penalty._fixed_per_hour_deduction()
 
         # Assert
-        self.assertEqual(result, 0.0, "Fixed per hour should result 30")
+        self.assertEqual(result, 0.0, "Zero penalty minutes should result 0")
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
+    # ------------------------------------------------------------------
+    # _factor_deduction
+    # ------------------------------------------------------------------
+    @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.DisciplinePenalty._get_minute_rate")
-    def test_valid_factor_deduction(self, mock_minute_rate, mock_policy):
+    def test_valid_factor_deduction(self, mock_minute_rate, mock_get_cached_doc):
         """Test normal case 5mins * factor=5 * rate=5 = 125"""
         # Arrange
         self.penalty.penalty_minutes = 5
-        mock_policy.return_value.deducted_minutes_factor = 5
+        policy = MagicMock(deducted_minutes_factor=5)
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=policy)
         mock_minute_rate.return_value = 5
 
         # Act
@@ -84,87 +112,61 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 125.0, "Factor Deduction 5 * 5 * 5 failed")
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.DisciplinePenalty._get_minute_rate")
-    def test_factor_deduction_zero(self, mock_minute_rate, mock_policy):
-        "Test minutes factor = 0, should result 0 penalty"
+    def test_factor_deduction_zero(self, mock_minute_rate, mock_get_cached_doc):
+        """Test minutes factor = 0, should result 0 penalty (short-circuits before minute rate)"""
         # Arrange
         self.penalty.penalty_minutes = 100
+        policy = MagicMock(deducted_minutes_factor=0)
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=policy)
         mock_minute_rate.return_value = 20
-        mock_policy.return_value.deducted_minutes_factor = 0
 
         # Act
         result = self.penalty._factor_deduction()
 
         # Assert
-        self.assertEqual(result, 0.0, "Factor Deduction  deducted_minutes_factor = 0 * n * n failed")
+        self.assertEqual(result, 0.0, "Factor Deduction with deducted_minutes_factor = 0 should be 0")
 
+    # ------------------------------------------------------------------
+    # _penalty_matrix_deduction (attendance)
+    # ------------------------------------------------------------------
     @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
-    def test_attendance_penalty_matrix_overflow(self, mock_policy, mock_daily_rate):
-        "Test penalty matrix valid maximum day"
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_attendance_penalty_matrix_overflow(self, mock_get_cached_doc, mock_daily_rate):
+        """Violation number > matrix length falls back to the last row."""
         # Arrange
         self.penalty.violation_number = 4
-        mock_policy.return_value = self.attendance_policy
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=self.attendance_policy)
         mock_daily_rate.return_value = 100
 
         # Act
         result = self.penalty._penalty_matrix_deduction()
 
         # Assert
-        self.assertEqual(result, 100.0, "violation number=4 > Penalty Matrix=3 idx didn't pass")
+        self.assertEqual(result, 100.0, "violation number=4 > matrix=3 idx didn't pick last row")
 
     @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
-    def test_absence_penalty_matrix_overflow(self, mock_policy, mock_daily_rate):
-        "Test absence penalty matrix valid maximum day"
-        # Arrange
-        self.penalty.violation_number = 4
-        mock_policy.return_value = self.absence_policy
-        mock_daily_rate.return_value = 100
-
-        # Act
-        result = self.penalty._absence_penalty_matrix()
-
-        # Assert
-        self.assertEqual(result, 100.0, "violation number=4 > Penalty Matrix=3 idx didn't pass")
-
-    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
-    def test_attendance_penalty_matrix_exact_number(self, mock_policy, mock_daily_rate):
-        "Test attendance penalty matrix valid exact number 2 -> 0.5 * daily_rate"
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_attendance_penalty_matrix_exact_number(self, mock_get_cached_doc, mock_daily_rate):
+        """Exact violation match returns ``percentage * daily_rate``."""
         # Arrange
         self.penalty.violation_number = 2
-        mock_policy.return_value = self.attendance_policy
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=self.attendance_policy)
         mock_daily_rate.return_value = 100
 
         # Act
         result = self.penalty._penalty_matrix_deduction()
 
         # Assert
-        self.assertEqual(result, 50.0, "violation number=2 > Penalty Matrix=2 should return 0.5 * 100 -> 50")
+        self.assertEqual(result, 50.0, "violation number=2 -> 0.5 * 100 -> 50")
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
-    def test_absence_penalty_matrix_exact_number(self, mock_policy, mock_daily_rate):
-        "Test absence penalty matrix valid exact number 2 -> 0.5 * daily_rate"
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_penalty_matrix_deduction_empty_matrix(self, mock_get_cached_doc):
+        """Empty matrix [] should return 0 deduction."""
         # Arrange
-        self.penalty.violation_number = 2
-        mock_policy.return_value = self.absence_policy
-        mock_daily_rate.return_value = 100
-
-        # Act
-        result = self.penalty._absence_penalty_matrix()
-
-        # Assert
-        self.assertEqual(result, 50.0, "violation number=2 > Penalty Matrix=2 should return 0.5 * 100 -> 50")
-
-    @patch(f"{MODULE}.DisciplinePenalty._get_attendance_penalty_policy_doc")
-    def test_penalty_matrix_deduction_empty_matrix(self, mock_policy):
-        """Test empty matrix [] should return 0"""
-        # Arrange
-        self.penalty_matrix = []
-        mock_policy.return_value.penalty_matrix = self.penalty_matrix
+        empty_policy = MagicMock(penalty_matrix=[])
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=empty_policy)
 
         # Act
         result = self.penalty._penalty_matrix_deduction()
@@ -172,12 +174,45 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Empty Matrix should return 0 deduction")
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
-    def test_absence_penalty_matrix_empty_matrix(self, mock_policy):
-        """Test empty matrix [] should return 0"""
+    # ------------------------------------------------------------------
+    # _absence_penalty_matrix
+    # ------------------------------------------------------------------
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_absence_penalty_matrix_overflow(self, mock_get_cached_doc, mock_daily_rate):
+        """Violation number > matrix length falls back to the last row (absence)."""
         # Arrange
-        self.penalty_matrix = []
-        mock_policy.return_value.penalty_matrix = self.penalty_matrix
+        self.penalty.violation_number = 4
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=self.absence_policy)
+        mock_daily_rate.return_value = 100
+
+        # Act
+        result = self.penalty._absence_penalty_matrix()
+
+        # Assert
+        self.assertEqual(result, 100.0, "violation number=4 > matrix=3 idx didn't pick last row")
+
+    @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_absence_penalty_matrix_exact_number(self, mock_get_cached_doc, mock_daily_rate):
+        """Exact violation match returns ``percentage * daily_rate`` (absence)."""
+        # Arrange
+        self.penalty.violation_number = 2
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=self.absence_policy)
+        mock_daily_rate.return_value = 100
+
+        # Act
+        result = self.penalty._absence_penalty_matrix()
+
+        # Assert
+        self.assertEqual(result, 50.0, "violation number=2 -> 0.5 * 100 -> 50")
+
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_absence_penalty_matrix_empty_matrix(self, mock_get_cached_doc):
+        """Empty matrix [] should return 0 deduction (absence)."""
+        # Arrange
+        empty_policy = MagicMock(penalty_matrix=[])
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=empty_policy)
 
         # Act
         result = self.penalty._absence_penalty_matrix()
@@ -185,15 +220,20 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Empty Matrix should return 0 deduction")
 
+    # ------------------------------------------------------------------
+    # _get_employee_daily_rate
+    # ------------------------------------------------------------------
     @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.frappe.db.get_value")
     def test_get_employee_daily_rate(self, mock_db_get_value, mock_get_cached_doc):
         """Test Daily rate for monthly 3000 / 30 -> 100"""
         # Arrange
+        # Set violation_date so the controller doesn't call today() — that
+        # transitively reads System Settings via frappe.db.get_value, which
+        # collides with our SSA tuple mock.
+        self.penalty.violation_date = "2026-01-15"
         mock_db_get_value.return_value = (3000, 1000)
-        mock_config = MagicMock()
-        mock_config.month_days = 30
-        mock_config.salary_basis = "Base"
+        mock_config = MagicMock(month_days=30, salary_basis="Base")
         mock_get_cached_doc.return_value = mock_config
 
         # Act
@@ -207,10 +247,9 @@ class TestDisciplinePenalty(TestCase):
     def test_get_employee_daily_rate_custom_month_days(self, mock_db_get_value, mock_get_cached_doc):
         """Test Daily rate with custom month_days: 3000 / 26 ≈ 115.38"""
         # Arrange
+        self.penalty.violation_date = "2026-01-15"
         mock_db_get_value.return_value = (3000, 1000)
-        mock_config = MagicMock()
-        mock_config.month_days = 26
-        mock_config.salary_basis = "Base"
+        mock_config = MagicMock(month_days=26, salary_basis="Base")
         mock_get_cached_doc.return_value = mock_config
 
         # Act
@@ -224,10 +263,9 @@ class TestDisciplinePenalty(TestCase):
     def test_get_valid_daily_total_rate(self, mock_db_get_value, mock_get_cached_doc):
         """Get Employee Daily rate variable+total if hr settings have `Total` Enabled."""
         # Arrange
+        self.penalty.violation_date = "2026-01-15"
         mock_db_get_value.return_value = (1000, 8000)
-        mock_config = MagicMock()
-        mock_config.month_days = 30
-        mock_config.salary_basis = "Total"
+        mock_config = MagicMock(month_days=30, salary_basis="Total")
         mock_get_cached_doc.return_value = mock_config
 
         # Act
@@ -264,9 +302,31 @@ class TestDisciplinePenalty(TestCase):
             str(ctx.exception),
         )
 
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    @patch(f"{MODULE}.frappe.db.get_value")
+    def test_get_employee_daily_rate_filters_by_violation_date(self, mock_db_get_value, mock_get_cached_doc):
+        """SSA lookup must filter by from_date <= violation_date so retro-raises don't change history."""
+        # Arrange
+        self.penalty.violation_date = "2026-01-15"
+        mock_db_get_value.return_value = (3000, 0)
+        mock_config = MagicMock(month_days=30, salary_basis="Base")
+        mock_get_cached_doc.return_value = mock_config
+
+        # Act
+        self.penalty._get_employee_daily_rate()
+
+        # Assert
+        filters = mock_db_get_value.call_args.args[1]
+        self.assertEqual(
+            filters["from_date"], ("<=", "2026-01-15"), "SSA query must filter by from_date <= violation_date"
+        )
+
+    # ------------------------------------------------------------------
+    # get_penalty_amount dispatch
+    # ------------------------------------------------------------------
     @patch(f"{MODULE}.frappe.get_value")
     def test_get_penalty_amount_present_dispatches_attendance_handler(self, mock_get_value):
-        """Test that penalty_status=Present dispatches to attendance handler"""
+        """penalty_status=Present dispatches to the attendance handler chain."""
         # Arrange
         self.penalty.penalty_status = "Present"
         self.penalty.attendance_penalty_policy = "ATP-0001"
@@ -282,7 +342,7 @@ class TestDisciplinePenalty(TestCase):
 
     @patch(f"{MODULE}.frappe.get_value")
     def test_get_penalty_amount_absent_dispatches_absence_handler(self, mock_get_value):
-        """Test that penalty_status=Absent dispatches to absence handler"""
+        """penalty_status=Absent dispatches to the absence handler chain."""
         # Arrange
         self.penalty.penalty_status = "Absent"
         self.penalty.absence_penalty_policy = "ABP-0001"
@@ -297,7 +357,7 @@ class TestDisciplinePenalty(TestCase):
         self.assertEqual(result, 100.0)
 
     def test_get_penalty_amount_missing_policy_returns_zero(self):
-        """Test that missing policy link returns 0.0"""
+        """Missing policy link returns 0.0 instead of throwing."""
         # Arrange
         self.penalty.penalty_status = "Present"
         self.penalty.attendance_penalty_policy = None
@@ -308,13 +368,16 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0)
 
+    # ------------------------------------------------------------------
+    # _special_day_deduction
+    # ------------------------------------------------------------------
     @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
-    def test_special_day_deduction_missing_day(self, mock_policy_doc, mock_daily_rate):
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_special_day_deduction_missing_day(self, mock_get_cached_doc, mock_daily_rate):
         """Test that missing day in special_days returns 0.0"""
         # Arrange
         self.penalty.violation_date = "2026-03-13"  # Friday — not in special_days
-        mock_policy_doc.return_value = self.special_days
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=self.special_days)
         mock_daily_rate.return_value = 300
 
         # Act
@@ -324,13 +387,13 @@ class TestDisciplinePenalty(TestCase):
         self.assertEqual(result, 0.0, "Non-special weekday should return 0.0")
 
     @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
-    def test_special_day_deduction_existing_day(self, mock_policy_doc, mock_daily_rate):
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_special_day_deduction_existing_day(self, mock_get_cached_doc, mock_daily_rate):
         """Test that existing day in special_days returns percentage * daily_rate"""
         # Arrange
         self.penalty.violation_date = "2026-03-15"  # Sunday — percentage 2 in special_days
         mock_daily_rate.return_value = 300
-        mock_policy_doc.return_value = self.special_days
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=self.special_days)
 
         # Act
         result = self.penalty._special_day_deduction()
@@ -339,13 +402,14 @@ class TestDisciplinePenalty(TestCase):
         self.assertEqual(result, 600.0, "Sunday (2.0 x 300) should return 600.0")
 
     @patch(f"{MODULE}.DisciplinePenalty._get_employee_daily_rate")
-    @patch(f"{MODULE}.DisciplinePenalty._get_absence_penalty_policy_doc")
-    def test_empty_special_day_table(self, mock_policy_doc, mock_daily_rate):
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    def test_empty_special_day_table(self, mock_get_cached_doc, mock_daily_rate):
         """Test that an empty special_days table returns 0.0"""
         # Arrange
         self.penalty.violation_date = "2026-03-15"  # Any date — table is empty
         mock_daily_rate.return_value = 300
-        mock_policy_doc.return_value = AbsencePenaltyPolicy({"doctype": "Absence Penalty Policy"})
+        empty = AbsencePenaltyPolicy({"doctype": "Absence Penalty Policy"})
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(policy=empty)
 
         # Act
         result = self.penalty._special_day_deduction()
@@ -353,6 +417,9 @@ class TestDisciplinePenalty(TestCase):
         # Assert
         self.assertEqual(result, 0.0, "Empty special_days table should return 0.0")
 
+    # ------------------------------------------------------------------
+    # count_prior_violations helper
+    # ------------------------------------------------------------------
     @patch("discipline_hr.services.utils.frappe.db.count")
     def test_count_prior_violations_excludes_rejected(self, mock_count):
         """Test that count_prior_violations excludes status='Rejected' penalties."""
@@ -364,7 +431,6 @@ class TestDisciplinePenalty(TestCase):
 
         # Assert
         self.assertEqual(result, 2)
-        # Verify the filter includes status != "Rejected"
         mock_count.assert_called_once()
         call_args = mock_count.call_args
         self.assertEqual(call_args[0][0], "Discipline Penalty")
@@ -373,10 +439,17 @@ class TestDisciplinePenalty(TestCase):
         self.assertEqual(filters["penalty_status"], "Present")
         self.assertEqual(filters["status"], ("!=", "Rejected"))
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
+    # ------------------------------------------------------------------
+    # create_additional_salary / retry — merged penalty creator
+    # ------------------------------------------------------------------
+    # ``retry()`` is a thin shim that calls ``create_additional_salary``. We
+    # exercise the merged code path by invoking ``retry()`` so the previous
+    # ``error_log`` semantics are preserved.
+
+    @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.frappe.get_doc")
     @patch(f"{MODULE}.frappe.db.get_value")
-    def test_discipline_penalty_retry_happy_path(self, mock_get_value, mock_get_doc, mock_settings):
+    def test_discipline_penalty_retry_happy_path(self, mock_get_value, mock_get_doc, mock_get_cached_doc):
         """Retry creates an Additional Salary and clears the stale error."""
         # Arrange
         self.penalty.name = "DP-0001"
@@ -385,7 +458,9 @@ class TestDisciplinePenalty(TestCase):
         self.penalty.violation_date = "2026-01-01"
         self.penalty.error_log = "some old error"
         mock_get_value.return_value = None  # no non-cancelled AS exists → proceed to create
-        mock_settings.return_value.auto_submit_additional_salary = 0
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(
+            settings=MagicMock(auto_submit_additional_salary=0)
+        )
 
         # Act
         with patch.object(self.penalty, "db_set") as mock_db_set:
@@ -405,36 +480,45 @@ class TestDisciplinePenalty(TestCase):
             if call_args[0] == "error_log" and call_args[1] is not None:
                 self.fail(f"db_set called with non-None error during retry: {call_args}")
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
-    @patch(f"{MODULE}._log")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
+    @patch(f"{MODULE}.frappe.get_doc")
     @patch(f"{MODULE}.frappe.db.get_value")
-    def test_retry_duplicate_guard_submitted_as(self, mock_get_value, mock_logger, mock_settings):
-        """A submitted Additional Salary trips the guard, error cleared, no new doc created."""
+    def test_retry_duplicate_guard_submitted_as(self, mock_get_value, mock_get_doc, mock_get_cached_doc):
+        """A submitted Additional Salary trips the guard: error cleared, no new doc created."""
         # Arrange
         self.penalty.name = "DP-0001"
         self.penalty.penalty_amount = 100
         self.penalty.salary_component = "Basic"
         self.penalty.error_log = "some old error"
         mock_get_value.return_value = ("AS-0001", 1)  # submitted AS exists
-        mock_settings.return_value.auto_submit_additional_salary = 1
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(
+            settings=MagicMock(auto_submit_additional_salary=1)
+        )
 
         # Act
         with patch.object(self.penalty, "db_set") as mock_db_set:
             self.penalty.retry()
 
-        # Assert
+        # Assert: stale error cleared
         mock_db_set.assert_any_call("error_log", None)
-        mock_logger.assert_called_with(
-            "info",
-            "additional_salary_exists",
-            penalty=self.penalty.name,
-            additional_salary="AS-0001",
+
+        # Assert: no NEW Additional Salary was inserted
+        created_dicts = [
+            call.args[0]
+            for call in mock_get_doc.call_args_list
+            if call.args and isinstance(call.args[0], dict)
+        ]
+        self.assertFalse(
+            any(d.get("doctype") == "Additional Salary" for d in created_dicts),
+            "Submitted AS already exists; should not create another",
         )
 
-    @patch(f"{MODULE}.DisciplinePenalty._get_discipline_hr_settings")
+    @patch(f"{MODULE}.frappe.get_cached_doc")
     @patch(f"{MODULE}.frappe.get_doc")
     @patch(f"{MODULE}.frappe.db.get_value")
-    def test_retry_submits_stuck_draft_additional_salary(self, mock_get_value, mock_get_doc, mock_settings):
+    def test_retry_submits_stuck_draft_additional_salary(
+        self, mock_get_value, mock_get_doc, mock_get_cached_doc
+    ):
         """A draft AS from a failed submit gets submitted on retry, not silently skipped."""
         # Arrange
         self.penalty.name = "DP-0001"
@@ -442,7 +526,9 @@ class TestDisciplinePenalty(TestCase):
         self.penalty.salary_component = "Basic"
         self.penalty.error_log = "submit failed earlier"
         mock_get_value.return_value = ("AS-0001", 0)  # draft AS exists
-        mock_settings.return_value.auto_submit_additional_salary = 1
+        mock_get_cached_doc.side_effect = _cached_doc_dispatcher(
+            settings=MagicMock(auto_submit_additional_salary=1)
+        )
         draft_doc = MagicMock()
         mock_get_doc.return_value = draft_doc
 
@@ -453,24 +539,3 @@ class TestDisciplinePenalty(TestCase):
         # Assert: existing draft was fetched and submit() was called on it
         mock_get_doc.assert_called_with("Additional Salary", "AS-0001")
         draft_doc.submit.assert_called_once()
-
-    @patch(f"{MODULE}.frappe.get_cached_doc")
-    @patch(f"{MODULE}.frappe.db.get_value")
-    def test_get_employee_daily_rate_filters_by_violation_date(self, mock_db_get_value, mock_get_cached_doc):
-        """SSA lookup must filter by from_date <= violation_date so retro-raises don't change history."""
-        # Arrange
-        self.penalty.violation_date = "2026-01-15"
-        mock_db_get_value.return_value = (3000, 0)
-        mock_config = MagicMock()
-        mock_config.month_days = 30
-        mock_config.salary_basis = "Base"
-        mock_get_cached_doc.return_value = mock_config
-
-        # Act
-        self.penalty._get_employee_daily_rate()
-
-        # Assert: filter must include from_date <= violation_date
-        filters = mock_db_get_value.call_args.args[1]
-        self.assertEqual(
-            filters["from_date"], ("<=", "2026-01-15"), "SSA query must filter by from_date <= violation_date"
-        )

@@ -41,7 +41,7 @@ class TestGuardErroredDisciplinePenalties(TestCase):
             filters={
                 "employee": "EMP-0001",
                 "error_log": ["is", "set"],
-                "violation_date": ["between", slip.start_date, slip.end_date],
+                "violation_date": ["between", (slip.start_date, slip.end_date)],
             },
             pluck="name",
         )
@@ -82,7 +82,7 @@ class TestGuardErroredAttendances(TestCase):
             filters={
                 "employee": "EMP-0004",
                 "custom_error_log": ["is", "set"],
-                "attendance_date": ["between", slip.start_date, slip.end_date],
+                "attendance_date": ["between", (slip.start_date, slip.end_date)],
             },
             pluck="name",
         )
@@ -123,7 +123,7 @@ class TestGuardErroredGraceLedgers(TestCase):
             filters={
                 "employee": "EMP-0002",
                 "error_log": ["is", "set"],
-                "date": ["between", slip.start_date, slip.end_date],
+                "date": ["between", (slip.start_date, slip.end_date)],
             },
             pluck="name",
         )
