@@ -547,7 +547,7 @@
    "insert_after": "modify_half_day_status",
    "is_system_generated": 0,
    "is_virtual": 0,
-   "label": "",
+   "label": "Discipline HR",
    "length": 0,
    "link_filters": null,
    "mandatory_depends_on": null,

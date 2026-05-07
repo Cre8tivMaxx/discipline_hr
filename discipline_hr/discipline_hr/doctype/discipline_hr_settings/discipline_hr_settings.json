@@ -7,47 +7,35 @@
  "field_order": [
   "section_break_policies",
   "attendance_penalty_policy",
-  "absence_penalty_policy",
-  "pre_authorization_surplus_policy",
   "column_break_policies",
-  "salary_component",
-  "section_break_salary_calc",
-  "salary_basis",
-  "month_days",
-  "section_break_automation",
+  "absence_penalty_policy",
+  "section_break_pre_auth",
+  "pre_authorization_surplus_policy",
   "auto_approve_pre_authorization",
-  "auto_process_attendance_penalty",
-  "auto_submit_additional_salary",
+  "column_break_pre_auth",
   "pre_authorization_expiry_days",
-  "column_break_automation"
+  "section_break_salary_calc",
+  "salary_component",
+  "month_days",
+  "column_break_salary_calc",
+  "salary_basis",
+  "section_break_automation",
+  "auto_process_attendance_penalty",
+  "column_break_automation",
+  "auto_submit_additional_salary"
  ],
  "fields": [
   {
-   "description": "Fallback policies used when not configured on the Shift Type.",
+   "description": "Defaults applied when a Shift Type does not specify its own policy. Override per Shift Type as needed.",
    "fieldname": "section_break_policies",
    "fieldtype": "Section Break",
-   "label": "Default Policies"
+   "label": "Penalty Policies"
   },
   {
-   "description": "Default policy used when an employee exceeds their grace pool. Override per Shift Type.",
+   "description": "Default policy used when an employee exceeds their grace pool.",
    "fieldname": "attendance_penalty_policy",
    "fieldtype": "Link",
    "label": "Attendance Penalty Policy",
-   "options": "Attendance Penalty Policy"
-  },
-  {
-   "description": "Default policy used for unpermitted absences. Override per Shift Type.",
-   "fieldname": "absence_penalty_policy",
-   "fieldtype": "Link",
-   "label": "Absence Penalty Policy",
-   "options": "Absence Penalty Policy"
-  },
-  {
-   "description": "Policy used to penalize the minutes that exceed an employee's Approved Attendance Pre-Authorization. Only Factor and Fixed Per Hour policies are valid.",
-   "fieldname": "pre_authorization_surplus_policy",
-   "fieldtype": "Link",
-   "label": "Pre-Authorization Surplus Policy",
-   "link_filters": "[[\"Attendance Penalty Policy\",\"penalty_type\",\"in\",[\"Factor\",\"Fixed Per Hour\"]]]",
    "options": "Attendance Penalty Policy"
   },
   {
@@ -55,18 +43,43 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "salary_component",
+   "description": "Default policy used for unpermitted absences.",
+   "fieldname": "absence_penalty_policy",
    "fieldtype": "Link",
-   "label": "Salary Component",
-   "link_filters": "[[\"Salary Component\",\"type\",\"=\",\"Deduction\"]]",
-   "options": "Salary Component"
+   "label": "Absence Penalty Policy",
+   "options": "Absence Penalty Policy"
   },
   {
-   "default": "30",
-   "description": "Working days per month used to derive the daily rate from base salary (<code>daily_rate = base / month_days</code>). Common values: 22 (working days), 26 (six-day week), 30 (calendar days). Default is 30.",
-   "fieldname": "month_days",
+   "description": "Controls how Attendance Pre-Authorizations are created, expired and penalized when consumed minutes exceed the approved amount.",
+   "fieldname": "section_break_pre_auth",
+   "fieldtype": "Section Break",
+   "label": "Pre-Authorization"
+  },
+  {
+   "description": "Policy used to penalize the minutes that exceed an employee's Approved Attendance Pre-Authorization. Only Factor and Fixed Per Hour policies are valid.",
+   "fieldname": "pre_authorization_surplus_policy",
+   "fieldtype": "Link",
+   "label": "Surplus Policy",
+   "link_filters": "[[\"Attendance Penalty Policy\",\"penalty_type\",\"in\",[\"Factor\",\"Fixed Per Hour\"]]]",
+   "options": "Attendance Penalty Policy"
+  },
+  {
+   "default": "0",
+   "description": "When checked, newly created Pre-Authorizations skip HR review and are immediately Approved. Use this when HR is the only role creating pre-authorizations.",
+   "fieldname": "auto_approve_pre_authorization",
+   "fieldtype": "Check",
+   "label": "Auto-Approve Pre-Authorizations"
+  },
+  {
+   "fieldname": "column_break_pre_auth",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "7",
+   "description": "Number of days after a pre-authorization's date before unconsumed records (Draft / Pending Approval / Approved) are auto-marked Expired by the daily scheduler. An Approved pre-auth is expired only if it was never consumed by a submitted Attendance — this prevents stale approvals from being absorbed by a late-arriving attendance amendment.",
+   "fieldname": "pre_authorization_expiry_days",
    "fieldtype": "Int",
-   "label": "Month Days",
+   "label": "Expiry (Days)",
    "non_negative": 1
   },
   {
@@ -76,57 +89,63 @@
    "label": "Salary Calculation"
   },
   {
+   "description": "Salary Component used for the resulting deduction. Override per Shift Type if needed.",
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "label": "Salary Component",
+   "link_filters": "[[\"Salary Component\",\"type\",\"=\",\"Deduction\"]]",
+   "options": "Salary Component"
+  },
+  {
+   "default": "30",
+   "description": "Working days per month used to derive the daily rate from base salary (<code>daily_rate = base / month_days</code>). Common values: 22 (working days), 26 (six-day week), 30 (calendar days).",
+   "fieldname": "month_days",
+   "fieldtype": "Int",
+   "label": "Month Days",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_salary_calc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Base",
+   "description": "Base: <code>daily_rate = base / month_days</code>. Total: <code>daily_rate = (base + variable) / month_days</code>.",
+   "fieldname": "salary_basis",
+   "fieldtype": "Select",
+   "label": "Salary Basis",
+   "options": "Base\nTotal"
+  },
+  {
+   "description": "Toggles that govern downstream document creation after an Attendance is submitted.",
    "fieldname": "section_break_automation",
    "fieldtype": "Section Break",
    "label": "Automation"
   },
   {
    "default": "0",
-   "description": "When checked, newly created Attendance Pre-Authorizations skip HR review and are immediately Approved. Use this when HR is the only role creating pre-authorizations and review is unnecessary.",
-   "fieldname": "auto_approve_pre_authorization",
-   "fieldtype": "Check",
-   "label": "Auto Approve Pre-Authorization"
-  },
-  {
-   "default": "0",
-   "description": "If checked Discipline Penalties will be created as auto processed, else will be pending.",
+   "description": "If checked, Discipline Penalties are created as auto-processed; otherwise they are pending review.",
    "fieldname": "auto_process_attendance_penalty",
    "fieldtype": "Check",
-   "label": "Auto Process Discipline Penalty"
-  },
-  {
-   "default": "1",
-   "description": "The Additional Salary will be created as Draft if this field is not checked.",
-   "fieldname": "auto_submit_additional_salary",
-   "fieldtype": "Check",
-   "label": "Auto Submit Additional Salary"
-  },
-  {
-   "default": "7",
-   "description": "Number of days after a pre-authorization's date before unconsumed records (Draft / Pending Approval / Approved) are auto-marked Expired by the daily scheduler. An Approved pre-auth is expired only if it was never consumed by a submitted Attendance — this prevents stale approvals from being absorbed by a late-arriving attendance amendment. Default is 7.",
-   "fieldname": "pre_authorization_expiry_days",
-   "fieldtype": "Int",
-   "label": "Pre-Authorization Expiry (Days)",
-   "non_negative": 1
+   "label": "Auto-Process Discipline Penalty"
   },
   {
    "fieldname": "column_break_automation",
    "fieldtype": "Column Break"
   },
   {
-   "default": "Base",
-   "description": "Base: daily rate = base / month days. Total: daily rate = (base + variable) / month days.",
-   "fieldname": "salary_basis",
-   "fieldtype": "Select",
-   "label": "Salary Basis",
-   "options": "Base\nTotal"
+   "default": "1",
+   "description": "If unchecked, the Additional Salary is created as a Draft and must be submitted manually.",
+   "fieldname": "auto_submit_additional_salary",
+   "fieldtype": "Check",
+   "label": "Auto-Submit Additional Salary"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-28 14:30:00.000000",
+ "modified": "2026-05-07 14:35:00.000000",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline HR Settings",

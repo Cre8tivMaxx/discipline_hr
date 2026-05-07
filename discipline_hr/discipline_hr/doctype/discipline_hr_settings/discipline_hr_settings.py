@@ -21,9 +21,8 @@ class DisciplineHRSettings(Document):
         auto_approve_pre_authorization: DF.Check
         auto_process_attendance_penalty: DF.Check
         auto_submit_additional_salary: DF.Check
-        default_penalty_notification: DF.Link | None
-        default_pending_notification: DF.Link | None
         month_days: DF.Int
+        pre_authorization_expiry_days: DF.Int
         pre_authorization_surplus_policy: DF.Link | None
         salary_basis: DF.Literal["Base", "Total"]
         salary_component: DF.Link | None
