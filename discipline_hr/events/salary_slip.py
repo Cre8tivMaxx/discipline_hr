@@ -8,7 +8,7 @@ def _find_errored(doctype, date_field, error_field, employee, start_date, end_da
         filters={
             "employee": employee,
             error_field: ["is", "set"],
-            date_field: ["between", start_date, end_date],
+            date_field: ["between", (start_date, end_date)],
         },
         pluck="name",
     )
