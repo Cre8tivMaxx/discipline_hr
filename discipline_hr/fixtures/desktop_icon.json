@@ -1,0 +1,17 @@
+[
+ {
+  "app": "discipline_hr",
+  "docstatus": 0,
+  "doctype": "Desktop Icon",
+  "hidden": 0,
+  "icon_type": "Link",
+  "idx": 1,
+  "label": "Discipline Hr",
+  "link_to": "Discipline Hr",
+  "link_type": "Workspace Sidebar",
+  "logo_url": "/assets/discipline_hr/images/discipline_hr_logo.svg",
+  "name": "Discipline Hr",
+  "roles": [],
+  "standard": 1
+ }
+]
