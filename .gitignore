@@ -16,3 +16,4 @@ discipline_hr/discipline_hr/doctype/dev_attendance_seeder/
 .opencode.json
 .mcp.json
 .claude/settings.local.json
+fix_icon.py
