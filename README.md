@@ -10,6 +10,33 @@ Frappe HRMS already tracks attendance, leaves, and late entries. **Discipline HR
 
 ---
 
+## Videos
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://youtu.be/XbxGJNTu2fs">
+        <img src="https://img.youtube.com/vi/XbxGJNTu2fs/0.jpg" alt="Discipline HR — 3-minute overview (English)" width="100%">
+      </a>
+      <br>
+      <b><a href="https://youtu.be/XbxGJNTu2fs">Quick overview — English (~3 min)</a></b>
+      <br>
+      <sub>A fast tour of what the app does and why.</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://www.youtube.com/playlist?list=PLJPb_p6wBrJYcpmcx91QLQ9OmOm6wmtj_">
+        <img src="https://img.youtube.com/vi/XAfY-HCySDU/0.jpg" alt="Discipline HR — Arabic playlist (8 videos)" width="100%">
+      </a>
+      <br>
+      <b><a href="https://www.youtube.com/playlist?list=PLJPb_p6wBrJYcpmcx91QLQ9OmOm6wmtj_">Full walkthrough — Arabic (8 videos, ~50 min)</a></b>
+      <br>
+      <sub>Deep dive: setup, policies, pre-authorizations, reports, and edge cases.</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## Quickstart
 
 Get a working penalty in under 10 minutes.
