@@ -246,7 +246,6 @@ before_request = ["discipline_hr.services.utils.configure_log_level"]
 fixtures = [
     {"dt": "Workflow State"},
     {"dt": "Workflow", "filters": [["name", "in", ["Discipline Penalty"]]]},
-    {"dt": "Desktop Icon", "filters": [["name", "in", ["Discipline Hr"]]]},
 ]
 
 export_python_type_annotations = True

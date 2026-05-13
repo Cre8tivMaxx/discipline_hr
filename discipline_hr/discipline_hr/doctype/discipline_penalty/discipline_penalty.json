@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "DIS-PEN-.####",
- "creation": "2026-03-25 13:23:25.243748",
+ "creation": "2026-03-25 10:53:25.243748",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -98,6 +98,7 @@
    "bold": 1,
    "fieldname": "status",
    "fieldtype": "Select",
+   "hidden": 1,
    "in_standard_filter": 1,
    "label": "Status",
    "options": "\nAuto Processed\nPending\nProcessed\nRejected",
@@ -119,12 +120,14 @@
   {
    "fieldname": "start_period",
    "fieldtype": "Date",
-   "label": "Start Period"
+   "label": "Start Period",
+   "read_only": 1
   },
   {
    "fieldname": "end_period",
    "fieldtype": "Date",
-   "label": "End Period"
+   "label": "End Period",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_policy",
@@ -239,7 +242,7 @@
    "link_fieldname": "custom_discipline_penalty"
   }
  ],
- "modified": "2026-05-03 20:31:56.302035",
+ "modified": "2026-05-10 12:06:49.642622",
  "modified_by": "Administrator",
  "module": "Discipline Hr",
  "name": "Discipline Penalty",

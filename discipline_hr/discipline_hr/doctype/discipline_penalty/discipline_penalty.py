@@ -35,8 +35,8 @@ class DisciplinePenalty(Document):
         status: DF.Literal["", "Auto Processed", "Pending", "Processed", "Rejected"]
         violation_date: DF.Date
         violation_number: DF.Int
-
     # end: auto-generated types
+
     def after_insert(self):
         if self.status == "Auto Processed":
             self.create_additional_salary()

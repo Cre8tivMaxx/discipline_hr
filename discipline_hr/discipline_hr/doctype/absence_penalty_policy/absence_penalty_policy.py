@@ -32,6 +32,9 @@ class AbsencePenaltyPolicy(Document):
             ``Special Days-01``
             ``Matrix & Special Days-01``
         """
+        if self.penalty_type == "Matrix & Special Days":
+            self.name = make_autoname(f"Matrix and Special Days-.##")
+            return
         self.name = make_autoname(f"{self.penalty_type}-.##")
 
     def validate(self):

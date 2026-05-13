@@ -1,5 +1,4 @@
-[
- {
+{
   "app": "discipline_hr",
   "docstatus": 0,
   "doctype": "Desktop Icon",
@@ -13,5 +12,4 @@
   "name": "Discipline Hr",
   "roles": [],
   "standard": 1
- }
-]
+}

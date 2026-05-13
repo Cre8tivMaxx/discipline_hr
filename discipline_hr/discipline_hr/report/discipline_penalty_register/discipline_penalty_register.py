@@ -33,6 +33,12 @@ def _validate_filters(filters: dict) -> None:
 def _columns() -> list[dict]:
     return [
         {"label": _("Violation Date"), "fieldname": "violation_date", "fieldtype": "Date", "width": 110},
+        {"label": _("Violation #"), "fieldname": "violation_number", "fieldtype": "Int", "width": 90},
+        {"label": _("Grace Consumed"), "fieldname": "grace_consumed", "fieldtype": "Int", "width": 110},
+        {"label": _("Penalty Minutes"), "fieldname": "penalty_minutes", "fieldtype": "Int", "width": 110},
+        {"label": _("Penalty Amount"), "fieldname": "penalty_amount", "fieldtype": "Currency", "width": 120},
+        {"label": _("Period Start"), "fieldname": "start_period", "fieldtype": "Date", "width": 100},
+        {"label": _("Period End"), "fieldname": "end_period", "fieldtype": "Date", "width": 100},
         {
             "label": _("Penalty"),
             "fieldname": "name",
@@ -57,9 +63,6 @@ def _columns() -> list[dict]:
             "options": "Department",
             "width": 140,
         },
-        {"label": _("Violation #"), "fieldname": "violation_number", "fieldtype": "Int", "width": 90},
-        {"label": _("Period Start"), "fieldname": "start_period", "fieldtype": "Date", "width": 100},
-        {"label": _("Period End"), "fieldname": "end_period", "fieldtype": "Date", "width": 100},
         {
             "label": _("Shift"),
             "fieldname": "shift_type",
@@ -67,9 +70,6 @@ def _columns() -> list[dict]:
             "options": "Shift Type",
             "width": 130,
         },
-        {"label": _("Grace Consumed"), "fieldname": "grace_consumed", "fieldtype": "Int", "width": 110},
-        {"label": _("Penalty Minutes"), "fieldname": "penalty_minutes", "fieldtype": "Int", "width": 110},
-        {"label": _("Penalty Amount"), "fieldname": "penalty_amount", "fieldtype": "Currency", "width": 120},
         {
             "label": _("Salary Component"),
             "fieldname": "salary_component",
